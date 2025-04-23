@@ -32,11 +32,11 @@ class Preloader {
   }
 
   _terminate() {
-    if (this._spiner) {
+    if (this._spinner) {
       this._spinner.stop();
       this._spinner = false;
     }
-    document.body.removeChild(this._preloader);
+    this._preloader.remove();
   }
 }
 

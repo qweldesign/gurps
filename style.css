@@ -200,7 +200,7 @@ h1 {
   position: absolute;
   left: 0;
   bottom: -.5rem;
-  width: 21rem;
+  width: 24rem;
   font-size: 3rem;
   line-height: 2rem;
   text-align: center;
@@ -224,7 +224,7 @@ h1 span {
 
 .entrance h1 {
   left: 50%;
-  margin-left: -10.5rem;
+  margin-left: -12rem;
 }
 
 .main-menu {
