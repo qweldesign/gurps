@@ -1,7 +1,6 @@
 /*
  * Author: Taigo Ito
  * Site: https://qwel.design
- * Twitter: @taigoito
  * Location: Fukui, Japan
  */
 
