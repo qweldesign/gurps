@@ -7,8 +7,8 @@
 import App from './app/_init.js';
 import Router from './_router.js';
 
-const HOST = 'http://localhost:8080';
-const ROOT = '/gurps/';
+const HOST = 'https://gurps.artofwar.site';
+const ROOT = '/';
 
 // App and Router
 const app = new App()
