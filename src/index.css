@@ -1,1 +1,65 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    @apply text-gray-200 lg:text-lg tracking-wide;
+  }
+}
+
+@layer project {
+  .header {
+    @apply sticky top-0 left-0 w-1/1 h-[6em] border-b-2 border-b-white text-[1em] transition-all duration-1000;
+  }
+
+  .header.entrance {
+    @apply h-[50svh] text-[1.2em];
+  }
+
+  .sitebrand {
+    @apply absolute left-1/16 lg:left-1/8 bottom-0 flex items-center justify-center w-[18em] h-[6em] m-auto font-serif text-gray-300 text-center tracking-wider transition-all duration-1000;
+  }
+
+  .header.entrance .sitebrand {
+    left: calc(50% - 9em);
+  }
+
+  .sitebrand a {
+    @apply flex flex-col gap-3 hover:text-[#999966] transition-colors duration-300;
+  }
+
+  .sitebrand__title {
+    @apply block text-[3em] leading-none;
+  }
+
+  .sitebrand__tagline {
+    @apply block text-[0.75em] leading-none;
+  }
+
+  .nav {
+    @apply flex flex-wrap items-center justify-center h-18 font-serif;
+  }
+
+  .nav__item:not(:first-child)::before {
+    @apply content-["/"] mx-3;
+  }
+
+  .nav__item a {
+    @apply hover:text-[#999966] transition-colors duration-300;
+  }
+
+  .cover {
+    @apply fixed inset-0 -z-10 w-1/1 h-1/1;
+  }
+
+  .cover.is-image-1 {
+    @apply bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.5),rgba(0,0,0,1)),url(/images/image00.jpg)] bg-center bg-cover;
+  }
+
+  .cover.is-image-2 {
+    @apply bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.5),rgba(0,0,0,1)),url(/images/image01.jpg)] bg-center bg-cover;
+  }
+
+  .footer {
+    @apply py-18 text-center;
+  }
+}

@@ -2,11 +2,17 @@ import { Link } from 'react-router-dom';
 
 function Entrance() {
   return (
-    <nav>
-      <Link to="/docs/">ドキュメント</Link>
-      <Link to="/making/">キャラクター作成</Link>
-      <Link to="/battle/">模擬戦闘</Link>
-    </nav>
+    <ul className='nav'>
+      <li className='nav__item'>
+        <Link to="/docs/">ドキュメント</Link>
+      </li>
+      <li className='nav__item'>
+        <Link to="/making/">キャラクター作成</Link>
+      </li>
+      <li className='nav__item'>
+        <Link to="/battle/">模擬戦闘</Link>
+      </li>
+    </ul>
   )
 }
 
