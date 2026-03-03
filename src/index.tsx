@@ -1,13 +1,27 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
-import { marked } from 'marked'
+import { marked, Renderer, type Tokens } from 'marked'
 import './index.css'
 import App from './App'
 import Entrance from './parts/Entrance'
 import Docs from './parts/Docs'
 import Making from './parts/Making'
 import Battle from './parts/Battle'
+
+const renderer = new Renderer();
+const originalTable = renderer.table.bind(renderer);
+
+renderer.table = (token: Tokens.Table): string => {
+  const tableHtml = originalTable(token);
+  return `
+    <div class="table-wrapper">
+      ${tableHtml}
+    </div>
+  `;
+};
+
+marked.setOptions({ renderer });
 
 const router = createBrowserRouter([
   {

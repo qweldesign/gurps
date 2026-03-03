@@ -37,8 +37,12 @@
     @apply list-disc my-6 ps-6;
   }
 
+  .table-wrapper {
+    @apply w-1/1 overflow-x-auto;
+  }
+
   table {
-    @apply w-1/1 my-6 text-[0.875em];
+    @apply w-max my-6 text-[0.875em];
 
     thead > tr {
       @apply border-y border-white;
