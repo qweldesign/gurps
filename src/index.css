@@ -120,7 +120,7 @@
   }
 
   .docs-nav__chapter {
-    @apply ps-6;
+    @apply ps-6 cursor-pointer;
   }
 
   .docs-nav__section {
