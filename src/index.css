@@ -2,13 +2,61 @@
 
 @layer base {
   body {
-    @apply text-gray-200 lg:text-lg tracking-wide;
+    @apply text-gray-200 lg:text-lg leading-loose tracking-wider;
+  }
+
+  h1, h2, h3 ,h4, h5 {
+    @apply font-serif leading-relaxed tracking-wide;
+  }
+
+  h2 {
+    @apply my-6 ps-3 border-b border-dotted border-white text-[1.5em];
+  }
+
+  h3 {
+    @apply mt-12 mb-6 ps-3 border-s-6 border-solid border-white text-[1.5em];
+  }
+
+  h4 {
+    @apply mt-12 mb-6 text-[1.25em] before:content-['-'] before:pe-3;
+  }
+
+  h5 {
+    @apply my-6 text-[1.125em] before:content-['◇'] before:pe-3;
+  }
+
+  h6 {
+    @apply my-6 italic text-[0.875em] before:content-['▼'] before:pe-3
+  }
+
+  p {
+    @apply my-3 text-justify;
+  }
+
+  ul {
+    @apply list-disc my-6 ps-6;
+  }
+
+  table {
+    @apply w-1/1 my-6 text-[0.875em];
+
+    thead > tr {
+      @apply border-y border-white;
+    }
+
+    tbody > tr {
+      @apply border-b border-white hover:bg-white/10;
+    }
+
+    th, td {
+      @apply p-3 text-left;
+    }
   }
 }
 
-@layer project {
+@layer layout {
   .header {
-    @apply sticky top-0 left-0 w-1/1 h-[6em] border-b-2 border-b-white text-[1em] transition-all duration-1000;
+    @apply relative w-1/1 h-[6em] border-b-2 border-b-white text-[1em] transition-all duration-1000;
   }
 
   .header.entrance {
@@ -36,7 +84,7 @@
   }
 
   .nav {
-    @apply flex flex-wrap items-center justify-center h-18 font-serif;
+    @apply list-none flex flex-wrap items-center justify-center h-18 m-0 p-0 font-serif;
   }
 
   .nav__item:not(:first-child)::before {
@@ -44,6 +92,38 @@
   }
 
   .nav__item a {
+    @apply hover:text-[#999966] transition-colors duration-300;
+  }
+
+  .main {
+    @apply max-w-6xl mx-auto;
+  }
+
+  .row {
+    @apply flex flex-wrap;
+  }
+
+  .primary-col {
+    @apply order-2 w-1/1 max-w-3xl p-6;
+  }
+
+  .secondary-col {
+    @apply order-1 w-1/1 max-w-sm p-6;
+  }
+
+  .docs-nav {
+    @apply font-serif text-[1.125em];
+  }
+
+  .docs-nav__chapter {
+    @apply ps-6;
+  }
+
+  .docs-nav__section {
+    @apply ps-3;
+  }
+
+  .docs-nav a {
     @apply hover:text-[#999966] transition-colors duration-300;
   }
 
