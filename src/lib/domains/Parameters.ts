@@ -6,7 +6,12 @@ const POINT_STEP: Point[] = [
   0, 0.5, 1, 2, 4, 8, 16
 ]
 
-const PARAMETER_LIST: { name: string, base: string | 10 }[] = [
+export type Parameter = '筋力' | '敏捷力' | '知力' | '生命力'
+  | '武術' | '剣術' | '弓術' | '木行術' | '火行術' | '土行術' | '金行術' | '水行術'
+  | '怪力' | '格闘' | '柔術' | '探索' | '運動' | '細工' | '早業' | '隠密' | '軽業' | '演奏' | '舞踏' | '技術'
+  | '礼法' | '交渉' | '尋問' | '演技' | '鑑定' | '治癒' | '歴史' | '言語' | '知識' | '修養' | '鍛錬' | '歌唱'
+
+const PARAMETER_LIST: { name: Parameter, base: 10 | Parameter }[] = [
   { name: '筋力', base: 10 },
   { name: '敏捷力', base: 10 },
   { name: '知力', base: 10 },
@@ -47,7 +52,7 @@ const PARAMETER_LIST: { name: string, base: string | 10 }[] = [
 
 // 能力値・技能値を、PointのMapとして司るクラス
 export class Parameters {
-  private points: Map<string, Point>
+  private points: Map<Parameter, Point>
 
   // CPの配列をPointのMapに変換
   constructor(points: Point[]) {
@@ -57,23 +62,23 @@ export class Parameters {
   }
 
   // nameとpointを指定し、Point を追加
-  set(name: string, point: Point) {
+  set(name: Parameter, point: Point) {
     this.points.set(name, point)
   }
 
   // nameを指定し、Pointから削除
-  unset(name: string) {
+  unset(name: Parameter) {
     this.points.delete(name)
   }
 
   // nameとsizeを指定してPointを増減し、変化後のPointを返す
   // Mapに無ければ追加する
-  step(name: string, size: -1 | 1 = 1): number {
+  step(name: Parameter, size: -1 | 1 = 1): number {
     return (size === 1) ? this.increase(name) : this.decrease(name)
   }
 
   // nameを指定してPointを減らし、変化後のPointを返す
-  decrease(name: string): number {
+  decrease(name: Parameter): number {
     const point = this.points.get(name)
     if (!point) {
       return 0 // Mapに無ければ無視
@@ -86,7 +91,7 @@ export class Parameters {
   }
 
   // nameを指定してPointを増やし、変化後のPointを返す
-  increase(name: string): number {
+  increase(name: Parameter): number {
     const point = this.points.get(name)
     if (!point) {
       this.points.set(name, 0.5) // Mapに無ければ追加
@@ -100,13 +105,13 @@ export class Parameters {
   }
 
   // nameを指定してPointを取り出す
-  get(name: string): Point {
+  get(name: Parameter): Point {
     return this.points.get(name) ?? 0
   }
 
   // nameを指定してPointからValueを算出して返す
-  getValue(name: string): number {
-    const base = PARAMETER_LIST.find(p => p.name === name)!.base // 必ず見つかる
+  getValue(name: Parameter): number {
+    const base = PARAMETER_LIST.find(p => p.name === name)!.base as 10 | Parameter // 必ず見つかる
     const baseValue = base !== 10 ? this.getValue(base) : 10
     const point = this.points.get(name)
     if (!point) { // Mapに無ければbaseValueを返す
