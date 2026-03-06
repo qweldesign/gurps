@@ -5,14 +5,16 @@ import { type Point, type Parameter, Parameters } from './Parameters'
 export class Character {
   public id: number
   public name: string
+  public position: number // 0: 戦士, 1: 剣士, 2: 弓使い(フリー), 3: 術士
   public gender: string
   private parameters: Parameters
 
   // CPの配列をParametersクラスの型に変換
-  constructor(id: number, name: string, gender: string, points: Point[]) {
+  constructor(id: number, name: string, gender: string, position: number, points: Point[]) {
     this.id = id
     this.name = name
     this.gender = gender
+    this.position = position
     this.parameters = new Parameters(points)
   }
 
@@ -50,6 +52,16 @@ export class Character {
   // nameを指定してPointからValueを算出して返す
   getParamValue(name: Parameter): number {
     return this.parameters.getValue(name)
+  }
+
+  // 全てのパラメータを取得
+  getParams(): Map<Parameter, Point> {
+    return this.parameters.getAll()
+  }
+
+  // 全ての技能を取得
+  getSkills() {
+    return this.parameters.getSkills()
   }
 
   // Point総計を算出して返す

@@ -1,17 +1,12 @@
 // Parameters.ts
 
-export type Point = 0 | 0.5 | 1 | 2 | 4 | 8 | 16
-
-const POINT_STEP: Point[] = [
+const POINT_STEP = [
   0, 0.5, 1, 2, 4, 8, 16
-]
+] as const
 
-export type Parameter = '筋力' | '敏捷力' | '知力' | '生命力'
-  | '武術' | '剣術' | '弓術' | '木行術' | '火行術' | '土行術' | '金行術' | '水行術'
-  | '怪力' | '格闘' | '柔術' | '探索' | '運動' | '細工' | '早業' | '隠密' | '軽業' | '演奏' | '舞踏' | '技術'
-  | '礼法' | '交渉' | '尋問' | '演技' | '鑑定' | '治癒' | '歴史' | '言語' | '知識' | '修養' | '鍛錬' | '歌唱'
+export type Point = typeof POINT_STEP[number]
 
-const PARAMETER_LIST: { name: Parameter, base: 10 | Parameter }[] = [
+const PARAMETER_LIST = [
   { name: '筋力', base: 10 },
   { name: '敏捷力', base: 10 },
   { name: '知力', base: 10 },
@@ -48,7 +43,9 @@ const PARAMETER_LIST: { name: Parameter, base: 10 | Parameter }[] = [
   { name: '修養', base: '知力' },
   { name: '鍛錬', base: '生命力' },
   { name: '歌唱', base: '生命力' }
-]
+] as const
+
+export type Parameter = typeof PARAMETER_LIST[number]['name']
 
 // 能力値・技能値を、PointのMapとして司るクラス
 export class Parameters {
@@ -118,6 +115,28 @@ export class Parameters {
       return baseValue - 2 // -2が基準
     }
     return baseValue + POINT_STEP.indexOf(point) - 2
+  }
+
+  // 全てのパラメータを取得
+  getAll(): Map<Parameter, Point> {
+    return this.points
+  }
+
+  // 全ての技能を取得 (ソート込み)
+  getSkills() {
+    const skills: Map<Parameter, Point> = new Map()
+    PARAMETER_LIST.forEach(param => {
+      if (
+        param.name !== '筋力'
+        && param.name !== '敏捷力'
+        && param.name !== '知力'
+        && param.name !== '生命力'
+        && this.get(param.name) > 0
+      ) {
+        skills.set(param.name, this.get(param.name))
+      }
+    })
+    return skills
   }
 
   // Point総計を算出して返す
