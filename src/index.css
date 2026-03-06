@@ -56,6 +56,10 @@
       @apply p-3 text-left;
     }
   }
+
+  select {
+    @apply w-24 h-9 rounded-md bg-white text-black text-center;
+  }
 }
 
 @layer layout {
@@ -145,5 +149,19 @@
 
   .footer {
     @apply py-18 text-center;
+  }
+}
+
+@layer components {
+  .grid {
+    @apply border-t border-white;
+  }
+
+  .grid > .grid {
+    @apply border-0;
+  }
+
+  .grid > div:not(.grid) {
+    @apply p-3 border-b border-white text-[0.875em] text-center;
   }
 }

@@ -4,7 +4,7 @@ import { createBrowserRouter } from 'react-router'
 import App from './App'
 import Entrance from './parts/Entrance'
 import Docs from './parts/Docs'
-import Making from './parts/Making'
+import Sample from './parts/Sample'
 import Battle from './parts/Battle'
 import { docsLoader } from './docsLoader'
 
@@ -18,7 +18,10 @@ export const router = createBrowserRouter([
         { index: true, element: <Docs />, loader: docsLoader },
         { path: ':docsId', element: <Docs />, loader: docsLoader }
       ]},
-      { path: '/making/', element: <Making /> },
+      { path: '/sample/', children: [
+        { index: true, element: <Sample /> },
+        { path: ':sampleId', element: <Sample /> },
+      ]},
       { path: '/battle/', element: <Battle /> }
     ]
   }
