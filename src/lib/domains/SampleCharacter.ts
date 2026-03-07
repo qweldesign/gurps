@@ -1,6 +1,6 @@
 // SampleCharacter.ts
 
-import { type Point, type Parameter } from './Parameters'
+import { type Point, type ParameterName, type Parameter } from './Parameters'
 import { type WeaponName, type ArmorName } from './Equipments'
 import { Character } from './Character'
 
@@ -35,7 +35,7 @@ const ABILITY_TABLE: Point[][] = [
 ]
 
 // 能力値修正 (派生)
-const BRANCH_TABLE: [Parameter, -1 | 1][] = [
+const BRANCH_TABLE: [ParameterName, -1 | 1][] = [
   ['筋力', 1], // 0:男性 (派生1)
   ['知力', 1], // 1:男性 (派生2)
   ['敏捷力', 1], // 2:女性 (派生3)
@@ -43,7 +43,7 @@ const BRANCH_TABLE: [Parameter, -1 | 1][] = [
 ]
 
 // 修得技能セット
-const TACTIC_TABLE: Parameter[][] = [
+const TACTIC_TABLE: ParameterName[][] = [
   ['武術', '怪力', '鍛錬', '格闘', '運動', '探索', '修養', '歌唱'], // 0:重戦士
   ['武術', '運動', '探索', '鍛錬', '隠密', '軽業', '怪力', '格闘', '修養', '歌唱'], // 1:軽戦士
   ['武術', '水行術', '怪力', '鍛錬', '格闘', '修養', '礼法', '尋問', '治癒'], // 2:術戦士(ST)
@@ -141,9 +141,9 @@ export class SampleCharacter extends Character {
 
   // 技能修得や自動行動時のロジックタイプを設定
   getTactic(): number {
-    const str = this.getParamValue('筋力')
-    const dex = this.getParamValue('敏捷力')
-    const int = this.getParamValue('知力')
+    const str = this.getParamLevel('筋力')
+    const dex = this.getParamLevel('敏捷力')
+    const int = this.getParamLevel('知力')
     if (str > 11) {
       if (int >= 11) return 2 // 術戦士(ST)
       else if (dex >= 11) return 1 // 軽戦士
@@ -198,7 +198,7 @@ export class SampleCharacter extends Character {
   }
 
   // Points合計に対して主技能を設定
-  setMainSkill(skill: Parameter, totalPoints: number) {
+  setMainSkill(skill: ParameterName, totalPoints: number) {
     if (totalPoints >= 32) this.setParam(skill, Math.floor(totalPoints / 16) * 8 as Point)
     else if (totalPoints >= 24) this.setParam(skill, 8)
     else if (totalPoints >= 16) this.setParam(skill, 4)
@@ -207,7 +207,7 @@ export class SampleCharacter extends Character {
   }
 
   // 技能テーブルから順に技能を修得
-  setSkillLoop(skills: Parameter[], totalPoints: number) {
+  setSkillLoop(skills: ParameterName[], totalPoints: number) {
     let maxPoint = 1
     let maxLevel = 12
     let count = 0
@@ -220,7 +220,7 @@ export class SampleCharacter extends Character {
         while (
           this.getParamTotal() < totalPoints // 合計がtotalPointsに達した場合
           && this.getParam(skill) < maxPoint // 1つの技能にmaxPoint消費した場合
-          && this.getParamValue(skill) < maxLevel // 技能値がmaxLevelに達した場合
+          && this.getParamLevel(skill) < maxLevel // 技能値がmaxLevelに達した場合
         ) {
           this.stepParam(skill)
         }
@@ -233,13 +233,11 @@ export class SampleCharacter extends Character {
   }
 
   // 技能をオブジェクトとして返す (index 指定で修得優先度の高い技能から取得可能)
-  getSkill(index: number = 0) {
+  getSkillByPriority(index: number = 0) {
     const skill = TACTIC_TABLE[this.tactic][index]
-    return {
-      name: skill,
-      point: this.getParam(skill),
-      value: this.getParamValue(skill)
-    }
+    const param = this.getParamValue(skill)
+    const level = this.getParamLevel(skill)
+    return { ...param, level }
   }
 
   // 装備セットのマップ番号を取得

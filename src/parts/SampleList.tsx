@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { type Parameter } from '../lib/domains/Parameters'
+import { type ParameterName } from '../lib/domains/Parameters'
 import { type SampleCharacter } from '../lib/domains/SampleCharacter'
 import { createSamples } from '../lib/sample/create-sample'
 
@@ -39,7 +39,7 @@ function SampleList({ points, size }: { points: number, size: number }) {
       })
     } else {
       return samples.sort((a, b) => {
-        return (a.getParam(sortKey as Parameter) - b.getParam(sortKey as Parameter)) * (sortDir[sortKey] ?  -1 : 1)
+        return (a.getParam(sortKey as ParameterName) - b.getParam(sortKey as ParameterName)) * (sortDir[sortKey] ?  -1 : 1)
       })
     }
   }, [samples, sortKey, sortDir])
@@ -70,13 +70,13 @@ function SampleList({ points, size }: { points: number, size: number }) {
                 <td>{sample.name}</td>
                 <td>{sample.gender}</td>
                 <td>{`${sample.getTacticName()}`}</td>
-                <td>{`${sample.getParamValue('筋力')} (${sample.getParam('筋力')}CP)`}</td>
-                <td>{`${sample.getParamValue('敏捷力')} (${sample.getParam('敏捷力')}CP)`}</td>
-                <td>{`${sample.getParamValue('知力')} (${sample.getParam('知力')}CP)`}</td>
-                <td>{`${sample.getParamValue('生命力')} (${sample.getParam('生命力')}CP)`}</td>
-                <td>{`${sample.getSkill().name}: ${sample.getSkill().value}`}</td>
-                {sample.getSkill(1).point ? (
-                  <td>{`${sample.getSkill(1).name}: ${sample.getSkill(1).value}`}</td>
+                <td>{`${sample.getParamLevel('筋力')} (${sample.getParam('筋力')}CP)`}</td>
+                <td>{`${sample.getParamLevel('敏捷力')} (${sample.getParam('敏捷力')}CP)`}</td>
+                <td>{`${sample.getParamLevel('知力')} (${sample.getParam('知力')}CP)`}</td>
+                <td>{`${sample.getParamLevel('生命力')} (${sample.getParam('生命力')}CP)`}</td>
+                <td>{`${sample.getSkillByPriority().name}: ${sample.getSkillByPriority().level}`}</td>
+                {sample.getSkillByPriority(1).point ? (
+                  <td>{`${sample.getSkillByPriority(1).name}: ${sample.getSkillByPriority(1).level}`}</td>
                 ) : (
                   <td>-</td>
                 )}

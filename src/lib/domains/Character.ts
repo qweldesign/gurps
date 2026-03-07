@@ -1,9 +1,10 @@
 // Character.ts
 
-import { type Point, type Parameter, Parameters } from './Parameters'
+import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
 import { type Weapon, type Armor, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 
 export type Dmg = {
+  id?: number
   name?: string
   dice: number
   mod: number
@@ -31,7 +32,8 @@ const DMG_STEP: Dmg[] = [
   { dice: 4, mod: 1 }
 ]
 
-DMG_STEP.map((dmg) => {
+DMG_STEP.map((dmg, i) => {
+  dmg.id = i
   const mod = dmg.mod > 0 ? `+${dmg.mod}` : dmg.mod === 0 ? '' : dmg.mod
   dmg.name = `${dmg.dice}d${mod}`
 })
@@ -54,51 +56,62 @@ export class Character {
   }
 
   // nameとpointを指定し、Point を追加
-  setParam(name: Parameter, point: Point) {
-    this.parameters.set(name, point)
+  setParam(name: ParameterName, point: Point) {
+    return this.parameters.set(name, point)
   }
 
   // nameを指定し、Pointから削除
-  unsetParam(name: Parameter) {
+  unsetParam(name: ParameterName) {
     this.parameters.unset(name)
   }
 
   // nameとsizeを指定してPointを増減し、変化後のPointを返す
   // Mapに無ければ追加する
-  stepParam(name: Parameter, size: -1 | 1 = 1): number {
+  stepParam(name: ParameterName, size: -1 | 1 = 1): number {
     return (size === 1) ? this.parameters.increase(name) : this.parameters.decrease(name)
   }
 
   // nameを指定してPointを減らし、変化後のPointを返す
-  decreaseParam(name: Parameter): number {
+  decreaseParam(name: ParameterName): number {
     return this.parameters.decrease(name)
   }
 
   // nameを指定してPointを増やし、変化後のPointを返す
-  increaseParam(name: Parameter): number {
+  increaseParam(name: ParameterName): number {
     return this.parameters.increase(name)
   }
 
   // nameを指定してPointを取り出す
-  getParam(name: Parameter): Point {
+  getParam(name: ParameterName): Point {
     return this.parameters.get(name)
   }
 
-  // nameを指定してPointからValueを算出して返す
+  // nameを指定してオブジェクトをそのまま返す
+  getParamValue(name: ParameterName): Parameter {
+    return this.parameters.getValue(name)
+  }
+
+  // nameを指定してlevelを返すか, 無い場合は追加してその値を返す
   // includeWeight オプションにて胴防具の重量を加味
-  getParamValue(name: Parameter, includeWeight: boolean = false): number {
-    const weight = Math.max(this.getBodyArmor().wt - 2, 0)
-    return this.parameters.getValue(name) - (includeWeight ? weight : 0)
+  getParamLevel(name: ParameterName, includeWeight: boolean = false): number {
+    const param = this.getParamValue(name)
+    let weight = 0
+    // 胴防具の重量を加味するのは 敏捷力 ベースのパラメータのみ
+    if (includeWeight && (param.name === '敏捷力' || param.base === '敏捷力')) {
+      // 敏捷力への修正は 重量 - 2 と定義
+      weight = Math.max(this.getBodyArmor().wt - 2, 0)
+    }
+    return this.parameters.getLevel(name) - weight
   }
 
   // 全てのパラメータを取得
-  getParams(): Map<Parameter, Point> {
-    return this.parameters.getAll()
+  getAllParams() {
+    return this.parameters.getAllParams()
   }
 
   // 全ての技能を取得
-  getSkills() {
-    return this.parameters.getSkills()
+  getAllSkills() {
+    return this.parameters.getAllSkills()
   }
 
   // Point総計を算出して返す
@@ -182,12 +195,12 @@ export class Character {
     const weapon = (key === 'main' ? this.getMainUsage()
       : key === 'sub' ? this.getSubUsage() : this.getShield())
     if (weapon) {
-      const skill = weapon.skillType as Parameter
+      const skill = weapon.skillType
       if (skill === '剣術') {
         // 「武術」で「剣術」技能の武器を扱う場合は技能値の高い方を返す
-        return Math.max(this.getParamValue('武術', true), this.getParamValue(skill, true))
+        return Math.max(this.getParamLevel('武術', true), this.getParamLevel(skill, true))
       } else {
-        return this.getParamValue(skill, true)
+        return this.getParamLevel(skill, true)
       }
       
     } else {
@@ -196,19 +209,19 @@ export class Character {
   }
 
   getMaxHP() {
-    return this.getParamValue('鍛錬') * 2
+    return this.getParamLevel('鍛錬') * 2
   }
 
   getDmgModifier() {
-    return Math.floor(this.getParamValue('怪力') / 2) - 5
+    return Math.floor(this.getParamLevel('怪力') / 2) - 5
   }
 
   getDEV() {
-    return Math.floor(this.getParamValue('運動', true) / 2) + 5
+    return Math.floor(this.getParamLevel('運動', true) / 2) + 5
   }
   
   getRE() {
-    return this.getParamValue('修養')
+    return this.getParamLevel('修養')
   }
 
   // 胴防具を取得

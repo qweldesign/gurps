@@ -1,6 +1,7 @@
 // Equipments.ts
   
 export type Weapon = {
+  id?: number
   name: string
   secondName?: string
   weaponType: number // 0: 格闘, 1: 通常, 2: 鎖状, 3: 両手, 4: 竿上, 5: 射撃, 6: 盾
@@ -13,6 +14,7 @@ export type Weapon = {
 }
 
 export type Armor = {
+  id?: number
   name: string
   parts: (string | null)[]
   dr?: string
@@ -63,8 +65,14 @@ const ARMOR_LIST: Armor[] = [
   { name: 'プレイトメイル', parts: ['クローズヘルム', 'ヴァンブレイス', 'グリーヴ'], sdr: 4, tdr: 4, wt: 4 }
 ]
 
-// DR 文字列を設定
-ARMOR_LIST.map(armor => {
+// ID を設定
+WEAPON_LIST.map((weapon, i) => {
+  weapon.id = i
+})
+
+// ID, DR 文字列を設定
+ARMOR_LIST.map((armor, i) => {
+  armor.id = i
   const sdr = armor.sdr
   const tdr = armor.tdr
   if (sdr === tdr) armor.dr = String(sdr)

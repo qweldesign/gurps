@@ -6,7 +6,14 @@ const POINT_STEP = [
 
 export type Point = typeof POINT_STEP[number]
 
-const PARAMETER_LIST = [
+export type Parameter = {
+  id?: number
+  name: string
+  base: string | 10
+  point?: Point
+}
+
+const PARAMETER_LIST: Parameter[] = [
   { name: '筋力', base: 10 },
   { name: '敏捷力', base: 10 },
   { name: '知力', base: 10 },
@@ -43,74 +50,87 @@ const PARAMETER_LIST = [
   { name: '修養', base: '知力' },
   { name: '鍛錬', base: '生命力' },
   { name: '歌唱', base: '生命力' }
-] as const
+]
 
-export type Parameter = typeof PARAMETER_LIST[number]['name']
+// ID を設定
+PARAMETER_LIST.map((param, i) => {
+  param.id = i
+})
+
+export type ParameterName = typeof PARAMETER_LIST[number]['name']
 
 // 能力値・技能値を、PointのMapとして司るクラス
 export class Parameters {
-  private points: Map<Parameter, Point>
+  private points: Map<ParameterName, Parameter>
 
   // CPの配列をPointのMapに変換
   constructor(points: Point[]) {
     this.points = new Map(
-      points.map((p, i) => [PARAMETER_LIST[i].name, p])
+      points.map((p, i) => [PARAMETER_LIST[i].name, { ...PARAMETER_LIST[i], point: p}])
     )
   }
 
   // nameとpointを指定し、Point を追加
-  set(name: Parameter, point: Point) {
-    this.points.set(name, point)
+  set(name: ParameterName, point: Point): Parameter {
+    const param = PARAMETER_LIST.find(p => p.name === name)!
+    this.points.set(name, { ...param, point })
+    return this.points.get(name)!
   }
 
   // nameを指定し、Pointから削除
-  unset(name: Parameter) {
+  unset(name: ParameterName) {
     this.points.delete(name)
   }
 
   // nameとsizeを指定してPointを増減し、変化後のPointを返す
   // Mapに無ければ追加する
-  step(name: Parameter, size: -1 | 1 = 1): number {
+  step(name: ParameterName, size: -1 | 1 = 1): number {
     return (size === 1) ? this.increase(name) : this.decrease(name)
   }
 
   // nameを指定してPointを減らし、変化後のPointを返す
-  decrease(name: Parameter): number {
-    const point = this.points.get(name)
+  decrease(name: ParameterName): number {
+    const point = this.get(name)
     if (!point) {
       return 0 // Mapに無ければ無視
     }
     const index = POINT_STEP.indexOf(point as Point)
     // 最小値(0)であればそのまま返す
     const result = index > 0 ? POINT_STEP[index - 1] : 0
-    this.points.set(name, result)
+    this.set(name, result)
     return result
   }
 
   // nameを指定してPointを増やし、変化後のPointを返す
-  increase(name: Parameter): number {
-    const point = this.points.get(name)
+  increase(name: ParameterName): number {
+    const point = this.get(name)
     if (!point) {
-      this.points.set(name, 0.5) // Mapに無ければ追加
+      this.set(name, 0.5) // Mapに無ければ追加
       return 0.5
     }
     const index = POINT_STEP.indexOf(point as Point)
     // 最大値であればそのまま返す
     const result = index < POINT_STEP.length - 1 ? POINT_STEP[index + 1] : point
-    this.points.set(name, result)
+    this.set(name, result)
     return result
   }
 
   // nameを指定してPointを取り出す
-  get(name: Parameter): Point {
-    return this.points.get(name) ?? 0
+  get(name: ParameterName): Point {
+    const param = this.points.get(name)
+    return param?.point ?? 0
   }
 
-  // nameを指定してPointからValueを算出して返す
-  getValue(name: Parameter): number {
-    const base = PARAMETER_LIST.find(p => p.name === name)!.base as 10 | Parameter // 必ず見つかる
-    const baseValue = base !== 10 ? this.getValue(base) : 10
-    const point = this.points.get(name)
+  // nameを指定してオブジェクトをそのまま返す
+  getValue(name: ParameterName): Parameter {
+    return this.points.get(name) ?? this.set(name, 0)
+  }
+
+  // nameを指定してlevelを返す
+  getLevel(name: ParameterName): number {
+    const base = PARAMETER_LIST.find(p => p.name === name)!.base as 10 | ParameterName // 必ず見つかる
+    const baseValue = base !== 10 ? this.getLevel(base) : 10
+    const point = this.get(name)
     if (!point) { // Mapに無ければbaseValueを返す
       return baseValue - 2 // -2が基準
     }
@@ -118,32 +138,21 @@ export class Parameters {
   }
 
   // 全てのパラメータを取得
-  getAll(): Map<Parameter, Point> {
+  getAllParams(): Map<ParameterName, Parameter> {
     return this.points
   }
 
   // 全ての技能を取得 (ソート込み)
-  getSkills() {
-    const skills: Map<Parameter, Point> = new Map()
-    PARAMETER_LIST.forEach(param => {
-      if (
-        param.name !== '筋力'
-        && param.name !== '敏捷力'
-        && param.name !== '知力'
-        && param.name !== '生命力'
-        && this.get(param.name) > 0
-      ) {
-        skills.set(param.name, this.get(param.name))
-      }
-    })
-    return skills
+  getAllSkills() {
+    return [...this.points].filter(p => p[1].base !== 10 && p[1].point! > 0)
+      .sort((a, b) => a[1].id! - b[1].id!)
   }
 
   // Point総計を算出して返す
   getTotal(): number {
     let total = 0
     for (const p of this.points.values()) {
-      total += p
+      total += p.point || 0
     }
     return total
   }
