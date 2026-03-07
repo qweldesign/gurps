@@ -3,7 +3,14 @@
 import { type Point, type Parameter, Parameters } from './Parameters'
 import { type Weapon, type Armor, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 
-const DMG_STEP = [
+export type Dmg = {
+  name?: string
+  dice: number
+  mod: number
+  type?: number
+}
+
+const DMG_STEP: Dmg[] = [
   { dice: 1, mod: -4 },
   { dice: 1, mod: -3 },
   { dice: 1, mod: -2 },
@@ -22,9 +29,12 @@ const DMG_STEP = [
   { dice: 4, mod: -1 },
   { dice: 4, mod: 0 },
   { dice: 4, mod: 1 }
-] as const
+]
 
-export type Dmg = typeof DMG_STEP[number]
+DMG_STEP.map((dmg) => {
+  const mod = dmg.mod > 0 ? `+${dmg.mod}` : dmg.mod === 0 ? '' : dmg.mod
+  dmg.name = `${dmg.dice}d${mod}`
+})
 
 export class Character {
   public id: number
@@ -148,16 +158,23 @@ export class Character {
     return this.equipments.getShield()
   }
 
-  // 能力値と装備から Dmg を算出して返す
+  // 能力値と装備から Dmg を算出し、ダメージ型を足して返す
   getDmg(key: 'main' | 'sub' | 'shield' = 'main'): Dmg | null {
     const weapon = (key === 'main' ? this.getMainUsage()
       : key === 'sub' ? this.getSubUsage() : this.getShield())
     if (weapon) {
       const dmg = weapon.baseDmg + this.getDmgModifier()
-      return DMG_STEP[dmg]
+      return { ...DMG_STEP[dmg], type: weapon.dmgType }
     } else {
       return null
     }
+  }
+
+  getDmgName(key: 'main' | 'sub' | 'shield' = 'main') {
+    const dmg = this.getDmg(key)
+    if (!dmg) return null
+    const dmgType = dmg.type === 1 ? ' (刺)' : dmg.type === 2 ? ' (切)' : dmg.type === 3 ? ' (叩)' : ''
+    return `${dmg.name}${dmgType}`
   }
 
   // 能力値と装備から Lv を算出して返す

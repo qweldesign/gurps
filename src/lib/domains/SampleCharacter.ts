@@ -1,6 +1,7 @@
 // SampleCharacter.ts
 
 import { type Point, type Parameter } from './Parameters'
+import { type WeaponName, type ArmorName } from './Equipments'
 import { Character } from './Character'
 
 const DEFAULT_POINTS = 10
@@ -57,6 +58,37 @@ const TACTIC_TABLE: Parameter[][] = [
   ['金行術', '土行術', '修養', '礼法', '交渉', '鑑定', '治癒', '歴史', '尋問', '演技'] // 11:術士
 ]
 
+// 装備セット
+// 最貧, 貧弱, 普通, 強靭の最大4段階
+const EQUIPMENTS_TABLE: [WeaponName, ArmorName][][][] = [
+  [ // 重戦士
+    [['ショートソード', '革服'], ['バスタードソード', '革鎧'], ['バスタードソード', 'ブリガンディ'], ['バスタードソード', 'プレイトメイル']],
+    [['ショートソード', '革服'], ['蒼龍刀', '革鎧'], ['蒼龍刀', 'ブリガンディ'], ['蒼龍刀', 'プレイトメイル']],
+    [['鎚槌', '革鎧'], ['戦鎚', 'ブリガンディ'], ['戦鎚', 'ブリガンディ'], ['戦鎚', 'プレイトメイル']],
+    [['手斧', '革鎧'], ['戦斧', 'ブリガンディ'], ['戦斧', 'ブリガンディ'], ['戦斧', 'プレイトメイル']]
+  ],
+  [ // 軽戦士
+    [['ショートソード', '革服'], ['バスタードソード', '革鎧'], ['グレートソード', 'チェインメイル'], ['グレートソード', 'ブリガンディ']],
+    [['ショートソード', '革服'], ['蒼龍刀', '革鎧'], ['蒼龍刀', 'チェインメイル'], ['蒼龍刀', 'ブリガンディ']],
+    [['長槍', '革服'], ['薙刀', '革鎧'], ['薙刀', 'チェインメイル'], ['薙刀', 'ブリガンディ']],
+    [['長槍', '革服'], ['鉾槍', '革鎧'], ['鉾槍', 'チェインメイル'], ['鉾槍', 'ブリガンディ']]
+  ],
+  [ // 剣士
+    [['ダガー', '服'], ['レイピア', '革服'], ['レイピア', '革鎧']],
+    [['ショートソード', '服'], ['ロングソード', '革服'], ['ロングソード', '革鎧']],
+    [['ショートソード', '服'], ['三日月刀', '革服'], ['三日月刀', '革鎧']],
+    [['鎚槌', '革服'], ['鎚槌', '革鎧']],
+    [['手斧', '革服'], ['手斧', '革鎧']],
+    [['長槍', '服'], ['長槍', '革服'], ['長槍', '革鎧']]
+  ],
+  [ // 弓使い
+    [['長弓', '服'], ['長弓', '革服'], ['長弓', '革鎧']]
+  ],
+  [ // 術士
+    [['杖', '服'], ['杖', '革服'], ['杖', '革鎧']]
+  ],
+]
+
 // 名前
 const NAME_LIST: string[] = [
   'アーロン', 'アイゼア', 'アントニオ', 'アンドリュー', 'イアン', 'ウィリアム', 'エリック', 'オーウェン', //'カーター',
@@ -86,11 +118,11 @@ export class SampleCharacter extends Character {
     const g = Math.floor(b / 2) // 性別
     const p = Math.floor(a / 6) // 0: 戦士, 1: 剣士, 2: 弓使い(フリー), 3: 術士
 
-    // ID・名前・性別・配置・能力値の初期化
+    // ID・名前・性別・配置・能力値・装備の初期化
     const name = NAME_LIST[i % N]
     const gender = g ? '女性' : '男性'
     const abilities = ABILITY_TABLE[a]
-    super(id, name, gender, p, abilities)
+    super(id, name, gender, p, abilities, null)
 
     // 能力値の修正
     const branch = BRANCH_TABLE[b]
@@ -102,6 +134,9 @@ export class SampleCharacter extends Character {
 
     // 技能セットの選択
     this.setSkills(totalPoints, DEFAULT_POINTS)
+
+    // 装備セットの選択
+    this.setEquipments(a, b, totalPoints)
   }
 
   // 技能修得や自動行動時のロジックタイプを設定
@@ -205,5 +240,31 @@ export class SampleCharacter extends Character {
       point: this.getParam(skill),
       value: this.getParamValue(skill)
     }
+  }
+
+  // 装備セットのマップ番号を取得
+  getEquipmentSetMap() {
+    return [
+      0, 1, 0,
+      2, 2, 2,
+      3, 3, 3,
+      0, 2, 4
+    ][this.tactic]
+  }
+
+  // 装備の初期化
+  setEquipments(a: number, b: number, totalPoints: number) {
+    const e = this.getEquipmentSetMap()
+    const table1 = EQUIPMENTS_TABLE[e]
+    const len1 = table1.length
+    const r = (a + b) % len1
+    const table2 = table1[r]
+    const len2 = table2.length
+    const t = Math.min((totalPoints >= 24 ? 3 : totalPoints >= 16 ? 2 : totalPoints >= 12 ? 1 : 0), len2 - 1)
+    const weaponName = table2[t][0]
+    const armorName = table2[t][1]
+    const skill = this.getParam('武術') > 0 ? '武術' : this.getParam('剣術') > 0 ? '剣術' : ''
+    this.setWeapon(weaponName, true, skill)
+    this.setBody(armorName)
   }
 }

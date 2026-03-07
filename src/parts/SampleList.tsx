@@ -59,9 +59,8 @@ function SampleList({ points, size }: { points: number, size: number }) {
               <th onClick={() => handleSort('知力')}>知力 <span className="text-xs cursor-pointer">{sortDir['知力'] ? '▼' : '▲'}</span></th>
               <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
               <th>主技能</th>
-              <th>技能値</th>
               <th>副技能</th>
-              <th>技能値</th>
+              <th>装備</th>
             </tr>
           </thead>
           <tbody>
@@ -75,16 +74,13 @@ function SampleList({ points, size }: { points: number, size: number }) {
                 <td>{`${sample.getParamValue('敏捷力')} (${sample.getParam('敏捷力')}CP)`}</td>
                 <td>{`${sample.getParamValue('知力')} (${sample.getParam('知力')}CP)`}</td>
                 <td>{`${sample.getParamValue('生命力')} (${sample.getParam('生命力')}CP)`}</td>
-                <td>{sample.getSkill().name}</td>
-                <td>{`${sample.getSkill().value} (${sample.getSkill().point}CP)`}</td>
+                <td>{`${sample.getSkill().name}: ${sample.getSkill().value}`}</td>
                 {sample.getSkill(1).point ? (
-                  <>
-                    <td>{sample.getSkill(1).name}</td>
-                    <td>{`${sample.getSkill(1).value} (${sample.getSkill(1).point}CP)`}</td>
-                  </>
+                  <td>{`${sample.getSkill(1).name}: ${sample.getSkill(1).value}`}</td>
                 ) : (
-                  <><td>-</td><td>-</td></>
+                  <td>-</td>
                 )}
+                <td>{`${sample.getWeapon().name} / ${sample.getBodyArmor().name}`}</td>
               </tr>
             ))}
           </tbody>

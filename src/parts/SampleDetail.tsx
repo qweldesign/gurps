@@ -15,7 +15,7 @@ function SampleDetail({ id, points, size }: { id: number, points: number, size: 
           </div>
           <h4 className="mt-12 mb-6 italic text-lg">Abilities</h4>
           <div className="grid grid-cols-[40%_20%_40%] w-60 my-6">
-            <div className="text-left">HP</div><div>{sample.getParamValue('鍛錬') * 2}</div><div>{sample.getParam('鍛錬')}CP</div>
+            <div className="text-left">HP</div><div>{sample.getMaxHP()}</div><div>{sample.getParam('鍛錬')}CP</div>
             <div className="text-left">ST</div><div>{sample.getParamValue('筋力')}</div><div>{sample.getParam('筋力')}CP</div>
             <div className="text-left">DX</div><div>{sample.getParamValue('敏捷力')}</div><div>{sample.getParam('敏捷力')}CP</div>
             <div className="text-left">IN</div><div>{sample.getParamValue('知力')}</div><div>{sample.getParam('知力')}CP</div>
@@ -37,7 +37,56 @@ function SampleDetail({ id, points, size }: { id: number, points: number, size: 
             )}
           </div>
           <h4 className="mt-12 mb-6 italic text-lg">Equipments</h4>
-          <div className="grid my-6"></div>
+          <div className="grid grid-cols-[30%_30%_20%_20%] my-6 text-left">
+            <div>{sample.getMainUsage().name}</div>
+            <div>{`Dmg: ${sample.getDmgName()}`}</div>
+            <div>{`Lv: ${sample.getLevel()}`}</div>
+            <div>{`P-EV: ${sample.getMainUsage().ev}`}</div>
+            {sample.getSubUsage() && (
+              <>
+                <div>{sample.getSubUsage()!.name}</div>
+                <div>{`Dmg: ${sample.getDmgName('sub')}`}</div>
+                <div>{`Lv: ${sample.getLevel('sub')}`}</div>
+                <div>{`P-EV: ${sample.getSubUsage()!.ev}`}</div>
+              </>
+            )}
+            {sample.getShield() && (
+              <>
+                <div>{sample.getShield()!.name}</div>
+                <div>{`Dmg: ${sample.getDmgName('shield')}`}</div>
+                <div>{`Lv: ${sample.getLevel('shield')}`}</div>
+                <div>{`B-EV: ${sample.getShield()!.ev}`}</div>
+              </>
+            )}
+            <div>{sample.getBodyArmor().name}</div>
+            <div>{`DR: ${sample.getBodyArmor().dr}`}</div>
+            <div>{`WT: ${sample.getBodyArmor().wt}`}</div>
+            <div>{`D-EV: ${sample.getDEV()}`}</div>
+            {sample.getHeadArmor() && (
+              <>
+                <div>{sample.getHeadArmor()!.parts[0]}</div>
+                <div>{`DR: ${sample.getHeadArmor()!.dr}`}</div>
+                <div>{`WT: ${sample.getHeadArmor()!.wt}`}</div>
+                <div>-</div>
+              </>
+            )}
+            {sample.getArmArmor() && (
+              <>
+                <div>{sample.getArmArmor()!.parts[1]}</div>
+                <div>{`DR: ${sample.getArmArmor()!.dr}`}</div>
+                <div>{`WT: ${sample.getArmArmor()!.wt}`}</div>
+                <div>-</div>
+              </>
+            )}
+            {sample.getLegArmor() && (
+              <>
+                <div>{sample.getLegArmor()!.parts[2]}</div>
+                <div>{`DR: ${sample.getLegArmor()!.dr}`}</div>
+                <div>{`WT: ${sample.getLegArmor()!.wt}`}</div>
+                <div>-</div>
+              </>
+            )}
+          </div>
         </div>
       </div>
       <Link className="ms-12 italic" to="/sample/">&lt; Back to list</Link>
