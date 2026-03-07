@@ -1,7 +1,7 @@
 // Parameters.ts
 
 const POINT_STEP = [
-  0, 0.5, 1, 2, 4, 8, 16
+  0, 0.5, 1, 2, 4, 8, 16, 24, 32
 ] as const
 
 export type Point = typeof POINT_STEP[number]

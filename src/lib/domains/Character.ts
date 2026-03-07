@@ -41,16 +41,14 @@ DMG_STEP.map((dmg, i) => {
 export class Character {
   public id: number
   public name: string
-  public position: number // 0: 戦士, 1: 剣士, 2: 弓使い(フリー), 3: 術士
   public gender: string
   private parameters: Parameters
   private equipments: Equipments
 
-  constructor(id: number, name: string, gender: string, position: number, points: Point[], equipments: EquipmentSet | null) {
+  constructor(id: number, name: string, gender: string, points: Point[], equipments: EquipmentSet | null) {
     this.id = id
     this.name = name
     this.gender = gender
-    this.position = position
     this.parameters = new Parameters(points)
     this.equipments = new Equipments(equipments)
   }

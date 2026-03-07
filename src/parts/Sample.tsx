@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import SampleList from './SampleList'
 import SampleDetail from './SampleDetail'
 
-function Sample({ size = 96 }: { size?: number }) {
+function Sample({ size = 64 }: { size?: number }) {
   const [points, setPoints] = useState(10)
   const { sampleId } = useParams()
 
@@ -16,6 +16,7 @@ function Sample({ size = 96 }: { size?: number }) {
         <option value="16">16</option>
         <option value="24">24</option>
         <option value="40">40</option>
+        <option value="64">64</option>
       </select>
       {sampleId ? <SampleDetail id={Number(sampleId)} points={points} size={size} /> : <SampleList points={points} size={size} />}
     </>
