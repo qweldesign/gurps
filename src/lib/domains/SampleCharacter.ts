@@ -27,11 +27,11 @@ const ABILITY_TABLE: Point[][] = [
 ]
 
 // 能力値修正 (派生) 下方修正のみに変更
-const BRANCH_TABLE: [ParameterName, -1 | 1][] = [
-  ['敏捷力', -1], // 0:男性 (派生1)
-  ['生命力', -1], // 1:男性 (派生2)
-  ['筋力', -1], // 2:女性 (派生3)
-  ['知力', -1] // 3:女性 (派生4)
+const MOD_TABLE: ParameterName[] = [
+  '敏捷力', // 0:男性 (派生1)
+  '生命力', // 1:男性 (派生2)
+  '筋力', // 2:女性 (派生3)
+  '知力' // 3:女性 (派生4)
 ]
 
 // 修得技能セット
@@ -50,13 +50,13 @@ const TACTIC_TABLE: ParameterName[][] = [
 // 装備セット
 // 最貧, 貧弱, 普通, 強靭の最大4段階
 const EQUIPMENTS_TABLE: [WeaponName, ArmorName][][][] = [
-  [ // 重戦士, 術戦士
+  [ // 重戦士, 術戦士F
     [['ショートソード', '革服'], ['バスタードソード', '革鎧'], ['バスタードソード', 'ブリガンディ'], ['バスタードソード', 'プレイトメイル']],
     [['ショートソード', '革服'], ['蒼龍刀', '革鎧'], ['蒼龍刀', 'ブリガンディ'], ['蒼龍刀', 'プレイトメイル']],
     [['鎚槌', '革鎧'], ['戦鎚', 'ブリガンディ'], ['戦鎚', 'ブリガンディ'], ['戦鎚', 'プレイトメイル']],
     [['手斧', '革鎧'], ['戦斧', 'ブリガンディ'], ['戦斧', 'ブリガンディ'], ['戦斧', 'プレイトメイル']]
   ],
-  [ // 軽戦士
+  [ // 軽戦士, 術戦士B
     [['ショートソード', '革服'], ['バスタードソード', '革鎧'], ['グレートソード', 'チェインメイル'], ['グレートソード', 'ブリガンディ']],
     [['ショートソード', '革服'], ['蒼龍刀', '革鎧'], ['蒼龍刀', 'チェインメイル'], ['蒼龍刀', 'ブリガンディ']],
     [['長槍', '革服'], ['薙刀', '革鎧'], ['薙刀', 'チェインメイル'], ['薙刀', 'ブリガンディ']],
@@ -107,6 +107,7 @@ const NPC_LIST: string[] = [
 ]
 
 export class SampleCharacter extends Character {
+  public uid: number // キャラクター生成のアルゴリズムを決定するKey (デバッグ用)
   public tactic: number // 技能修得や装備選択、自動行動時のロジックタイプ
 
   constructor(id: number, uid: number, totalPoints: number = 10) {
@@ -125,13 +126,10 @@ export class SampleCharacter extends Character {
     const gender = g ? '女性' : '男性'
     const abilities = ABILITY_TABLE[a]
     super(id, name, gender, abilities, null)
+    this.uid = i
 
     // 能力値の修正
-    const branch = BRANCH_TABLE[b]
-    this.stepParam(branch[0], branch[1])
-    if (this.getParamTotal() > DEFAULT_POINTS - 1) {
-      this.stepParam(branch[0], -1) // CP総計-1を越えたら取消
-    }
+    this.modifyAbilities(MOD_TABLE[b])
     this.tactic = this.getTactic() // ロジックタイプを判定
 
     // 技能セットの選択
@@ -139,6 +137,24 @@ export class SampleCharacter extends Character {
 
     // 装備セットの選択
     this.setEquipments(a, b, totalPoints)
+  }
+
+  modifyAbilities(mod: ParameterName) {
+    // MOD_TABLE に対応した能力値を下げる (技能分を確保)
+    this.stepParam(mod, -1)
+
+    const str = this.getParamLevel('筋力')
+    const dex = this.getParamLevel('敏捷力')
+    const int = this.getParamLevel('知力')
+    const ht = this.getParamLevel('生命力')
+    const param = this.getParamLevel(mod)
+
+    // 個性が失われた場合の救済措置 (12 → 11に減少した場合のみ)
+    // HTが12ある場合、ST, DX, IN のいずれかを12に戻す
+    if (str < 12 && dex < 12 && int < 12 && ht > 11 && param === 11) {
+      this.stepParam('生命力', -1)
+      this.stepParam(mod, 1)
+    }
   }
 
   // 技能修得や装備選択、自動行動時のロジックタイプを設定
@@ -165,7 +181,7 @@ export class SampleCharacter extends Character {
       else if (str === dex) return 1 // 軽戦士
       else return 3 // 剣士
     } else {
-      if (str > 10 && int > 10) return 6 // 術戦士B
+      if (str > 10 && int > 10) return 2 // 術戦士F
       else if (str > 10) return 0 // 重戦士
       else if (str > 9 && dex > 9) return 7 // 術剣士
       else return 8 // 術士
@@ -244,7 +260,7 @@ export class SampleCharacter extends Character {
     return [
       0, 1, 0,
       2, 2, 3,
-      0, 2, 4
+      1, 2, 4
     ][this.tactic]
   }
 
