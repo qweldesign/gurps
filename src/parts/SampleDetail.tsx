@@ -9,17 +9,23 @@ function SampleDetail({ id, points, size }: { id: number, points: number, size: 
       <div className="row justify-around">
         <div className="summary">
           <h4 className="mt-12 mb-6 italic text-lg">Profile</h4>
-          <div className="grid grid-cols-[50%_50%] w-60 my-6">
-            <div className="text-left">Name</div><div>{sample.name}</div>
-            <div className="text-left">Gender</div><div>{sample.gender}</div>
+          <div className="grid grid-cols-[40%_60%] w-90 my-6">
+            <div className="text-left">{'Name (名前)'}</div><div>{sample.name}</div>
+            <div className="text-left">{'Gender (性別)'}</div><div>{sample.gender}</div>
           </div>
           <h4 className="mt-12 mb-6 italic text-lg">Abilities</h4>
-          <div className="grid grid-cols-[40%_20%_40%] w-60 my-6">
-            <div className="text-left">HP</div><div>{sample.getMaxHP()}</div><div>{sample.getParam('鍛錬')}CP</div>
-            <div className="text-left">ST</div><div>{sample.getParamLevel('筋力')}</div><div>{sample.getParam('筋力')}CP</div>
-            <div className="text-left">DX</div><div>{sample.getParamLevel('敏捷力')}</div><div>{sample.getParam('敏捷力')}CP</div>
-            <div className="text-left">IN</div><div>{sample.getParamLevel('知力')}</div><div>{sample.getParam('知力')}CP</div>
-            <div className="text-left">HT</div><div>{sample.getParamLevel('生命力')}</div><div>{sample.getParam('生命力')}CP</div>
+          <div className="grid grid-cols-[40%_15%_45%] w-90 my-6">
+            <div className="text-left">{'ST (筋力)'}</div><div>{sample.getParamLevel('筋力')}</div><div>{sample.getParam('筋力')}CP</div>
+            <div className="text-left">{'DX (敏捷力)'}</div><div>{sample.getParamLevel('敏捷力')}</div><div>{sample.getParam('敏捷力')}CP</div>
+            <div className="text-left">{'IN (知力)'}</div><div>{sample.getParamLevel('知力')}</div><div>{sample.getParam('知力')}CP</div>
+            <div className="text-left">{'HT (生命力)'}</div><div>{sample.getParamLevel('生命力')}</div><div>{sample.getParam('生命力')}CP</div>
+          </div>
+          <h4 className="mt-12 mb-6 italic text-lg">Battle Abilities</h4>
+          <div className="grid grid-cols-[40%_15%_45%] w-90 my-6">
+            <div className="text-left">{'Dmg (ダメージ)'}</div><div>{sample.getDmgModifier()}</div><div>{'{ 怪力 / 2 } - 5'}</div>
+            <div className="text-left">{'D-EV (よけ)'}</div><div>{sample.getDEV()}</div><div>{'{ 運動 / 2 } + 5'}</div>
+            <div className="text-left">{'HP (耐久点)'}</div><div>{sample.getMaxHP()}</div><div>{'{ 鍛錬 * 2 } '}</div>
+            <div className="text-left">{'RE (抵抗力)'}</div><div>{sample.getRE()}</div><div>{'{ 修養 }'}</div>
           </div>
         </div>
         <div className='details'>
