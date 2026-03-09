@@ -41,7 +41,7 @@ const TACTIC_TABLE: ParameterName[][] = [
   ['武術', '水行術', '怪力', '鍛錬', '修養', '礼法', '尋問', '治癒', '運動', '探索'], // 2:術戦士F
   ['剣術', '探索', '運動', '細工', '隠密', '早業', '軽業', '鍛錬', '怪力', '修養', '交渉', '柔術'], // 3:剣士
   ['剣術', '運動', '探索', '隠密', '細工', '軽業', '早業', '交渉', '演技', '尋問', '鑑定', '柔術'], // 4:盗賊
-  ['弓術', '探索', '運動', '細工', '隠密', '早業', '軽業', '修養', '交渉', '柔術', '治癒', '演奏'], // 5:弓使い
+  ['弓術', '探索', '運動', '細工', '隠密', '早業', '軽業', '修養', '剣術', '交渉', '治癒', '演奏'], // 5:弓使い
   ['火行術', '修養', '武術', '礼法', '演技', '歴史', '怪力', '鍛錬', '探索', '運動'], // 6:術戦士B
   ['木行術', '修養', '剣術', '礼法', '交渉', '探索', '運動', '鍛錬', '水行術', '鑑定', '治癒', '歴史'], // 7:術剣士
   ['金行術', '土行術', '修養', '礼法', '交渉', '尋問', '演技', '探索', '運動', '鑑定', '治癒', '歴史'] // 8:術士
@@ -74,11 +74,15 @@ const EQUIPMENTS_TABLE: [WeaponName, ArmorName][][][] = [
     [['長槍', '革服'], ['長槍', '革鎧']]
   ],
   [ // 弓使い
-    [['長弓', '革服'], ['長弓', '革鎧']]
+    [['装備無し', '革服'], ['ダガー', '革服'], ['レイピア', '革鎧']]
   ],
   [ // 術士
     [['杖', '革服'], ['杖', '革鎧']]
   ],
+]
+
+const MISSILE_TABLE: WeaponName[] = [
+  '短弓', '弩', '長弓'
 ]
 
 // 名前 (PC用)
@@ -278,8 +282,12 @@ export class SampleCharacter extends Character {
     const t = Math.min((totalPoints >= 24 ? 3 : totalPoints >= 16 ? 2 : totalPoints >= 12 ? 1 : 0), len2 - 1)
     const weaponName = table2[t][0]
     const armorName = table2[t][1]
+    const missileName = MISSILE_TABLE[this.tactic % 3]
     const skill = this.getParam('武術') > 0 ? '武術' : this.getParam('剣術') > 0 ? '剣術' : ''
     this.setWeapon(weaponName, true, skill)
     this.setBody(armorName)
+    if ((Math.floor(this.tactic / 3) === 1 && totalPoints >= 16) || this.tactic === 5) {
+      this.setMissile(missileName) // 条件に応じて射撃武器をセット
+    }
   }
 }

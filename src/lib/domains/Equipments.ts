@@ -25,7 +25,7 @@ export type Armor = {
 }
 
 const WEAPON_LIST: Weapon[] = [
-  { name: '装備無し', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
+  { name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
   { name: 'ダガー', weaponType: 1, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 0, ev: 1 },
   { name: 'ショートソード', weaponType: 1, baseDmg: 5, dmgType: 2, skillType: '剣術', ready: 0, ev: 1 },
   { name: 'レイピア', weaponType: 1, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 1 },
@@ -44,13 +44,13 @@ const WEAPON_LIST: Weapon[] = [
   { name: '鉾槍',secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 12, dmgType: 2, skillType: '武術', ready: 1, ev: 3, usage: '長槍' },
   { name: '短弓', weaponType: 5, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 1, ev: 0 },
   { name: '長弓', weaponType: 5, baseDmg: 5, dmgType: 1, skillType: '弓術', ready: 1, ev: 0 },
-  { name: '弩', weaponType: 5, baseDmg: 7, dmgType: 1, skillType: '武術', ready: 2, ev: 0 },
-  { name: '拳', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: '蹴り', weaponType: 0, baseDmg: 6, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳' },
-  { name: '拳+1', weaponType: 0, baseDmg: 5, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: '蹴り+1', weaponType: 0, baseDmg: 7, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+1' },
-  { name: '拳+2', weaponType: 0, baseDmg: 6, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: '蹴り+2', weaponType: 0, baseDmg: 8, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+2' },
+  { name: '弩', weaponType: 5, baseDmg: 7, dmgType: 1, skillType: '剣術', ready: 2, ev: 0 },
+  { name: '拳', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
+  { name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳' },
+  { name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
+  { name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+1' },
+  { name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
+  { name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+2' },
   { name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '剣術', ready: 1, ev: 2 },
   { name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 3 },
   { name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 4 }
@@ -91,6 +91,7 @@ export type LegArmorName = typeof ARMOR_LIST[number]['parts'][2]
 
 export type EquipmentSet = {
   weapon: Weapon
+  missile: Weapon | null
   shield: Weapon | null
   body: Armor
   head: Armor | null
@@ -103,6 +104,7 @@ export class Equipments {
   private weapon: Weapon
   private mainUsage: Weapon
   private subUsage: Weapon | null
+  private missile: Weapon | null
   private shield: Weapon | null
   private body: Armor
   private head: Armor | null
@@ -113,6 +115,7 @@ export class Equipments {
     this.weapon = set?.weapon ?? WEAPON_LIST[0]
     this.mainUsage = this.setMainUsage(this.weapon)
     this.subUsage = this.setSubUsage(this.weapon)
+    this.missile = set?.missile ?? null
     this.shield = set?.shield ?? null
     this.body = set?.body ?? ARMOR_LIST[0]
     this.head = set?.head ?? null
@@ -160,6 +163,12 @@ export class Equipments {
       return weapon
     }
     return null
+  }
+
+  // 射撃武器をセット
+  setMissile(weaponName: WeaponName): Weapon {
+    this.missile = WEAPON_LIST.find(item => item.name === weaponName)!
+    return this.missile
   }
 
   // 盾をセット
@@ -218,6 +227,11 @@ export class Equipments {
   // 武器の副用途を取得
   getSubUsage(): Weapon | null {
     return this.subUsage
+  }
+
+  // 射撃武器を取得
+  getMissile(): Weapon | null {
+    return this.missile
   }
 
   // 盾を取得

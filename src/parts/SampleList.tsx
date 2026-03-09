@@ -80,7 +80,7 @@ function SampleList({ points, size }: { points: number, size: number }) {
                 ) : (
                   <td>-</td>
                 )}
-                <td>{`${sample.getWeapon().name} / ${sample.getBodyArmor().name}`}</td>
+                <td>{`${sample.getWeapon().id !== 0 ? sample.getWeapon().name : sample.getMissile()!.name} / ${sample.getBodyArmor().name}`}</td>
               </tr>
             ))}
           </tbody>

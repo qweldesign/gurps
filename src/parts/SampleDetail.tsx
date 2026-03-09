@@ -38,16 +38,28 @@ function SampleDetail({ id, points, size }: { id: number, points: number, size: 
           </div>
           <h4 className="mt-12 mb-6 italic text-lg">Equipments</h4>
           <div className="grid grid-cols-[30%_30%_20%_20%] my-6 text-left">
-            <div>{sample.getMainUsage().name}</div>
-            <div>{`Dmg: ${sample.getDmgName()}`}</div>
-            <div>{`Lv: ${sample.getLevel()}`}</div>
-            <div>{`P-EV: ${sample.getMainUsage().ev}`}</div>
+            {sample.getMainUsage().id !== 0 && (
+              <>
+                <div>{sample.getMainUsage().name}</div>
+                <div>{`Dmg: ${sample.getDmgName()}`}</div>
+                <div>{`Lv: ${sample.getLevel()}`}</div>
+                <div>{`P-EV: ${sample.getMainUsage().ev}`}</div>
+              </>
+            )}
             {sample.getSubUsage() && (
               <>
                 <div>{sample.getSubUsage()!.name}</div>
                 <div>{`Dmg: ${sample.getDmgName('sub')}`}</div>
                 <div>{`Lv: ${sample.getLevel('sub')}`}</div>
                 <div>{`P-EV: ${sample.getSubUsage()!.ev}`}</div>
+              </>
+            )}
+            {sample.getMissile() && (
+              <>
+                <div>{sample.getMissile()!.name}</div>
+                <div>{`Dmg: ${sample.getDmgName('missile')}`}</div>
+                <div>{`Lv: ${sample.getLevel('missile')}`}</div>
+                <div>{`B-EV: ${sample.getMissile()!.ev}`}</div>
               </>
             )}
             {sample.getShield() && (

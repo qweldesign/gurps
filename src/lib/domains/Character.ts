@@ -123,6 +123,11 @@ export class Character {
     return this.equipments.setWeapon(weaponName, autoSet, skill)
   }
 
+  // 射撃武器をセット
+  setMissile(weaponName: WeaponName): Weapon {
+    return this.equipments.setMissile(weaponName)
+  }
+
   // 盾をセット
   setShield(weaponName: WeaponName): Weapon {
     return this.equipments.setShield(weaponName)
@@ -164,15 +169,21 @@ export class Character {
     return this.equipments.getSubUsage()
   }
 
+  // 射撃武器を取得
+  getMissile(): Weapon | null {
+    return this.equipments.getMissile()
+  }
+
   // 盾を取得
   getShield(): Weapon | null {
     return this.equipments.getShield()
   }
 
   // 能力値と装備から Dmg を算出し、ダメージ型を足して返す
-  getDmg(key: 'main' | 'sub' | 'shield' = 'main'): Dmg | null {
+  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): Dmg | null {
     const weapon = (key === 'main' ? this.getMainUsage()
-      : key === 'sub' ? this.getSubUsage() : this.getShield())
+      : key === 'sub' ? this.getSubUsage()
+      : key === 'missile' ? this.getMissile() : this.getShield())
     if (weapon) {
       const dmg = weapon.baseDmg + this.getDmgModifier()
       return { ...DMG_STEP[dmg], type: weapon.dmgType }
@@ -181,7 +192,7 @@ export class Character {
     }
   }
 
-  getDmgName(key: 'main' | 'sub' | 'shield' = 'main') {
+  getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main') {
     const dmg = this.getDmg(key)
     if (!dmg) return null
     const dmgType = dmg.type === 1 ? ' (刺)' : dmg.type === 2 ? ' (切)' : dmg.type === 3 ? ' (叩)' : ''
@@ -189,9 +200,10 @@ export class Character {
   }
 
   // 能力値と装備から Lv を算出して返す
-  getLevel(key: 'main' | 'sub' | 'shield' = 'main'): number | null {
+  getLevel(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): number | null {
     const weapon = (key === 'main' ? this.getMainUsage()
-      : key === 'sub' ? this.getSubUsage() : this.getShield())
+      : key === 'sub' ? this.getSubUsage()
+      : key === 'missile' ? this.getMissile() : this.getShield())
     if (weapon) {
       const skill = weapon.skillType
       if (skill === '剣術') {
