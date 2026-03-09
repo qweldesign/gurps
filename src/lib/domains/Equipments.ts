@@ -130,7 +130,7 @@ export class Equipments {
     const type = this.mainUsage.weaponType
     if ((type === 1 || type === 2) && autoSet) {
       if (skill === '武術') this.setShield('中盾')
-      else if (skill === '剣術') this.setShield('小盾')
+      else this.setShield('小盾')
     }
     return this.weapon
   }
