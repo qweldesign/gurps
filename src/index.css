@@ -57,6 +57,10 @@
     }
   }
 
+  button {
+    @apply inline-block w-48 h-12 m-6 rounded-md bg-gray-400 hover:bg-white text-white hover:text-black text-center transition-colors duration-300 cursor-pointer;
+  }
+
   select {
     @apply w-24 h-9 rounded-md bg-white text-black text-center;
   }

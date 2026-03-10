@@ -1,6 +1,6 @@
 //docsLoader.ts
 
-import { renderMarkdown } from './lib/docs/markdown'
+import { renderMarkdown } from '../lib/docs/markdown'
 
 export async function docsLoader({ params }: { params?: { docsId?: string } }) {
   const id = params?.docsId ?? '00'

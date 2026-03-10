@@ -63,7 +63,7 @@ function SampleList({ samples }: { samples: SampleCharacter[] }) {
           </thead>
           <tbody>
             {sorted.map((sample) => (
-              <tr className="cursor-pointer" key={sample.id} onClick={() => navigate(`/sample/${sample.id}`)}>
+              <tr className="cursor-pointer" key={sample.id} onClick={() => navigate(`/sample/${String(sample.id).padStart(2, '0')}`)}>
                 <td>{sample.id}</td>
                 <td>{sample.name}</td>
                 <td>{sample.gender}</td>

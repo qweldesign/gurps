@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLoaderData } from 'react-router-dom'
 import List from './Sample/List'
 import Detail from './Sample/Detail'
 import { type Multiplier, createSamples } from '../lib/domains/SampleCharacter'
@@ -7,7 +7,8 @@ import { type Multiplier, createSamples } from '../lib/domains/SampleCharacter'
 function Sample() {
   const [points, setPoints] = useState(10)
   const [multiplier, setMultiplier] = useState<Multiplier>(1)
-  const { sampleId } = useParams()
+  const { uid } = useLoaderData()
+  const sampleId = Number(uid)
 
   const updatePoints = (value: string) => {
     const [p, m] = value.split('/')
