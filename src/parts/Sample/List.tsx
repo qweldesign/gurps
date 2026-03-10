@@ -1,15 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { type ParameterName } from '../lib/domains/Parameters'
-import { type SampleCharacter } from '../lib/domains/SampleCharacter'
-import { createSamples } from '../lib/sample/create-sample'
+import { type ParameterName } from '../../lib/domains/Parameters'
+import { type SampleCharacter } from '../../lib/domains/SampleCharacter'
 
 type SortKey = 'id' | 'tactic' | '筋力' | '敏捷力' | '知力' | '生命力'
 
-function SampleList({ points, size }: { points: number, size: number }) {
+function SampleList({ samples }: { samples: SampleCharacter[] }) {
   const navigate = useNavigate()
-  const samples = createSamples(points, size)
-
+  
   const [sortKey, setSortKey] = useState<SortKey>('id')
   const [sortDir, setSortDir] = useState({
     id: false, // false: asc▲, true:desc▼
@@ -64,12 +62,12 @@ function SampleList({ points, size }: { points: number, size: number }) {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((sample, i) => (
-              <tr className="cursor-pointer" key={i} onClick={() => navigate(`/sample/${sample.id}`)}>
+            {sorted.map((sample) => (
+              <tr className="cursor-pointer" key={sample.id} onClick={() => navigate(`/sample/${sample.id}`)}>
                 <td>{sample.id}</td>
                 <td>{sample.name}</td>
                 <td>{sample.gender}</td>
-                <td>{`${sample.getTacticName()}`}</td>
+                <td>{sample.getTacticName()}</td>
                 <td>{`${sample.getParamLevel('筋力')} (${sample.getParam('筋力')}CP)`}</td>
                 <td>{`${sample.getParamLevel('敏捷力')} (${sample.getParam('敏捷力')}CP)`}</td>
                 <td>{`${sample.getParamLevel('知力')} (${sample.getParam('知力')}CP)`}</td>

@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import SampleList from './SampleList'
-import SampleDetail from './SampleDetail'
+import List from './Sample/List'
+import Detail from './Sample/Detail'
+import { createSamples } from '../lib/domains/SampleCharacter'
 
-function Sample({ size = 64 }: { size?: number }) {
+function Sample() {
   const [points, setPoints] = useState(10)
   const { sampleId } = useParams()
+
+  const samples = createSamples(points)
 
   return (
     <>
@@ -18,7 +21,10 @@ function Sample({ size = 64 }: { size?: number }) {
         <option value="40">40</option>
         <option value="64">64</option>
       </select>
-      {sampleId ? <SampleDetail id={Number(sampleId)} points={points} size={size} /> : <SampleList points={points} size={size} />}
+      {!sampleId
+        ? <List samples={samples} />
+        : <Detail sample={samples.find(m => m.id === Number(sampleId))!} />
+      }
     </>
   )
 }

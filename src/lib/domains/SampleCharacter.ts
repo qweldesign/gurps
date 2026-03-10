@@ -291,3 +291,18 @@ export class SampleCharacter extends Character {
     }
   }
 }
+
+// サンプルキャラクター生成
+export function createSamples(totalPoints = 10, size = 64) {
+  const step = 64 / size // size より step を算出 (実質16固定)
+  const samples = []
+
+  for (let n = 0; n < size; n++) {
+    const id = n + 1 // 1からカウント (呼び出すときは-1)
+    const uid = Math.floor(n * step)
+    const sample = new SampleCharacter(id, uid, totalPoints)
+    samples.push(sample)
+  }
+
+  return samples
+}

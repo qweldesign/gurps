@@ -1,9 +1,7 @@
 import { Link } from 'react-router-dom'
-import { createSample } from '../lib/sample/create-sample'
+import { type Character } from '../../lib/domains/Character'
 
-function SampleDetail({ id, points, size }: { id: number, points: number, size: number }) {
-  const sample = createSample(id, points, size)
-
+function SampleDetail({ sample }: { sample: Character }) {
   return (
     <>
       <div className="row justify-around">
