@@ -247,4 +247,17 @@ export class Equipments {
   getLegArmor(): Armor | null {
     return this.leg
   }
+
+  // Gold総額を算出して返す
+  getGold(): number {
+    let total = 0
+    total += this.weapon.gold
+    total += this.missile?.gold ?? 0
+    total += this.shield?.gold ?? 0
+    total += (this.body?.gold ?? 0) * 0.5
+    total += (this.head?.gold ?? 0) * 0.25
+    total += (this.arm?.gold ?? 0) * 0.1
+    total += (this.leg?.gold ?? 0) * 0.15
+    return total
+  }
 }
