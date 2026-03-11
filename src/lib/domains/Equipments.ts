@@ -26,36 +26,44 @@ export type Armor = {
   gold: number
 }
 
+export type Dmg = {
+  id: number
+  name: string
+  dice: number
+  mod: number
+  type?: number
+}
+
 export const WEAPON_LIST: Weapon[] = [
-  { id: 0, name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0},
-  { id: 1, name: 'ダガー', weaponType: 1, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 30 },
-  { id: 2, name: 'ショートソード', weaponType: 1, baseDmg: 5, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 40 },
-  { id: 3, name: 'レイピア', weaponType: 1, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 60 },
-  { id: 4, name: 'ロングソード',secondName: 'バスタードソード(片手)', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 80 },
-  { id: 5, name: 'バスタードソード',secondName: 'バスタードソード(両手)', weaponType: 3, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 2, usage: 'ロングソード', gold: 120 },
-  { id: 6, name: 'グレートソード', weaponType: 3, baseDmg: 9, dmgType: 2, skillType: '武術', ready: 0, ev: 2, gold: 160 },
-  { id: 7, name: '三日月刀',secondName: '蒼龍刀(片手)', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 80 },
-  { id: 8, name: '蒼龍刀',secondName: '蒼龍刀(両手)', weaponType: 3, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 2, usage: '三日月刀', gold: 120 },
-  { id: 9, name: '鎚槌', weaponType: 2, baseDmg: 8, dmgType: 3, skillType: '剣術', ready: 1, ev: 1, gold: 25 },
-  { id: 10, name: '手斧', weaponType: 1, baseDmg: 8, dmgType: 2, skillType: '剣術', ready: 1, ev: 1, gold: 50 },
-  { id: 11, name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 3, skillType: '武術', ready: 1, ev: 1, gold: 75 },
-  { id: 12, name: '戦斧', weaponType: 1, baseDmg: 9, dmgType: 2, skillType: '武術', ready: 1, ev: 1, gold: 100 },
-  { id: 13, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 3, skillType: '剣術', ready: 0, ev: 3, gold: 30 },
-  { id: 14, name: '長槍',secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 3, gold: 60 },
-  { id: 15, name: '薙刀', weaponType: 4, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 3, gold: 90 },
-  { id: 16, name: '鉾槍',secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 12, dmgType: 2, skillType: '武術', ready: 1, ev: 3, usage: '長槍', gold: 120 },
-  { id: 17, name: '短弓', weaponType: 5, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 1, ev: 0, gold: 30 },
-  { id: 18, name: '長弓', weaponType: 5, baseDmg: 5, dmgType: 1, skillType: '弓術', ready: 1, ev: 0, gold: 60 },
-  { id: 19, name: '弩', weaponType: 5, baseDmg: 7, dmgType: 1, skillType: '剣術', ready: 2, ev: 0, gold: 120 },
-  { id: 20, name: '拳', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
-  { id: 21, name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳', gold: 0 },
-  { id: 22, name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
-  { id: 23, name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+1', gold: 0 },
-  { id: 24, name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
-  { id: 25, name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+2', gold: 0 },
-  { id: 26, name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '剣術', ready: 1, ev: 2, gold: 10 },
-  { id: 27, name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 3, gold: 15 },
-  { id: 28, name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 4, gold: 20 }
+  { id: 0, name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, gold: 0},
+  { id: 1, name: 'ダガー', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 30 },
+  { id: 2, name: 'ショートソード', weaponType: 1, baseDmg: 6, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 40 },
+  { id: 3, name: 'レイピア', weaponType: 1, baseDmg: 8, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 60 },
+  { id: 4, name: 'ロングソード',secondName: 'バスタードソード(片手)', weaponType: 1, baseDmg: 8, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 80 },
+  { id: 5, name: 'バスタードソード',secondName: 'バスタードソード(両手)', weaponType: 3, baseDmg: 10, dmgType: 1, skillType: '武術', ready: 0, ev: 2, usage: 'ロングソード', gold: 120 },
+  { id: 6, name: 'グレートソード', weaponType: 3, baseDmg: 12, dmgType: 1, skillType: '武術', ready: 0, ev: 2, gold: 160 },
+  { id: 7, name: '三日月刀',secondName: '蒼龍刀(片手)', weaponType: 1, baseDmg: 8, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 80 },
+  { id: 8, name: '蒼龍刀',secondName: '蒼龍刀(両手)', weaponType: 3, baseDmg: 10, dmgType: 1, skillType: '武術', ready: 0, ev: 2, usage: '三日月刀', gold: 120 },
+  { id: 9, name: '鎚槌', weaponType: 2, baseDmg: 8, dmgType: 0, skillType: '剣術', ready: 1, ev: 1, gold: 25 },
+  { id: 10, name: '手斧', weaponType: 1, baseDmg: 10, dmgType: 1, skillType: '剣術', ready: 1, ev: 1, gold: 50 },
+  { id: 11, name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 0, skillType: '武術', ready: 1, ev: 1, gold: 75 },
+  { id: 12, name: '戦斧', weaponType: 1, baseDmg: 12, dmgType: 1, skillType: '武術', ready: 1, ev: 1, gold: 100 },
+  { id: 13, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 0, skillType: '剣術', ready: 0, ev: 3, gold: 30 },
+  { id: 14, name: '長槍',secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 8, dmgType: 2, skillType: '剣術', ready: 0, ev: 3, gold: 60 },
+  { id: 15, name: '薙刀', weaponType: 4, baseDmg: 10, dmgType: 1, skillType: '武術', ready: 0, ev: 3, gold: 90 },
+  { id: 16, name: '鉾槍',secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 16, dmgType: 1, skillType: '武術', ready: 1, ev: 3, usage: '長槍', gold: 120 },
+  { id: 17, name: '短弓', weaponType: 5, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 1, ev: 0, gold: 30 },
+  { id: 18, name: '長弓', weaponType: 5, baseDmg: 8, dmgType: 2, skillType: '弓術', ready: 1, ev: 0, gold: 60 },
+  { id: 19, name: '弩', weaponType: 5, baseDmg: 10, dmgType: 2, skillType: '剣術', ready: 2, ev: 0, gold: 120 },
+  { id: 20, name: '拳', weaponType: 0, baseDmg: 2, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
+  { id: 21, name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, usage: '拳', gold: 0 },
+  { id: 22, name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
+  { id: 23, name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, usage: '拳+1', gold: 0 },
+  { id: 24, name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
+  { id: 25, name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, usage: '拳+2', gold: 0 },
+  { id: 26, name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 0, skillType: '剣術', ready: 1, ev: 2, gold: 10 },
+  { id: 27, name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 0, skillType: '武術', ready: 1, ev: 3, gold: 15 },
+  { id: 28, name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 0, skillType: '武術', ready: 1, ev: 4, gold: 20 }
 ] as const
 
 export const ARMOR_LIST: Armor[] = [
@@ -66,6 +74,27 @@ export const ARMOR_LIST: Armor[] = [
   { id: 4, name: 'チェインメイル', parts: ['チェインコイフ', null, null], sdr: 3, tdr: 1, dr: '3 (1)', wt: 2, replace: '革鎧', gold: 120 },
   { id: 5, name: 'ブリガンディ', parts: ['オープンヘルム', 'ガントレット', 'ソールレット'], sdr: 3, tdr: 3, dr: '3', wt: 3, gold: 160 },
   { id: 6, name: 'プレイトメイル', parts: ['クローズヘルム', 'ヴァンブレイス', 'グリーヴ'], sdr: 4, tdr: 4, dr: '4', wt: 4, gold: 320 }
+] as const
+
+export const DMG_STEP: Dmg[] = [
+  { id: 0, name: '1d-4', dice: 1, mod: -4 },
+  { id: 1, name: '1d-3', dice: 1, mod: -3 },
+  { id: 2, name: '1d-2', dice: 1, mod: -2 },
+  { id: 3, name: '1d-1', dice: 1, mod: -1 },
+  { id: 4, name: '1d', dice: 1, mod: 0 },
+  { id: 5, name: '1d+1', dice: 1, mod: 1 },
+  { id: 6, name: '1d+2', dice: 1, mod: 2 },
+  { id: 7, name: '2d-1', dice: 2, mod: -1 },
+  { id: 8, name: '2d', dice: 2, mod: 0 },
+  { id: 9, name: '2d+1', dice: 2, mod: 1 },
+  { id: 10, name: '2d+2', dice: 2, mod: 2 },
+  { id: 11, name: '3d-1', dice: 3, mod: -1 },
+  { id: 12, name: '3d', dice: 3, mod: 0 },
+  { id: 13, name: '3d+1', dice: 3, mod: 1 },
+  { id: 14, name: '3d+2', dice: 3, mod: 2 },
+  { id: 15, name: '4d-1', dice: 4, mod: -1 },
+  { id: 16, name: '4d', dice: 4, mod: 0 },
+  { id: 17, name: '4d+1', dice: 4, mod: 1 }
 ] as const
 
 export type WeaponName = typeof WEAPON_LIST[number]['name']
@@ -86,6 +115,24 @@ export type EquipmentSet = {
   head: HeadArmorName
   arm: ArmArmorName
   leg: LegArmorName
+}
+
+// ダメージ型の有効/無効で, それぞれダメージを算出して返す
+export function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg {
+  const baseDmg = typeOption && weapon.dmgType == 2 // (刺)
+    ? weapon.baseDmg - Math.max((Math.floor((weapon.baseDmg - 1) / 3) + 1), 2)
+    : typeOption && weapon.dmgType == 1 // (切)
+      ? weapon.baseDmg - Math.max(Math.floor(weapon.baseDmg / 4), 1)
+      : weapon.baseDmg // (叩)
+  const dmg = baseDmg + mod
+  return { ...DMG_STEP[dmg], type: weapon.dmgType }
+}
+
+// ダメージ型の有効/無効で, それぞれダメージの文字列を結合して返す
+export function getDmgName(weapon: Weapon, typeOption: boolean, mod:number = 0): string {
+  const dmg = getDmg(weapon, typeOption, mod)
+  const dmgType = dmg.type === 2 ? ' (刺)' : dmg.type === 1 ? ' (切)' : ' (叩)'
+  return typeOption ? `${dmg.name}${dmgType}` : `${dmg.name}`
 }
 
 // 装備のデータを司るクラス
@@ -259,6 +306,22 @@ export class Equipments {
   // 脚防具を取得
   getLegArmor(): Armor {
     return this.leg
+  }
+
+  // 引数の修正値から Dmg を算出し、ダメージ型を足して返す
+  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption:boolean = true, mod: number = 0): Dmg {
+    const weapon = (key === 'main' ? this.getMainUsage()
+      : key === 'sub' ? this.getSubUsage()
+      : key === 'missile' ? this.getMissile() : this.getShield())
+    return getDmg(weapon, typeOption, mod)
+  }
+
+  // 引数の修正値から Dmg を算出し、表記を返す
+  getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption:boolean = true, mod: number = 0): string {
+    const weapon = (key === 'main' ? this.getMainUsage()
+      : key === 'sub' ? this.getSubUsage()
+      : key === 'missile' ? this.getMissile() : this.getShield())
+    return getDmgName(weapon, typeOption, mod)
   }
 
   // Gold総額を算出して返す

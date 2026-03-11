@@ -1,36 +1,7 @@
 // Character.ts
 
 import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
-import { type Weapon, type Armor, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
-
-export type Dmg = {
-  id: number
-  name: string
-  dice: number
-  mod: number
-  type?: number
-}
-
-const DMG_STEP: Dmg[] = [
-  { id: 0, name: '1d-4', dice: 1, mod: -4 },
-  { id: 1, name: '1d-3', dice: 1, mod: -3 },
-  { id: 2, name: '1d-2', dice: 1, mod: -2 },
-  { id: 3, name: '1d-1', dice: 1, mod: -1 },
-  { id: 4, name: '1d', dice: 1, mod: 0 },
-  { id: 5, name: '1d+1', dice: 1, mod: 1 },
-  { id: 6, name: '1d+2', dice: 1, mod: 2 },
-  { id: 7, name: '2d-1', dice: 2, mod: -1 },
-  { id: 8, name: '2d', dice: 2, mod: 0 },
-  { id: 9, name: '2d+1', dice: 2, mod: 1 },
-  { id: 10, name: '2d+2', dice: 2, mod: 2 },
-  { id: 11, name: '3d-1', dice: 3, mod: -1 },
-  { id: 12, name: '3d', dice: 3, mod: 0 },
-  { id: 13, name: '3d+1', dice: 3, mod: 1 },
-  { id: 14, name: '3d+2', dice: 3, mod: 2 },
-  { id: 15, name: '4d-1', dice: 4, mod: -1 },
-  { id: 16, name: '4d', dice: 4, mod: 0 },
-  { id: 17, name: '4d+1', dice: 4, mod: 1 }
-] as const
+import { type Weapon, type Armor, type Dmg, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 
 export class Character {
   public id: number
@@ -198,19 +169,13 @@ export class Character {
   }
 
   // 能力値と装備から Dmg を算出し、ダメージ型を足して返す
-  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): Dmg {
-    const weapon = (key === 'main' ? this.getMainUsage()
-      : key === 'sub' ? this.getSubUsage()
-      : key === 'missile' ? this.getMissile() : this.getShield())
-    const dmg = weapon.baseDmg + this.getDmgModifier()
-    return { ...DMG_STEP[dmg], type: weapon.dmgType }
+  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption = true): Dmg {
+    return this.equipments.getDmg(key, typeOption, this.getDmgModifier())
   }
 
-  getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main') {
-    const dmg = this.getDmg(key)
-    if (!dmg) return null
-    const dmgType = dmg.type === 1 ? ' (刺)' : dmg.type === 2 ? ' (切)' : dmg.type === 3 ? ' (叩)' : ''
-    return `${dmg.name}${dmgType}`
+  // 能力値と装備から Dmg を算出し、表記を返す
+  getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption = true): string {
+    return this.equipments.getDmgName(key, typeOption, this.getDmgModifier())
   }
 
   // 能力値と装備から Lv を算出して返す
