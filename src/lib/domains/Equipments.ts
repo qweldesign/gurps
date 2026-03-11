@@ -60,7 +60,7 @@ export const WEAPON_LIST: Weapon[] = [
 
 export const ARMOR_LIST: Armor[] = [
   { id: 0, name: '装備無し', parts:['装備無し', '装備無し', '装備無し'], sdr:0, tdr:0, dr: '0', wt:0, gold: 0},
-  { id: 1, name: '服', parts: ['帽子', null, null], sdr: 1, tdr: 0, dr: '1 (0)', wt: 0, replace: null, gold: 20 },
+  { id: 1, name: '服', parts: [null, null, null], sdr: 1, tdr: 0, dr: '1 (0)', wt: 0, replace: null, gold: 20 },
   { id: 2, name: '革服', parts: ['革の帽子', 'グローブ', 'ブーツ'], sdr: 1, tdr: 1, dr: '1', wt: 0, gold: 40 },
   { id: 3, name: '革鎧', parts: ['ヘッドギア', 'レザーグローブ', 'レザーブーツ'], sdr: 2, tdr: 2, dr: '2', wt: 1, gold: 80 },
   { id: 4, name: 'チェインメイル', parts: ['チェインコイフ', null, null], sdr: 3, tdr: 1, dr: '3 (1)', wt: 2, replace: '革鎧', gold: 120 },
@@ -79,37 +79,50 @@ export type ArmArmorName = typeof ARMOR_LIST[number]['parts'][1]
 export type LegArmorName = typeof ARMOR_LIST[number]['parts'][2]
 
 export type EquipmentSet = {
-  weapon: Weapon
-  missile: Weapon | null
-  shield: Weapon | null
-  body: Armor
-  head: Armor | null
-  arm: Armor | null
-  leg: Armor | null
+  weapon: WeaponName
+  missile: WeaponName
+  shield: WeaponName
+  body: ArmorName
+  head: HeadArmorName
+  arm: ArmArmorName
+  leg: LegArmorName
 }
 
 // 装備のデータを司るクラス
 export class Equipments {
   private weapon: Weapon
   private mainUsage: Weapon
-  private subUsage: Weapon | null
-  private missile: Weapon | null
-  private shield: Weapon | null
+  private subUsage: Weapon
+  private missile: Weapon
+  private shield: Weapon
   private body: Armor
-  private head: Armor | null
-  private arm: Armor | null
-  private leg: Armor | null
+  private head: Armor
+  private arm: Armor
+  private leg: Armor
 
   constructor(set: EquipmentSet | null) {
-    this.weapon = set?.weapon ?? WEAPON_LIST[0]
+    const weaponName = set?.weapon ?? WEAPON_LIST[0].name
+    this.weapon = WEAPON_LIST.find(item => item.name === weaponName)!
     this.mainUsage = this.setMainUsage(this.weapon)
     this.subUsage = this.setSubUsage(this.weapon)
-    this.missile = set?.missile ?? null
-    this.shield = set?.shield ?? null
-    this.body = set?.body ?? ARMOR_LIST[0]
-    this.head = set?.head ?? null
-    this.arm = set?.arm ?? null
-    this.leg = set?.leg ?? null
+
+    const missileName = set?.missile ?? WEAPON_LIST[0].name
+    this.missile = WEAPON_LIST.find(item => item.name === missileName)!
+
+    const shieldName = set?.shield ?? WEAPON_LIST[0].name
+    this.shield = WEAPON_LIST.find(item => item.name === shieldName)!
+
+    const bodyArmorName = set?.body ?? ARMOR_LIST[0].name
+    this.body = ARMOR_LIST.find(item => item.name === bodyArmorName)!
+
+    const headArmorName = set?.head ?? ARMOR_LIST[0].parts[0]
+    this.head = ARMOR_LIST.find(item => item.parts[0] === headArmorName)!
+
+    const armArmorName = set?.arm ?? ARMOR_LIST[0].parts[1]
+    this.arm = ARMOR_LIST.find(item => item.parts[1] === armArmorName)!
+    
+    const legArmorName = set?.leg ?? ARMOR_LIST[0].parts[2]
+    this.leg = ARMOR_LIST.find(item => item.parts[2] === legArmorName)!
   }
 
   // 武器をセット
@@ -142,7 +155,7 @@ export class Equipments {
   }
 
   // 武器の副用途をセット (現状: バスタードソードと鉾槍の場合のみ)
-  setSubUsage(weapon: Weapon): Weapon | null {
+  setSubUsage(weapon: Weapon): Weapon {
     if (weapon.usage) {
       // 用途が別にある武器は副用途の secondName を使用
       weapon = {
@@ -151,7 +164,7 @@ export class Equipments {
       }
       return weapon
     }
-    return null
+    return WEAPON_LIST[0]
   }
 
   // 射撃武器をセット
@@ -177,7 +190,7 @@ export class Equipments {
         this.head = this.body
         this.arm = this.leg = ARMOR_LIST.find(item => item.name === replace)!
       } else if (replace === null) { // 服のように腕・脚防具の代替が無い場合
-        this.arm = this.leg = null
+        this.head = this.arm = this.leg = ARMOR_LIST[0]
       } else if (replace === undefined) { // 代替が未定義の場合
         this.head = this.arm = this.leg = this.body
       }
@@ -214,17 +227,17 @@ export class Equipments {
   }
 
   // 武器の副用途を取得
-  getSubUsage(): Weapon | null {
+  getSubUsage(): Weapon {
     return this.subUsage
   }
 
   // 射撃武器を取得
-  getMissile(): Weapon | null {
+  getMissile(): Weapon {
     return this.missile
   }
 
   // 盾を取得
-  getShield(): Weapon | null {
+  getShield(): Weapon {
     return this.shield
   }
 
@@ -234,17 +247,17 @@ export class Equipments {
   }
 
   // 頭防具を取得
-  getHeadArmor(): Armor | null {
+  getHeadArmor(): Armor {
     return this.head
   }
 
   // 腕防具を取得
-  getArmArmor(): Armor | null {
+  getArmArmor(): Armor {
     return this.arm
   }
 
   // 脚防具を取得
-  getLegArmor(): Armor | null {
+  getLegArmor(): Armor {
     return this.leg
   }
 

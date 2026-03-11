@@ -50,55 +50,55 @@ function SampleDetail({ sample }: { sample: Character }) {
                 <div>{`P-EV: ${sample.getMainUsage().ev}`}</div>
               </>
             )}
-            {sample.getSubUsage() && (
+            {sample.getSubUsage().id !== 0 && (
               <>
-                <div>{sample.getSubUsage()!.name}</div>
+                <div>{sample.getSubUsage().name}</div>
                 <div>{`Dmg: ${sample.getDmgName('sub')}`}</div>
                 <div>{`Lv: ${sample.getLevel('sub')}`}</div>
-                <div>{`P-EV: ${sample.getSubUsage()!.ev}`}</div>
+                <div>{`P-EV: ${sample.getSubUsage().ev}`}</div>
               </>
             )}
-            {sample.getMissile() && (
+            {sample.getMissile().id !== 0 && (
               <>
-                <div>{sample.getMissile()!.name}</div>
+                <div>{sample.getMissile().name}</div>
                 <div>{`Dmg: ${sample.getDmgName('missile')}`}</div>
                 <div>{`Lv: ${sample.getLevel('missile')}`}</div>
-                <div>{`B-EV: ${sample.getMissile()!.ev}`}</div>
+                <div>{`B-EV: ${sample.getMissile().ev}`}</div>
               </>
             )}
-            {sample.getShield() && (
+            {sample.getShield().id !== 0 && (
               <>
-                <div>{sample.getShield()!.name}</div>
+                <div>{sample.getShield().name}</div>
                 <div>{`Dmg: ${sample.getDmgName('shield')}`}</div>
                 <div>{`Lv: ${sample.getLevel('shield')}`}</div>
-                <div>{`B-EV: ${sample.getShield()!.ev}`}</div>
+                <div>{`B-EV: ${sample.getShield().ev}`}</div>
               </>
             )}
             <div>{sample.getBodyArmor().name}</div>
             <div>{`DR: ${sample.getBodyArmor().dr}`}</div>
             <div>{`WT: ${sample.getBodyArmor().wt}`}</div>
             <div>{`D-EV: ${sample.getDEV()}`}</div>
-            {sample.getHeadArmor() && (
+            {sample.getHeadArmor().id !== 0 && (
               <>
-                <div>{sample.getHeadArmor()!.parts[0]}</div>
-                <div>{`DR: ${sample.getHeadArmor()!.dr}`}</div>
-                <div>{`WT: ${sample.getHeadArmor()!.wt}`}</div>
+                <div>{sample.getHeadArmor().parts[0]}</div>
+                <div>{`DR: ${sample.getHeadArmor().dr}`}</div>
+                <div>{`WT: ${sample.getHeadArmor().wt}`}</div>
                 <div>-</div>
               </>
             )}
-            {sample.getArmArmor() && (
+            {sample.getArmArmor().id !== 0 && (
               <>
-                <div>{sample.getArmArmor()!.parts[1]}</div>
-                <div>{`DR: ${sample.getArmArmor()!.dr}`}</div>
-                <div>{`WT: ${sample.getArmArmor()!.wt}`}</div>
+                <div>{sample.getArmArmor().parts[1]}</div>
+                <div>{`DR: ${sample.getArmArmor().dr}`}</div>
+                <div>{`WT: ${sample.getArmArmor().wt}`}</div>
                 <div>-</div>
               </>
             )}
-            {sample.getLegArmor() && (
+            {sample.getLegArmor().id !== 0 && (
               <>
-                <div>{sample.getLegArmor()!.parts[2]}</div>
-                <div>{`DR: ${sample.getLegArmor()!.dr}`}</div>
-                <div>{`WT: ${sample.getLegArmor()!.wt}`}</div>
+                <div>{sample.getLegArmor().parts[2]}</div>
+                <div>{`DR: ${sample.getLegArmor().dr}`}</div>
+                <div>{`WT: ${sample.getLegArmor().wt}`}</div>
                 <div>-</div>
               </>
             )}

@@ -183,31 +183,27 @@ export class Character {
   }
 
   // 武器の副用途を取得
-  getSubUsage(): Weapon | null {
+  getSubUsage(): Weapon {
     return this.equipments.getSubUsage()
   }
 
   // 射撃武器を取得
-  getMissile(): Weapon | null {
+  getMissile(): Weapon {
     return this.equipments.getMissile()
   }
 
   // 盾を取得
-  getShield(): Weapon | null {
+  getShield(): Weapon {
     return this.equipments.getShield()
   }
 
   // 能力値と装備から Dmg を算出し、ダメージ型を足して返す
-  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): Dmg | null {
+  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): Dmg {
     const weapon = (key === 'main' ? this.getMainUsage()
       : key === 'sub' ? this.getSubUsage()
       : key === 'missile' ? this.getMissile() : this.getShield())
-    if (weapon) {
-      const dmg = weapon.baseDmg + this.getDmgModifier()
-      return { ...DMG_STEP[dmg], type: weapon.dmgType }
-    } else {
-      return null
-    }
+    const dmg = weapon.baseDmg + this.getDmgModifier()
+    return { ...DMG_STEP[dmg], type: weapon.dmgType }
   }
 
   getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main') {
@@ -218,21 +214,16 @@ export class Character {
   }
 
   // 能力値と装備から Lv を算出して返す
-  getLevel(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): number | null {
+  getLevel(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): number {
     const weapon = (key === 'main' ? this.getMainUsage()
       : key === 'sub' ? this.getSubUsage()
       : key === 'missile' ? this.getMissile() : this.getShield())
-    if (weapon) {
-      const skill = weapon.skillType
-      if (skill === '剣術') {
-        // 「武術」で「剣術」技能の武器を扱う場合は技能値の高い方を返す
-        return Math.max(this.getParamLevel('武術', true), this.getParamLevel(skill, true))
-      } else {
-        return this.getParamLevel(skill, true)
-      }
-      
+    const skill = weapon.skillType
+    if (skill === '剣術') {
+      // 「武術」で「剣術」技能の武器を扱う場合は技能値の高い方を返す
+      return Math.max(this.getParamLevel('武術', true), this.getParamLevel(skill, true))
     } else {
-      return null
+      return this.getParamLevel(skill, true)
     }
   }
 
@@ -258,17 +249,17 @@ export class Character {
   }
 
   // 頭防具を取得
-  getHeadArmor(): Armor | null {
+  getHeadArmor(): Armor {
     return this.equipments.getHeadArmor()
   }
 
   // 腕防具を取得
-  getArmArmor(): Armor | null {
+  getArmArmor(): Armor {
     return this.equipments.getArmArmor()
   }
 
   // 脚防具を取得
-  getLegArmor(): Armor | null {
+  getLegArmor(): Armor {
     return this.equipments.getLegArmor()
   }
 }
