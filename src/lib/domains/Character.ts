@@ -107,6 +107,29 @@ export class Character {
     return this.parameters.getAllSkills()
   }
 
+  // 主技能 (Point消費が最も多い技能) を返す (無ければ「武術」を返す)
+  // この関数は暫定的に作成 (Level でソートすべきかなど仕様が未定)
+  getMainSkill(): Parameter {
+    const skills = this.getAllSkills()
+    if (skills.length) {
+      const sorted = [...skills].sort((a, b) => {
+        const pointA = a[1].point ?? 0
+        const pointB = b[1].point ?? 0
+        return pointB - pointA
+      })
+      return sorted[0][1]
+    } else {
+      this.setParam('武術', 0)
+      return this.getParamValue('武術')
+    }
+  }
+
+  // 主技能の技能値を返す
+  getMainSkillLevel(): number {
+    const skill = this.getMainSkill()
+    return this.getParamLevel(skill.name)
+  }
+
   // Point総計を算出して返す
   getParamTotal(): number {
     return this.parameters.getTotal()
