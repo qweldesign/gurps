@@ -3,6 +3,7 @@ import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../lib/domains/Equipments'
+import { PC_LIST } from '../../lib/domains/SampleCharacter'
 
 function Making() {
   const [points, setPoints] = useState(10)
@@ -11,6 +12,8 @@ function Making() {
   const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
   const [equips, setEquips] = useState(() => new Equipments(null))
+  const [name, setName] = useState('')
+  const [gender, setGender] = useState('男性')
   const [weaponList, setWeaponList] = useState(WEAPON_LIST.filter(item => item.skillType !== '武術'))
   const [armorList, setArmorList] = useState(ARMOR_LIST.filter(item => item.wt <= 2))
   
@@ -112,10 +115,26 @@ function Making() {
     next.setLeg(name)
     setEquips(next)
   }
+
+  const changeName = (name: string) => {
+    setName(name)
+  }
+
+  const changeGender = (gender: string) => {
+    setGender(gender)    
+  }
+
+  const autoProfile = () => {
+    const g = gender === '男性' ? 0 : 1
+    const n = Math.floor((Math.random() + g) * PC_LIST.length / 2)
+    setName(PC_LIST[n])
+  }
  
   useEffect(() => {
     // 作成したキャラクターのデータを反映
-    setPrevParams(() => new Parameters(data.points)) // 保存済みデータ
+    setName(data.name)
+    setGender(data.gender)
+    setPrevParams(() => new Parameters(data.points))
     setParams(() => new Parameters(data.points))
     setEquips(() => new Equipments(data.equipments))
   }, [])
@@ -273,6 +292,21 @@ function Making() {
               )).map((item, i) => (
                 <option key={i} value={item.parts[2]!}>{`${item.parts[2]} | 性能:${item.sdr} (${item.gold * 0.15}金)`}</option>
               ))}
+            </select>
+          </div>
+        </section>
+        <section>
+          <h4>4. プロフィールの設定</h4>
+          <div>
+            <label className="inline-block w-24 text-right">名前: </label>
+            <input className="w-72 m-6 px-3 text-left" type="text" value={name} onChange={(e) => changeName(e.target.value)} />
+            <button className="w-24 h-6 text-sm/1" onClick={autoProfile}>自動入力</button>
+          </div>
+          <div>
+            <label className="inline-block w-24 text-right">性別: </label>
+            <select className="w-72 m-6 px-3 text-left" value={gender} onChange={(e) => changeGender(e.target.value)}>
+              <option value="男性">男性</option>
+              <option value="女性">女性</option>
             </select>
           </div>
         </section>
