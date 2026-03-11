@@ -4,39 +4,33 @@ import { type Point, type ParameterName, type Parameter, Parameters } from './Pa
 import { type Weapon, type Armor, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 
 export type Dmg = {
-  id?: number
-  name?: string
+  id: number
+  name: string
   dice: number
   mod: number
   type?: number
 }
 
 const DMG_STEP: Dmg[] = [
-  { dice: 1, mod: -4 },
-  { dice: 1, mod: -3 },
-  { dice: 1, mod: -2 },
-  { dice: 1, mod: -1 },
-  { dice: 1, mod: 0 },
-  { dice: 1, mod: 1 },
-  { dice: 1, mod: 2 },
-  { dice: 2, mod: -1 },
-  { dice: 2, mod: 0 },
-  { dice: 2, mod: 1 },
-  { dice: 2, mod: 2 },
-  { dice: 3, mod: -1 },
-  { dice: 3, mod: 0 },
-  { dice: 3, mod: 1 },
-  { dice: 3, mod: 2 },
-  { dice: 4, mod: -1 },
-  { dice: 4, mod: 0 },
-  { dice: 4, mod: 1 }
-]
-
-DMG_STEP.map((dmg, i) => {
-  dmg.id = i
-  const mod = dmg.mod > 0 ? `+${dmg.mod}` : dmg.mod === 0 ? '' : dmg.mod
-  dmg.name = `${dmg.dice}d${mod}`
-})
+  { id: 0, name: '1d-4', dice: 1, mod: -4 },
+  { id: 1, name: '1d-3', dice: 1, mod: -3 },
+  { id: 2, name: '1d-2', dice: 1, mod: -2 },
+  { id: 3, name: '1d-1', dice: 1, mod: -1 },
+  { id: 4, name: '1d', dice: 1, mod: 0 },
+  { id: 5, name: '1d+1', dice: 1, mod: 1 },
+  { id: 6, name: '1d+2', dice: 1, mod: 2 },
+  { id: 7, name: '2d-1', dice: 2, mod: -1 },
+  { id: 8, name: '2d', dice: 2, mod: 0 },
+  { id: 9, name: '2d+1', dice: 2, mod: 1 },
+  { id: 10, name: '2d+2', dice: 2, mod: 2 },
+  { id: 11, name: '3d-1', dice: 3, mod: -1 },
+  { id: 12, name: '3d', dice: 3, mod: 0 },
+  { id: 13, name: '3d+1', dice: 3, mod: 1 },
+  { id: 14, name: '3d+2', dice: 3, mod: 2 },
+  { id: 15, name: '4d-1', dice: 4, mod: -1 },
+  { id: 16, name: '4d', dice: 4, mod: 0 },
+  { id: 17, name: '4d+1', dice: 4, mod: 1 }
+] as const
 
 export class Character {
   public id: number

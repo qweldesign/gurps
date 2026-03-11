@@ -7,55 +7,50 @@ const POINT_STEP = [
 export type Point = typeof POINT_STEP[number]
 
 export type Parameter = {
-  id?: number
+  id: number
   name: string
   base: string | 10
   point?: Point
 }
 
-const PARAMETER_LIST: Parameter[] = [
-  { name: '筋力', base: 10 },
-  { name: '敏捷力', base: 10 },
-  { name: '知力', base: 10 },
-  { name: '生命力', base: 10 },
-  { name: '武術', base: '筋力' },
-  { name: '剣術', base: '敏捷力' },
-  { name: '弓術', base: '敏捷力' },
-  { name: '木行術', base: '知力' },
-  { name: '火行術', base: '知力' },
-  { name: '土行術', base: '知力' },
-  { name: '金行術', base: '知力' },
-  { name: '水行術', base: '知力' },
-  { name: '怪力', base: '筋力' },
-  { name: '格闘', base: '筋力' },
-  { name: '柔術', base: '敏捷力' },
-  { name: '探索', base: '敏捷力' },
-  { name: '運動', base: '敏捷力' },
-  { name: '細工', base: '敏捷力' },
-  { name: '早業', base: '敏捷力' },
-  { name: '隠密', base: '敏捷力' },
-  { name: '軽業', base: '敏捷力' },
-  { name: '演奏', base: '敏捷力' },
-  { name: '舞踏', base: '敏捷力' },
-  { name: '技術', base: '敏捷力' },
-  { name: '礼法', base: '知力' },
-  { name: '交渉', base: '知力' },
-  { name: '尋問', base: '知力' },
-  { name: '演技', base: '知力' },
-  { name: '鑑定', base: '知力' },
-  { name: '治癒', base: '知力' },
-  { name: '歴史', base: '知力' },
-  { name: '言語', base: '知力' },
-  { name: '知識', base: '知力' },
-  { name: '修養', base: '知力' },
-  { name: '鍛錬', base: '生命力' },
-  { name: '歌唱', base: '生命力' }
-]
-
-// ID を設定
-PARAMETER_LIST.map((param, i) => {
-  param.id = i
-})
+export const PARAMETER_LIST: Parameter[] = [
+  { id: 0, name: '筋力', base: 10 },
+  { id: 1, name: '敏捷力', base: 10 },
+  { id: 2, name: '知力', base: 10 },
+  { id: 3, name: '生命力', base: 10 },
+  { id: 4, name: '武術', base: '筋力' },
+  { id: 5, name: '剣術', base: '敏捷力' },
+  { id: 6, name: '弓術', base: '敏捷力' },
+  { id: 7, name: '木行術', base: '知力' },
+  { id: 8, name: '火行術', base: '知力' },
+  { id: 9, name: '土行術', base: '知力' },
+  { id: 10, name: '金行術', base: '知力' },
+  { id: 11, name: '水行術', base: '知力' },
+  { id: 12, name: '怪力', base: '筋力' },
+  { id: 13, name: '格闘', base: '筋力' },
+  { id: 14, name: '柔術', base: '敏捷力' },
+  { id: 15, name: '探索', base: '敏捷力' },
+  { id: 16, name: '運動', base: '敏捷力' },
+  { id: 17, name: '細工', base: '敏捷力' },
+  { id: 18, name: '早業', base: '敏捷力' },
+  { id: 19, name: '隠密', base: '敏捷力' },
+  { id: 20, name: '軽業', base: '敏捷力' },
+  { id: 21, name: '演奏', base: '敏捷力' },
+  { id: 22, name: '舞踏', base: '敏捷力' },
+  { id: 23, name: '技術', base: '敏捷力' },
+  { id: 24, name: '礼法', base: '知力' },
+  { id: 25, name: '交渉', base: '知力' },
+  { id: 26, name: '尋問', base: '知力' },
+  { id: 27, name: '演技', base: '知力' },
+  { id: 28, name: '鑑定', base: '知力' },
+  { id: 29, name: '治癒', base: '知力' },
+  { id: 30, name: '歴史', base: '知力' },
+  { id: 31, name: '言語', base: '知力' },
+  { id: 32, name: '知識', base: '知力' },
+  { id: 33, name: '修養', base: '知力' },
+  { id: 34, name: '鍛錬', base: '生命力' },
+  { id: 35, name: '歌唱', base: '生命力' }
+] as const
 
 export type ParameterName = typeof PARAMETER_LIST[number]['name']
 

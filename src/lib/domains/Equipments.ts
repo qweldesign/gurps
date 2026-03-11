@@ -1,7 +1,7 @@
 // Equipments.ts
   
 export type Weapon = {
-  id?: number
+  id: number
   name: string
   secondName?: string
   weaponType: number // 0: 格闘, 1: 通常, 2: 鎖状, 3: 両手, 4: 竿上, 5: 射撃, 6: 盾
@@ -11,73 +11,62 @@ export type Weapon = {
   ready: number
   ev: number
   usage?: string
+  gold: number
 }
 
 export type Armor = {
-  id?: number
+  id: number
   name: string
   parts: (string | null)[]
-  dr?: string
+  dr: string
   sdr: number
   tdr: number
   wt: number
   replace?: string | null
+  gold: number
 }
 
-const WEAPON_LIST: Weapon[] = [
-  { name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: 'ダガー', weaponType: 1, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 0, ev: 1 },
-  { name: 'ショートソード', weaponType: 1, baseDmg: 5, dmgType: 2, skillType: '剣術', ready: 0, ev: 1 },
-  { name: 'レイピア', weaponType: 1, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 1 },
-  { name: 'ロングソード',secondName: 'バスタードソード(片手)', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1 },
-  { name: 'バスタードソード',secondName: 'バスタードソード(両手)', weaponType: 3, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 2, usage: 'ロングソード' },
-  { name: 'グレートソード', weaponType: 3, baseDmg: 9, dmgType: 2, skillType: '武術', ready: 0, ev: 2 },
-  { name: '三日月刀',secondName: '蒼龍刀(片手)', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1 },
-  { name: '蒼龍刀',secondName: '蒼龍刀(両手)', weaponType: 3, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 2, usage: '三日月刀' },
-  { name: '鎚槌', weaponType: 2, baseDmg: 8, dmgType: 3, skillType: '剣術', ready: 1, ev: 1 },
-  { name: '手斧', weaponType: 1, baseDmg: 8, dmgType: 2, skillType: '剣術', ready: 1, ev: 1 },
-  { name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 3, skillType: '武術', ready: 1, ev: 1 },
-  { name: '戦斧', weaponType: 1, baseDmg: 9, dmgType: 2, skillType: '武術', ready: 1, ev: 1 },
-  { name: '杖', weaponType: 4, baseDmg: 6, dmgType: 3, skillType: '剣術', ready: 0, ev: 3 },
-  { name: '長槍',secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 3 },
-  { name: '薙刀', weaponType: 4, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 3 },
-  { name: '鉾槍',secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 12, dmgType: 2, skillType: '武術', ready: 1, ev: 3, usage: '長槍' },
-  { name: '短弓', weaponType: 5, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 1, ev: 0 },
-  { name: '長弓', weaponType: 5, baseDmg: 5, dmgType: 1, skillType: '弓術', ready: 1, ev: 0 },
-  { name: '弩', weaponType: 5, baseDmg: 7, dmgType: 1, skillType: '剣術', ready: 2, ev: 0 },
-  { name: '拳', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳' },
-  { name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+1' },
-  { name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0 },
-  { name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+2' },
-  { name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '剣術', ready: 1, ev: 2 },
-  { name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 3 },
-  { name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 4 }
-]
+export const WEAPON_LIST: Weapon[] = [
+  { id: 0, name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0},
+  { id: 1, name: 'ダガー', weaponType: 1, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 30 },
+  { id: 2, name: 'ショートソード', weaponType: 1, baseDmg: 5, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 40 },
+  { id: 3, name: 'レイピア', weaponType: 1, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 1, gold: 60 },
+  { id: 4, name: 'ロングソード',secondName: 'バスタードソード(片手)', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 80 },
+  { id: 5, name: 'バスタードソード',secondName: 'バスタードソード(両手)', weaponType: 3, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 2, usage: 'ロングソード', gold: 120 },
+  { id: 6, name: 'グレートソード', weaponType: 3, baseDmg: 9, dmgType: 2, skillType: '武術', ready: 0, ev: 2, gold: 160 },
+  { id: 7, name: '三日月刀',secondName: '蒼龍刀(片手)', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 80 },
+  { id: 8, name: '蒼龍刀',secondName: '蒼龍刀(両手)', weaponType: 3, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 2, usage: '三日月刀', gold: 120 },
+  { id: 9, name: '鎚槌', weaponType: 2, baseDmg: 8, dmgType: 3, skillType: '剣術', ready: 1, ev: 1, gold: 25 },
+  { id: 10, name: '手斧', weaponType: 1, baseDmg: 8, dmgType: 2, skillType: '剣術', ready: 1, ev: 1, gold: 50 },
+  { id: 11, name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 3, skillType: '武術', ready: 1, ev: 1, gold: 75 },
+  { id: 12, name: '戦斧', weaponType: 1, baseDmg: 9, dmgType: 2, skillType: '武術', ready: 1, ev: 1, gold: 100 },
+  { id: 13, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 3, skillType: '剣術', ready: 0, ev: 3, gold: 30 },
+  { id: 14, name: '長槍',secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 5, dmgType: 1, skillType: '剣術', ready: 0, ev: 3, gold: 60 },
+  { id: 15, name: '薙刀', weaponType: 4, baseDmg: 8, dmgType: 2, skillType: '武術', ready: 0, ev: 3, gold: 90 },
+  { id: 16, name: '鉾槍',secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 12, dmgType: 2, skillType: '武術', ready: 1, ev: 3, usage: '長槍', gold: 120 },
+  { id: 17, name: '短弓', weaponType: 5, baseDmg: 4, dmgType: 1, skillType: '剣術', ready: 1, ev: 0, gold: 30 },
+  { id: 18, name: '長弓', weaponType: 5, baseDmg: 5, dmgType: 1, skillType: '弓術', ready: 1, ev: 0, gold: 60 },
+  { id: 19, name: '弩', weaponType: 5, baseDmg: 7, dmgType: 1, skillType: '剣術', ready: 2, ev: 0, gold: 120 },
+  { id: 20, name: '拳', weaponType: 0, baseDmg: 2, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
+  { id: 21, name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳', gold: 0 },
+  { id: 22, name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
+  { id: 23, name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+1', gold: 0 },
+  { id: 24, name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, gold: 0 },
+  { id: 25, name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 3, skillType: '格闘', ready: 0, ev: 0, usage: '拳+2', gold: 0 },
+  { id: 26, name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '剣術', ready: 1, ev: 2, gold: 10 },
+  { id: 27, name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 3, gold: 15 },
+  { id: 28, name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 3, skillType: '武術', ready: 1, ev: 4, gold: 20 }
+] as const
 
-const ARMOR_LIST: Armor[] = [
-  { name: '服', parts: ['帽子', null, null], sdr: 1, tdr: 0, wt: 0, replace: null },
-  { name: '革服', parts: ['革の帽子', 'グローブ', 'ブーツ'], sdr: 1, tdr: 1, wt: 0 },
-  { name: '革鎧', parts: ['ヘッドギア', 'レザーグローブ', 'レザーブーツ'], sdr: 2, tdr: 2, wt: 1 },
-  { name: 'チェインメイル', parts: ['チェインコイフ', null, null], sdr: 3, tdr: 1, wt: 2, replace: '革鎧' },
-  { name: 'ブリガンディ', parts: ['オープンヘルム', 'ガントレット', 'ソールレット'], sdr: 3, tdr: 3, wt: 3 },
-  { name: 'プレイトメイル', parts: ['クローズヘルム', 'ヴァンブレイス', 'グリーヴ'], sdr: 4, tdr: 4, wt: 4 }
-]
-
-// ID を設定
-WEAPON_LIST.map((weapon, i) => {
-  weapon.id = i
-})
-
-// ID, DR 文字列を設定
-ARMOR_LIST.map((armor, i) => {
-  armor.id = i
-  const sdr = armor.sdr
-  const tdr = armor.tdr
-  if (sdr === tdr) armor.dr = String(sdr)
-  else armor.dr = `${String(sdr)} (${String(tdr)})`
-})
+export const ARMOR_LIST: Armor[] = [
+  { id: 0, name: '装備無し', parts:['装備無し', '装備無し', '装備無し'], sdr:0, tdr:0, dr: '0', wt:0, gold: 0},
+  { id: 1, name: '服', parts: ['帽子', null, null], sdr: 1, tdr: 0, dr: '1 (0)', wt: 0, replace: null, gold: 20 },
+  { id: 2, name: '革服', parts: ['革の帽子', 'グローブ', 'ブーツ'], sdr: 1, tdr: 1, dr: '1', wt: 0, gold: 40 },
+  { id: 3, name: '革鎧', parts: ['ヘッドギア', 'レザーグローブ', 'レザーブーツ'], sdr: 2, tdr: 2, dr: '2', wt: 1, gold: 80 },
+  { id: 4, name: 'チェインメイル', parts: ['チェインコイフ', null, null], sdr: 3, tdr: 1, dr: '3 (1)', wt: 2, replace: '革鎧', gold: 120 },
+  { id: 5, name: 'ブリガンディ', parts: ['オープンヘルム', 'ガントレット', 'ソールレット'], sdr: 3, tdr: 3, dr: '3', wt: 3, gold: 160 },
+  { id: 6, name: 'プレイトメイル', parts: ['クローズヘルム', 'ヴァンブレイス', 'グリーヴ'], sdr: 4, tdr: 4, dr: '4', wt: 4, gold: 320 }
+] as const
 
 export type WeaponName = typeof WEAPON_LIST[number]['name']
 
