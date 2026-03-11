@@ -79,34 +79,41 @@ export class Parameters {
 
   // nameとsizeを指定してPointを増減し、変化後のPointを返す
   // Mapに無ければ追加する
-  step(name: ParameterName, size: -1 | 1 = 1): number {
-    return (size === 1) ? this.increase(name) : this.decrease(name)
+  step(name: ParameterName, size: number = 1): number {
+    if (size === 0) return this.get(name)
+    return (size > 0) ? this.increase(name, Math.abs(size)) : this.decrease(name, Math.abs(size))
   }
 
   // nameを指定してPointを減らし、変化後のPointを返す
-  decrease(name: ParameterName): number {
-    const point = this.get(name)
-    if (!point) {
-      return 0 // Mapに無ければ無視
+  decrease(name: ParameterName, size: number = 1): number {
+    let result = 0 as Point
+    for (let i = 0; i < size; i++) {
+      const point = this.get(name)
+      if (!point) {
+        return 0 // Mapに無ければ無視
+      }
+      const index = POINT_STEP.indexOf(point as Point)
+      // 最小値(0)であればそのまま返す
+      result = index > 0 ? POINT_STEP[index - 1] : 0
+      this.set(name, result)
     }
-    const index = POINT_STEP.indexOf(point as Point)
-    // 最小値(0)であればそのまま返す
-    const result = index > 0 ? POINT_STEP[index - 1] : 0
-    this.set(name, result)
     return result
   }
 
   // nameを指定してPointを増やし、変化後のPointを返す
-  increase(name: ParameterName): number {
-    const point = this.get(name)
-    if (!point) {
-      this.set(name, 0.5) // Mapに無ければ追加
-      return 0.5
+  increase(name: ParameterName, size: number = 1): number {
+    let result = 0 as Point
+    for (let i = 0; i < size; i++) {
+      const point = this.get(name)
+      if (!point) {
+        this.set(name, 0.5) // Mapに無ければ追加
+        result = 0.5
+      }
+      const index = POINT_STEP.indexOf(point as Point)
+      // 最大値であればそのまま返す
+      result = index < POINT_STEP.length - 1 ? POINT_STEP[index + 1] : point
+      this.set(name, result)
     }
-    const index = POINT_STEP.indexOf(point as Point)
-    // 最大値であればそのまま返す
-    const result = index < POINT_STEP.length - 1 ? POINT_STEP[index + 1] : point
-    this.set(name, result)
     return result
   }
 
