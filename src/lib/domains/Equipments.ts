@@ -336,4 +336,17 @@ export class Equipments {
     total += (this.leg?.gold ?? 0) * 0.15
     return total
   }
+
+  // シリアライズ用データ変換
+  toData(): EquipmentSet {
+    return {
+      weapon: this.getWeapon().name,
+      missile: this.getMissile()?.name ?? null,
+      shield: this.getShield()?.name ?? null,
+      body: this.getBodyArmor().name,
+      head: this.getHeadArmor()?.parts[0] ?? null,
+      arm: this.getArmArmor()?.parts[1] ?? null,
+      leg: this.getLegArmor()?.parts[2] ?? null
+    }
+  }
 }

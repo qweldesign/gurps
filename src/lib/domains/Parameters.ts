@@ -158,4 +158,13 @@ export class Parameters {
     }
     return total
   }
+
+  // シリアライズ用データ変換
+  toData(): Point[] {
+    const data: Point[] = []
+    PARAMETER_LIST.forEach(param => {
+      data.push(this.get(param.name))
+    })
+    return data
+  }
 }

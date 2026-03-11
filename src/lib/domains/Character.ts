@@ -3,6 +3,14 @@
 import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
 import { type Weapon, type Armor, type Dmg, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 
+export type CharacterData = {
+  id: number
+  name: string
+  gender: string
+  points: Point[]
+  equipments: EquipmentSet | null
+}
+
 export class Character {
   public id: number
   public name: string
@@ -10,7 +18,8 @@ export class Character {
   private parameters: Parameters
   private equipments: Equipments
 
-  constructor(id: number, name: string, gender: string, points: Point[], equipments: EquipmentSet | null) {
+  constructor(data: CharacterData) {
+    const { id, name, gender, points, equipments } = data
     this.id = id
     this.name = name
     this.gender = gender
@@ -226,5 +235,16 @@ export class Character {
   // 脚防具を取得
   getLegArmor(): Armor {
     return this.equipments.getLegArmor()
+  }
+
+  // シリアライズ用データ変換
+  toData(): CharacterData {
+    return {
+      id: this.id,
+      name: this.name,
+      gender: this.gender,
+      points: this.parameters.toData(),
+      equipments: this.equipments.toData()
+    }
   }
 }
