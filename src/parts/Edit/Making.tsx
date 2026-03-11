@@ -5,6 +5,7 @@ import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domain
 
 function Making() {
   const [points] = useState(10)
+  const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
   
   // 作成したキャラクターID
@@ -30,6 +31,17 @@ function Making() {
     equipments: null
   })
 
+  // 増減ボタンの状態を取得 (true: 有効 / false: 無効)
+  const getButtonDisable = (name: ParameterName, size: number, i: number) => {
+    if (Number(uid) > 0 && i === 0) return true
+    const prevPoint = prevParams.get(name)
+    const currentPoint = params.get(name)
+    const next = new Parameters(params.toData())
+    const nextPoint = next.step(name, size)
+    // 下限を下回る場合, 合計を上回る場合は disable を true に 
+    return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || next.getTotal() > points)
+  }
+
   // パラメータをステップ
   const step = (name: ParameterName, size: number) => {
     const next = new Parameters(params.toData())
@@ -39,6 +51,7 @@ function Making() {
  
   useEffect(() => {
     // 作成したキャラクターのデータを反映
+    setPrevParams(() => new Parameters(data.points)) // 保存済みデータ
     setParams(() => new Parameters(data.points))
   }, [])
 
@@ -78,11 +91,13 @@ function Making() {
                       <td>
                         <button
                           className="w-6 h-6 my-0 mx-3 leading-1"
+                          disabled={getButtonDisable(p.name, -1, i)}
                           onClick={() => step(p.name, -1)}
                         >-</button>
                         <span className="inline-block w-6 text-center">{params.getLevel(p.name)}</span>
                         <button
                           className="w-6 h-6 my-0 mx-3 leading-1"
+                          disabled={getButtonDisable(p.name, 1, i)}
                           onClick={() => step(p.name, 1)}
                         >+</button>
                       </td>
