@@ -63,7 +63,7 @@ function List({ models }: { models: Character[] }) {
           </thead>
           <tbody>
             {sorted.map((model) => (
-              <tr className="cursor-pointer" key={model.id} onClick={() => navigate(`/edit/${String(model.id).padStart(2, '0')}`)}>
+              <tr className="cursor-pointer" key={model.id} onClick={() => navigate(`/edit/view/${String(model.id).padStart(2, '0')}`)}>
                 <td>{model.id}</td>
                 <td>{model.name}</td>
                 <td>{model.gender}</td>

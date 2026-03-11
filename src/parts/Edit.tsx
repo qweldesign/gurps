@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import List from './Edit/List'
-import Detail from './Edit/Detail'
 import { type CharacterData, Character } from '../lib/domains/Character'
 import { createSamples } from '../lib/domains/SampleCharacter'
 
 function Edit() {
-  // 作成したキャラクターID
-  const { uid } = useParams()
+  const navigate = useNavigate()
 
   // LocalStorage を使用
   const storageKey = 'savedata';
@@ -61,11 +59,9 @@ function Edit() {
 
   return (
     <>
-      {!uid
-        ? <List models={models} />
-        : <Detail model={models.find(m => m.id === Number(uid))!} />
-      }
+      <List models={models} />
       <div className="text-center">
+        <button onClick={() => navigate('./making/')}>新規作成</button>
         <button onClick={reset}>リセット</button>
       </div>
     </>

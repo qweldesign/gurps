@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { type Character } from '../../lib/domains/Character'
 
 function Detail({ model }: { model: Character }) {
@@ -105,7 +104,6 @@ function Detail({ model }: { model: Character }) {
           </div>
         </div>
       </div>
-      <Link className="ms-12 italic" to="/edit/">&lt; Back to list</Link>
     </>
   )
 }
