@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
+import { useSessionStorage } from '../../hooks/useSessionStorage'
 import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../lib/domains/Equipments'
 import { PC_LIST } from '../../lib/domains/SampleCharacter'
@@ -29,16 +30,19 @@ function Making() {
   lists[3] = PARAMETER_LIST.filter(param => param.base === '敏捷力')
   lists[4] = PARAMETER_LIST.filter(param => param.base === '知力')
 
-  // LocalStorage を使用
+  // LocalStorage / SessionStorage を使用
   const storageKey = 'savedata';
+  const uniqueKey = `${storageKey}:${uid}`
   // LocalStorage からキャラクターデータを取得
-  const [data] = useLocalStorage(`${storageKey}:${String(uid).padStart(2, '0')}`, {
+  const [prevData] = useLocalStorage(uniqueKey, {
     id: 0,
     name: '未設定',
     gender: '男性',
     points: [],
     equipments: null
   })
+  // SessionStorage から作りかけのデータを取得
+  const [nextData] = useSessionStorage(uniqueKey, prevData)
 
   const updateOptions = (value: string) => {
     const [p, m] = value.split('/')
@@ -129,14 +133,27 @@ function Making() {
     const n = Math.floor((Math.random() + g) * PC_LIST.length / 2)
     setName(PC_LIST[n])
   }
+
+  // 確認 (SessionStorage を使用)
+  const confirm = () => {
+    const confirmData = {
+      id: Number(uid), name, gender, points: params.toData(), equipments: equips.toData()
+    }
+    sessionStorage.setItem(uniqueKey, JSON.stringify(confirmData))
+    if (Number(uid)) {
+      navigate(`/edit/confirm/${uid}`)
+    } else {
+      navigate(`/edit/confirm/`)
+    }
+  }
  
   useEffect(() => {
     // 作成したキャラクターのデータを反映
-    setName(data.name)
-    setGender(data.gender)
-    setPrevParams(() => new Parameters(data.points))
-    setParams(() => new Parameters(data.points))
-    setEquips(() => new Equipments(data.equipments))
+    setName(nextData.name)
+    setGender(nextData.gender)
+    setPrevParams(() => new Parameters(prevData.points))
+    setParams(() => new Parameters(nextData.points))
+    setEquips(() => new Equipments(nextData.equipments))
   }, [])
 
   return (
@@ -310,9 +327,13 @@ function Making() {
             </select>
           </div>
         </section>
-      </div>
-      <div className="text-center">
-        <button onClick={() => navigate('/edit/')}>作成中止</button>
+        <section className="my-12 text-center">
+          <p className="text-center">お疲れ様でした。もうすぐキャラクター作成は完了です。
+            <br />この内容でよろしければ、確認へ進んでください。
+          </p>
+          <button onClick={confirm}>確認する</button>
+          <button onClick={() => navigate('/edit/')}>作成中止</button>
+        </section>
       </div>
     </>
   )
