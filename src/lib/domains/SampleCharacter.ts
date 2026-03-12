@@ -343,12 +343,12 @@ export class SampleCharacter extends Character {
 }
 
 // サンプルキャラクター生成
-export function createSamples(totalPoints = 10, multiplier: Multiplier = 1, size = 64, mod = 0) {
+export function createSamples(totalPoints = 10, multiplier: Multiplier = 1, size = 64, mod = 0, idMod = 0) {
   const step = 64 / size // size より step を算出 (実質16固定)
   const samples = []
 
   for (let n = 0; n < size; n++) {
-    const id = n + 1 // 1からカウント (呼び出すときは-1)
+    const id = n + idMod + 1 // 通常は1からカウント (呼び出すときは-1, idMod を足す)
     const uid = Math.floor(n * step) + mod // 定数を足してサンプル生成
     const sample = new SampleCharacter(id, uid, totalPoints, multiplier)
     samples.push(sample)

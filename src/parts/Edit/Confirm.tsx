@@ -1,4 +1,5 @@
 import { useLoaderData, useNavigate } from 'react-router-dom'
+import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { useSessionStorage } from '../../hooks/useSessionStorage'
 import Detail from './Detail'
 import { type CharacterData, Character } from '../../lib/domains/Character'
@@ -10,6 +11,10 @@ function Confirm() {
   // LocakStorage / SessionStorage を使用
   const storageKey = 'savedata';
   let uniqueKey = `${storageKey}:${uid}`
+
+  // LocalStorage のインデックス (uid配列を格納)
+  const indexKey = `${storageKey}:index`
+  const [index, setIndex] = useLocalStorage<string[]>(indexKey, [])
 
   // SessionStorage からデータを取り出す
   // この初期データが使われることは恐らく無い (デバッグ用)
@@ -38,16 +43,14 @@ function Confirm() {
     if (!data.id) {
       // 新規の場合
       // id から uid を作成 (インデックスの長さから生成)
-      const indexKey = `${storageKey}:index`
-      const index = JSON.parse(localStorage.getItem(indexKey)!)
       const uid = String(index.length + 1).padStart(2, '0')
       // 忘れずに StorageKey を更新
       uniqueKey = `${storageKey}:${uid}`
       // 忘れずにキャラクターのIDを更新
       data.id = Number(uid)
       // インデックスを更新
-      index.push(uid)
-      localStorage.setItem(indexKey, JSON.stringify(index))
+      const newIndex = [...index, uid]
+      setIndex(newIndex)
     }
     // キャラクターデータを保存
     localStorage.setItem(uniqueKey, JSON.stringify(data))

@@ -33,6 +33,11 @@ function Making() {
   // LocalStorage / SessionStorage を使用
   const storageKey = 'savedata';
   const uniqueKey = `${storageKey}:${uid}`
+  
+  // LocalStorage のインデックス (uid配列を格納)
+  const indexKey = `${storageKey}:index`
+  const [index] = useLocalStorage<string[]>(indexKey, [])
+  
   // LocalStorage からキャラクターデータを取得
   const [prevData] = useLocalStorage(uniqueKey, {
     id: 0,
@@ -133,6 +138,8 @@ function Making() {
     const n = Math.floor((Math.random() + g) * PC_LIST.length / 2)
     setName(PC_LIST[n])
   }
+
+  const back = index.length ? '/edit/' : '/'
 
   // 確認 (SessionStorage を使用)
   const confirm = () => {
@@ -332,7 +339,7 @@ function Making() {
             <br />この内容でよろしければ、確認へ進んでください。
           </p>
           <button onClick={confirm}>確認する</button>
-          <button onClick={() => navigate('/edit/')}>作成中止</button>
+          <button onClick={() => navigate(back)}>作成中止</button>
         </section>
       </div>
     </>
