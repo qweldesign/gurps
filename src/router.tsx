@@ -7,7 +7,7 @@ import Docs from './parts/Docs'
 import Sample from './parts/Sample'
 import Edit from './parts/Edit'
 import View from './parts/Edit/View'
-import Making from './parts/Edit/Making'
+import Setting from './parts/Edit/Setting'
 import Confirm from './parts/Edit/Confirm'
 import Battle from './parts/Battle'
 import { docsLoader } from './loader/docsLoader'
@@ -29,13 +29,14 @@ export const router = createBrowserRouter([
       ]},
       { path: 'edit', children: [
         { index: true, element: <Edit /> },
+        { path: 'making', element: <Setting />, loader: idLoader },
         { path: 'view', children: [
           { index: true, element: <View />, loader: idLoader },
           { path: ':uid', element: <View />, loader: idLoader }
         ]},
-        { path: 'making', children: [
-          { index: true, element: <Making />, loader: idLoader },
-          { path: ':uid', element: <Making />, loader: idLoader }
+        { path: 'setting', children: [
+          { index: true, element: <Setting />, loader: idLoader },
+          { path: ':uid', element: <Setting />, loader: idLoader }
         ]},
         { path: 'confirm', children: [
           { index: true, element: <Confirm />, loader: idLoader },

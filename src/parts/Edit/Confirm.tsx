@@ -34,7 +34,7 @@ function Confirm() {
   // 戻る
   const back = () => {
     if (data.id) {
-      navigate(`/edit/making/${uid}`)
+      navigate(`/edit/setting/${uid}`)
     } else {
       navigate(`/edit/making/`)
     }

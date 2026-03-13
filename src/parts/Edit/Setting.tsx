@@ -8,7 +8,7 @@ import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmo
 import { PC_LIST } from '../../lib/domains/SampleCharacter'
 import type { CharacterData } from '../../lib/domains/Character'
 
-function Making() {
+function Setting() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
   const [alertOpen, setAlertOpen] = useState(false)
   const [points, setPoints] = useState(10)
@@ -18,6 +18,7 @@ function Making() {
   const [initialEquipSet, setInitialEquipSet] = useState(false) // 装備を一度でも変更したかどうか
   const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
+  const [prevEquips, setPrevEquips] = useState(() => new Equipments(null))
   const [equips, setEquips] = useState(() => new Equipments(null))
   const [name, setName] = useState('')
   const [gender, setGender] = useState('男性')
@@ -28,6 +29,7 @@ function Making() {
   // 作成したキャラクターID
   const { uid } = useLoaderData()
   const navigate = useNavigate()
+  const isFirstCreation = uid === '00' ? true : false
 
   // 能力値, 技能一覧表
   const lists = []
@@ -81,7 +83,7 @@ function Making() {
     next.step(name as ParameterName, size)
     if (params.get('武術') === 0 && next.get('武術') > 0) {
       // 武術がセットされた場合
-      setGold(gold * 2) // 所持金を倍に
+      if (isFirstCreation) setGold(gold * 2) // 初回作成時は所持金を倍に
       setWeaponList(WEAPON_LIST) // リストを追加
       setArmorList(ARMOR_LIST)
       if (initialEquipSet) {
@@ -96,7 +98,7 @@ function Making() {
       }
     } else if (params.get('武術') > 0 && next.get('武術') === 0) {
       // 武術がリセットされた場合
-      setGold(gold / 2)
+      if (isFirstCreation) setGold(gold / 2)
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
       resetEquips()
@@ -161,7 +163,7 @@ function Making() {
   }
 
   const resetEquips = () => {
-    const next = new Equipments(null)
+    const next = new Equipments(prevEquips.toData())
     setEquips(next)
   }
 
@@ -183,8 +185,8 @@ function Making() {
 
   // 確認 (SessionStorage を使用)
   const confirm = () => {
-    // points を使い切ってない場合のアラート
-    if (!pointsState) {
+    // 初回作成時で points を使い切ってない場合のアラート
+    if (isFirstCreation && !pointsState) {
       const message = (
         <p className="text-center">キャラクターポイントを使い切っていません。
           <br />ポイントを使い切ってください。</p>
@@ -205,8 +207,8 @@ function Making() {
       return
     }
 
-    // 名前が未設定の場合のアラート
-    if (!nameState) {
+    // 初回作成時で名前が未設定の場合のアラート
+    if (isFirstCreation && !nameState) {
       const message = (
         <p className="text-center">名前を設定してください。</p>
       )
@@ -233,10 +235,13 @@ function Making() {
  
   useEffect(() => {
     // 作成したキャラクターのデータを反映
+    setPoints(prevData.totalPoints)
+    setGold(prevData.gold) // 旧データを使用
     setName(nextData.name)
     setGender(nextData.gender)
     setPrevParams(() => new Parameters(prevData.points))
     setParams(() => new Parameters(nextData.points))
+    setPrevEquips(() => new Equipments(prevData.equipments))
     setEquips(() => new Equipments(nextData.equipments))
 
     // 武器・防具リストのフィルター更新
@@ -286,29 +291,35 @@ function Making() {
   return (
     <>
       <div className="w-[48em] mx-auto">
-        <h3>キャラクター作成</h3>
+        <h3>キャラクター{isFirstCreation ? '作成' : '編集'}</h3>
+        {isFirstCreation && (
+          <section>
+            <h4>1. 基本設定</h4>
+            <p>キャラクター作成の条件を設定します。
+              <br />初期CPや所持金が大きいほど強いキャラクターを作成できますが、初めてのプレイヤーはロックされています。
+              <br />模擬戦闘で勝利を重ねるとアンロックされます（開発中は全ての条件がアンロックされています）。
+            </p>
+            <div>
+              <label>作成条件: </label>
+              <select className="w-48 m-6 ps-3 text-center" onChange={(e) => updateOptions(e.target.value)}>
+                <option value="10/100">{'10CP / 100金'}</option>
+                <option value="20/200">{'20CP / 200金'}</option>
+                <option value="40/400">{'40CP / 400金'}</option>
+              </select>
+            </div>
+          </section>
+        )}
         <section>
-          <h4>1. 基本設定</h4>
-          <p>キャラクター作成の条件を設定します。
-            <br />初期CPや所持金が大きいほど強いキャラクターを作成できますが、初めてのプレイヤーはロックされています。
-            <br />模擬戦闘で勝利を重ねるとアンロックされます（開発中は全ての条件がアンロックされています）。
-          </p>
-          <div>
-            <label>作成条件: </label>
-            <select className="w-48 m-6 ps-3 text-center" onChange={(e) => updateOptions(e.target.value)}>
-              <option value="10/100">{'10CP / 100金'}</option>
-              <option value="20/200">{'20CP / 200金'}</option>
-              <option value="40/400">{'40CP / 400金'}</option>
-            </select>
-          </div>
-        </section>
-        <section>
-          <h4>2. キャラクターポイントの振り分け</h4>
-          <p>合計{points}点のキャラクターポイントを振り分けてキャラクターを作成します。
-            <br />能力値や技能値は、値が高くなるほどポイントを多く消耗します。
-            <br />能力値は技能値の基準となるので、多めに振り分けましょう。
-            <br />ポイントは最小0.5点単位で振り分けることができます。
-          </p>
+          {isFirstCreation && (
+            <>
+              <h4>2. キャラクターポイントの振り分け</h4>
+              <p>合計{points}点のキャラクターポイントを振り分けてキャラクターを作成します。
+                <br />能力値や技能値は、値が高くなるほどポイントを多く消耗します。
+                <br />能力値は技能値の基準となるので、多めに振り分けましょう。
+                <br />ポイントは最小0.5点単位で振り分けることができます。
+              </p>
+            </>
+          )}
           <h5>残りCP: <span className={!pointsState ? 'text-amber-400 font-bold' : 'font-bold'}>{points - params.getTotal()} 点</span></h5>
           <div className="flex flex-wrap flex-col items-center gap-6 h-[60em]">
             {lists.map((list, i) => (
@@ -355,10 +366,14 @@ function Making() {
           </div>
         </section>
         <section>
-          <h4>3. 装備の購入</h4>
-          <p>合計{gold}金の所持金でキャラクターの装備を購入します。
-            <br />「武術」の保有者は所持金が倍になります（戦いを職業としているため、優遇されます）。
-          </p>
+          {isFirstCreation && (
+            <>
+              <h4>3. 装備の購入</h4>
+              <p>合計{gold}金の所持金でキャラクターの装備を購入します。
+                <br />「武術」の保有者は所持金が倍になります（戦いを職業としているため、優遇されます）。
+              </p>
+            </>
+          )}
           <h5>残り所持金: <span className={!goldState ? 'text-red-600 font-bold' : 'font-bold'}>{gold - equips.getGold()} 金</span></h5>
           <div>
             <label className="inline-block w-24 text-right">主用武器: </label>
@@ -439,27 +454,31 @@ function Making() {
             </select>
           </div>
         </section>
-        <section>
-          <h4>4. プロフィールの設定</h4>
-          <div>
-            <label className="inline-block w-24 text-right">名前: </label>
-            <input className="w-72 m-6 px-3 text-left" type="text" value={name} onChange={(e) => changeName(e.target.value)} />
-            <button className="w-24 h-6 text-sm/1" onClick={autoProfile}>自動入力</button>
-          </div>
-          <div>
-            <label className="inline-block w-24 text-right">性別: </label>
-            <select className="w-72 m-6 px-3 text-left" value={gender} onChange={(e) => changeGender(e.target.value)}>
-              <option value="男性">男性</option>
-              <option value="女性">女性</option>
-            </select>
-          </div>
-        </section>
+        {isFirstCreation && (
+          <section>
+            <h4>4. プロフィールの設定</h4>
+            <div>
+              <label className="inline-block w-24 text-right">名前: </label>
+              <input className="w-72 m-6 px-3 text-left" type="text" value={name} onChange={(e) => changeName(e.target.value)} />
+              <button className="w-24 h-6 text-sm/1" onClick={autoProfile}>自動入力</button>
+            </div>
+            <div>
+              <label className="inline-block w-24 text-right">性別: </label>
+              <select className="w-72 m-6 px-3 text-left" value={gender} onChange={(e) => changeGender(e.target.value)}>
+                <option value="男性">男性</option>
+                <option value="女性">女性</option>
+              </select>
+            </div>
+          </section>
+        )}
         <section className="my-12 text-center">
-          <p className="text-center">お疲れ様でした。もうすぐキャラクター作成は完了です。
-            <br />この内容でよろしければ、確認へ進んでください。
-          </p>
+          {isFirstCreation && (
+            <p className="text-center">お疲れ様でした。もうすぐキャラクター作成は完了です。
+              <br />この内容でよろしければ、確認へ進んでください。
+            </p>
+          )}
           <button onClick={confirm}>確認する</button>
-          <button onClick={() => navigate(back)}>作成中止</button>
+          <button onClick={() => navigate(back)}>{isFirstCreation ? '作成' : '編集'}中止</button>
         </section>
       </div>
       {alertOpen && (
@@ -469,4 +488,4 @@ function Making() {
   )
 }
 
-export default Making
+export default Setting

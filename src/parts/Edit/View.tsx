@@ -79,7 +79,7 @@ function View() {
       <Detail unit={unit} />
       <div className="text-center">
         <button onClick={() => navigate('/edit/')}>一覧へ戻る</button>
-        <button onClick={() => navigate(`/edit/making/${uid}`)}>編集</button>
+        <button onClick={() => navigate(`/edit/setting/${uid}`)}>編集</button>
         <button onClick={confirmRemove}>除名</button>
       </div>
       {alertOpen && (
