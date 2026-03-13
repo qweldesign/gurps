@@ -9,8 +9,13 @@ function View() {
 
   // LocalStorage を使用
   const storageKey = 'savedata';
+  const uniqueKey = `${storageKey}:${uid}`
 
-  const [data] = useLocalStorage<CharacterData>(`${storageKey}:${uid}`, {
+  // LocalStorage のインデックス (uid配列を格納)
+  const indexKey = `${storageKey}:index`
+  const [index, setIndex] = useLocalStorage<string[]>(indexKey, [])
+
+  const [data] = useLocalStorage<CharacterData>(uniqueKey, {
     id: 0,
     name: '未設定',
     gender: '男性',
@@ -20,12 +25,46 @@ function View() {
 
   const model = new Character(data)
 
+  // 除名
+  const remove = () => {
+    const order = index.indexOf(uid)
+    if (order !== -1) {
+      // 配列を詰める
+      index.forEach((uid, i) => { // 01, 02, 03, 04, 05 とすると、i = 2
+        if (i > order) {
+          // 旧キーからデータを取り出す uid='04', '05'
+          const uniqueKey = `${storageKey}:${uid}`
+          const stored = localStorage.getItem(uniqueKey) ?? 'null'
+          const data = JSON.parse(stored)
+          if (data) {
+            data.id-- // ID を更新
+            const newUid = String(data.id).padStart(2, '0')
+            const newUniqueKey = `${storageKey}:${newUid}` // 03, 04
+            const newData = JSON.stringify(data)
+            localStorage.setItem(newUniqueKey, newData) // 新キーへデータを格納
+            sessionStorage.setItem(newUniqueKey, newData)
+          }
+        }
+      })
+      // 末尾を削除
+      const latestUid = index[index.length - 1]
+      const latestUniqueKey = `${storageKey}:${latestUid}`
+      localStorage.removeItem(latestUniqueKey)
+      sessionStorage.removeItem(latestUniqueKey)
+      // インデックスを更新
+      const newIndex = index.filter(v => v !== latestUid)
+      setIndex(newIndex)
+      navigate('/edit/')
+    }
+  }
+
   return (
     <>
       <Detail model={model} />
       <div className="text-center">
         <button onClick={() => navigate('/edit/')}>一覧へ戻る</button>
         <button onClick={() => navigate(`/edit/making/${uid}`)}>編集</button>
+        <button onClick={remove}>除名</button>
       </div>
     </>
   )
