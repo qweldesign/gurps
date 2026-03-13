@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { type ReactNode, useState, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { useSessionStorage } from '../../hooks/useSessionStorage'
@@ -9,18 +9,21 @@ import { PC_LIST } from '../../lib/domains/SampleCharacter'
 import type { CharacterData } from '../../lib/domains/Character'
 
 function Making() {
-  const [alertMessage] = useState('Test Alert.')
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
   const [alertOpen, setAlertOpen] = useState(false)
   const [points, setPoints] = useState(10)
+  const [pointsState, setPointsState] = useState(false) // points を使い切ったら true にする
   const [gold, setGold] = useState(100)
-  const [goldRate, setGoldRate] = useState(1)
+  const [goldState, setGoldState] = useState(true) // 購入金額が所持金を超えた場合に false にする
+  const [initialEquipSet, setInitialEquipSet] = useState(false) // 装備を一度でも変更したかどうか
   const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
   const [equips, setEquips] = useState(() => new Equipments(null))
   const [name, setName] = useState('')
   const [gender, setGender] = useState('男性')
-  const [weaponList, setWeaponList] = useState(WEAPON_LIST.filter(item => item.skillType !== '武術'))
-  const [armorList, setArmorList] = useState(ARMOR_LIST.filter(item => item.wt <= 2))
+  const [nameState, setNameState] = useState(false) // 名前を決定したら true にする
+  const [weaponList, setWeaponList] = useState(WEAPON_LIST)
+  const [armorList, setArmorList] = useState(ARMOR_LIST)
   
   // 作成したキャラクターID
   const { uid } = useLoaderData()
@@ -78,13 +81,32 @@ function Making() {
     next.step(name as ParameterName, size)
     if (params.get('武術') === 0 && next.get('武術') > 0) {
       // 武術がセットされた場合
-      setGoldRate(2) // 所持金を倍に
+      setGold(gold * 2) // 所持金を倍に
       setWeaponList(WEAPON_LIST) // リストを追加
       setArmorList(ARMOR_LIST)
+      if (initialEquipSet) {
+        // 一度でも装備を変更していた場合, アラート表示 (装備は全解除しない)
+        const message = (
+          <p className="text-center">「武術」がセットされたため、所持金が2倍になりました。
+            <br />装備可能な武器・防具が変わったため、装備の選択をやり直してください。</p>
+        )
+        setAlertMessage(message)
+        setAlertOpen(true)
+        setInitialEquipSet(false) // 繰り返しアラート表示されるのを防ぐ
+      }
     } else if (params.get('武術') > 0 && next.get('武術') === 0) {
-      setGoldRate(1)
+      // 武術がリセットされた場合
+      setGold(gold / 2)
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
+      resetEquips()
+      // 装備を全解除しアラート表示 (initialEquipSet の値に関わらない)
+      const message = (
+        <p className="text-center">「武術」がリセットされたため、所持金が半分になりました。
+          <br />装備可能な武器・防具が変わったため、装備の選択をやり直してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
     }
     setParams(next)
   }
@@ -93,41 +115,53 @@ function Making() {
     const next = new Equipments(equips.toData())
     next.setWeapon(name, false)
     setEquips(next)
+    setInitialEquipSet(true)
   }
 
   const changeMissile = (name: WeaponName) => {
     const next = new Equipments(equips.toData())
     next.setMissile(name)
     setEquips(next)
+    setInitialEquipSet(true)
   }
 
   const changeShield = (name: WeaponName) => {
     const next = new Equipments(equips.toData())
     next.setShield(name)
     setEquips(next)
+    setInitialEquipSet(true)
   }
 
   const changeArmor = (name: ArmorName) => {
     const next = new Equipments(equips.toData())
     next.setBody(name, false)
     setEquips(next)
+    setInitialEquipSet(true)
   }
 
   const changeHeadArmor = (name: HeadArmorName) => {
     const next = new Equipments(equips.toData())
     next.setHead(name)
     setEquips(next)
+    setInitialEquipSet(true)
   }
 
   const changeArmArmor = (name: ArmArmorName) => {
     const next = new Equipments(equips.toData())
     next.setArm(name)
     setEquips(next)
+    setInitialEquipSet(true)
   }
 
   const changeLegArmor = (name: LegArmorName) => {
     const next = new Equipments(equips.toData())
     next.setLeg(name)
+    setEquips(next)
+    setInitialEquipSet(true)
+  }
+
+  const resetEquips = () => {
+    const next = new Equipments(null)
     setEquips(next)
   }
 
@@ -149,6 +183,38 @@ function Making() {
 
   // 確認 (SessionStorage を使用)
   const confirm = () => {
+    // points を使い切ってない場合のアラート
+    if (!pointsState) {
+      const message = (
+        <p className="text-center">キャラクターポイントを使い切っていません。
+          <br />ポイントを使い切ってください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
+    // 装備の購入金額が所持金を超えている場合のアラート
+    if (!goldState) {
+      const message = (
+        <p className="text-center">装備の購入金額が所持金を超えています。
+          <br />装備を変更してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
+    // 名前が未設定の場合のアラート
+    if (!nameState) {
+      const message = (
+        <p className="text-center">名前を設定してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
     const confirmData: CharacterData = {
       id: Number(uid),
       name, gender,
@@ -172,7 +238,50 @@ function Making() {
     setPrevParams(() => new Parameters(prevData.points))
     setParams(() => new Parameters(nextData.points))
     setEquips(() => new Equipments(nextData.equipments))
+
+    // 武器・防具リストのフィルター更新
+    if (nextData.points.length === 0 || nextData.points[4] === 0) { //「武術」(params 経由で取得しても React で未反映なので)
+      setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
+      setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
+    } else {
+      setGold(gold * 2)
+      setWeaponList(WEAPON_LIST)
+      setArmorList(ARMOR_LIST)
+    }
   }, [])
+
+  useEffect(() => {
+    // points を使い切ったかどうかの判定
+    if (points === params.getTotal()) {
+      setPointsState(true)
+    } else {
+      setPointsState(false)
+    }
+  }, [params])
+
+  useEffect(() => {
+    // 装備の購入金額が所持金を超えた場合のアラート
+    if (gold < equips.getGold()) {
+      const message = (
+        <p className="text-center">装備の購入金額が所持金を超えています。
+          <br />装備を変更してください。</p>
+      )
+      setGoldState(false) // 所持金のスタイルを赤字に変更
+      setAlertMessage(message)
+      setAlertOpen(true)
+    } else {
+      setGoldState(true) // 所持金のスタイルを元に戻す
+    }
+  }, [gold, equips])
+
+  useEffect(() => {
+    // 名前を決定したら true にする
+    if (name === '未設定' || name === '') {
+      setNameState(false)
+    } else {
+      setNameState(true)
+    }
+  }, [name])
 
   return (
     <>
@@ -200,7 +309,7 @@ function Making() {
             <br />能力値は技能値の基準となるので、多めに振り分けましょう。
             <br />ポイントは最小0.5点単位で振り分けることができます。
           </p>
-          <h5>残りCP: {points - params.getTotal()} 点</h5>
+          <h5>残りCP: <span className={!pointsState ? 'text-amber-400 font-bold' : 'font-bold'}>{points - params.getTotal()} 点</span></h5>
           <div className="flex flex-wrap flex-col items-center gap-6 h-[60em]">
             {lists.map((list, i) => (
               <div className="w-64" key={i}>
@@ -250,7 +359,7 @@ function Making() {
           <p>合計{gold}金の所持金でキャラクターの装備を購入します。
             <br />「武術」の保有者は所持金が倍になります（戦いを職業としているため、優遇されます）。
           </p>
-          <h5>残り所持金: {gold * goldRate - equips.getGold()} 金</h5>
+          <h5>残り所持金: <span className={!goldState ? 'text-red-600 font-bold' : 'font-bold'}>{gold - equips.getGold()} 金</span></h5>
           <div>
             <label className="inline-block w-24 text-right">主用武器: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getWeapon().name} onChange={(e) => changeWeapon(e.target.value)}>

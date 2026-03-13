@@ -1,8 +1,10 @@
-function Modal({ message, onClose }: { message: string, onClose: () => void }) {
+import { type ReactNode } from 'react'
+
+function Modal({ message, onClose }: { message: ReactNode, onClose: () => void }) {
   return (
     <div className="modal" onClick={onClose}>
       <div className="modal__container">
-        <p>{message}</p>
+        <div>{message}</div>
         <button onClick={onClose}>閉じる</button>
       </div>
     </div>
