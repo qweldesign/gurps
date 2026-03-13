@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { useSessionStorage } from '../../hooks/useSessionStorage'
+import Modal from './Modal'
 import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../lib/domains/Equipments'
 import { PC_LIST } from '../../lib/domains/SampleCharacter'
 import type { CharacterData } from '../../lib/domains/Character'
 
 function Making() {
+  const [alertMessage] = useState('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
   const [points, setPoints] = useState(10)
   const [gold, setGold] = useState(100)
   const [goldRate, setGoldRate] = useState(1)
@@ -350,6 +353,9 @@ function Making() {
           <button onClick={() => navigate(back)}>作成中止</button>
         </section>
       </div>
+      {alertOpen && (
+        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} />
+      )}
     </>
   )
 }

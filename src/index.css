@@ -168,4 +168,12 @@
   .grid > div:not(.grid) {
     @apply p-3 border-b border-white text-[0.875em] text-center;
   }
+
+  .modal {
+    @apply fixed inset-0 w-1/1 h-1/1 bg-black/30;
+  }
+
+  .modal__container {
+    @apply absolute inset-0 w-max h-max m-auto p-12 border-2 border-white rounded-3xl bg-black/70 text-white text-center;
+  }
 }
