@@ -8,23 +8,29 @@ export type CharacterData = {
   name: string
   gender: string
   points: Point[]
+  totalPoints: number
   equipments: EquipmentSet | null
+  gold: number
 }
 
 export class Character {
   public id: number
   public name: string
   public gender: string
-  private parameters: Parameters
-  private equipments: Equipments
+  protected parameters: Parameters
+  public points: number
+  protected equipments: Equipments
+  public gold: number
 
   constructor(data: CharacterData) {
-    const { id, name, gender, points, equipments } = data
+    const { id, name, gender, points, totalPoints, equipments, gold } = data
     this.id = id
     this.name = name
     this.gender = gender
     this.parameters = new Parameters(points)
+    this.points = totalPoints
     this.equipments = new Equipments(equipments)
+    this.gold = gold
   }
 
   // nameとpointを指定し、Point を追加
@@ -237,6 +243,11 @@ export class Character {
     return this.equipments.getLegArmor()
   }
 
+  // Gold総額を算出して返す
+  getGold(): number {
+    return this.equipments.getGold()
+  }
+
   // シリアライズ用データ変換
   toData(): CharacterData {
     return {
@@ -244,7 +255,9 @@ export class Character {
       name: this.name,
       gender: this.gender,
       points: this.parameters.toData(),
-      equipments: this.equipments.toData()
+      totalPoints: this.points,
+      equipments: this.equipments.toData(),
+      gold: this.gold
     }
   }
 }

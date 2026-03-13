@@ -16,24 +16,32 @@ function Edit() {
   const [index, setIndex] = useLocalStorage<string[]>(indexKey, [])
 
   // List, Detail に渡すパラメータ
-  const [models, setModels] = useState<Character[]>([])
+  const [units, setUnits] = useState<Character[]>([])
 
   // LocalStorage が空の場合はサンプルキャラクターを生成する
-  const initModels = (size: number, idMod:number = 0): Character[] => {
+  const initUnits = (size: number, idMod:number = 0): Character[] => {
     const mod = Math.floor(Math.random() * 15) // 乱数 0～15 を足してサンプル生成
-    const models = createSamples(10, 1, size, mod, idMod)
-    return models
+    const samples = createSamples(10, 1, size, mod, idMod)
+    const units = samples.map(sample => {
+      const data = {
+        ...sample.toData(),
+        totalPoints: 10,
+        gold: sample.getTactic() < 3 ? 200 : 100
+      }
+      return new Character(data)
+    })
+    return units
   }
 
   // 1人目のキャラクター作成後, サンプルキャラクターを4名追加する
-  const addSamples = (size: number) => {
+  const addUnits = (size: number) => {
     const idMod = 5 - size
     // サンプル生成
-    const samples = initModels(size, idMod)
-    const uids = samples.map((sample, i) => {
+    const units = initUnits(size, idMod)
+    const uids = units.map((unit, i) => {
       const uid = `${i + 1 + idMod}`.padStart(2, '0') // ID文字列生成
       // シリアライズ用データ変換の上 LocalStorage にキャラクターを保存
-      localStorage.setItem(`${storageKey}:${uid}`, JSON.stringify(sample.toData()))
+      localStorage.setItem(`${storageKey}:${uid}`, JSON.stringify(unit.toData()))
       return uid
     })
     const newIndex = [...index, ...uids]
@@ -50,7 +58,7 @@ function Edit() {
   useEffect(() => {
     if (index.length === 1) {
       // 不足メンバーを補完
-      addSamples(5 - index.length)
+      addUnits(5 - index.length)
     } else {
       const next = index.sort().map(key => {
         const stored = localStorage.getItem(`${storageKey}:${key}`)
@@ -59,17 +67,19 @@ function Edit() {
           name: '未設定',
           gender: '男性',
           points: [],
-          equipments: null
+          totalPoints: 10,
+          equipments: null,
+          gold: 100
         } as CharacterData
         return new Character(data)
       })
-      setModels(next)
+      setUnits(next)
     }
   }, [index])
 
   return (
     <>
-      <List models={models} />
+      <List units={units} />
       <div className="text-center">
         <button onClick={() => navigate('./making/')}>新規作成</button>
         <button onClick={reset}>リセット</button>

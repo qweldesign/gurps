@@ -20,10 +20,12 @@ function View() {
     name: '未設定',
     gender: '男性',
     points: [],
-    equipments: null
+    totalPoints: 10,
+    equipments: null,
+    gold: 100
   })
 
-  const model = new Character(data)
+  const unit = new Character(data)
 
   // 除名
   const remove = () => {
@@ -60,7 +62,7 @@ function View() {
 
   return (
     <>
-      <Detail model={model} />
+      <Detail unit={unit} />
       <div className="text-center">
         <button onClick={() => navigate('/edit/')}>一覧へ戻る</button>
         <button onClick={() => navigate(`/edit/making/${uid}`)}>編集</button>

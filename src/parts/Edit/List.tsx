@@ -5,7 +5,7 @@ import { type Character } from '../../lib/domains/Character'
 
 type SortKey = 'id' | 'skill' | '筋力' | '敏捷力' | '知力' | '生命力'
 
-function List({ models }: { models: Character[] }) {
+function List({ units }: { units: Character[] }) {
   const [sortKey, setSortKey] = useState<SortKey>('id')
   const [sortDir, setSortDir] = useState({
     id: false, // false: asc▲, true:desc▼
@@ -28,21 +28,21 @@ function List({ models }: { models: Character[] }) {
 
   const sorted = useMemo((): Character[] => {
     if (sortKey === 'id') {
-      return models.sort((a, b) => {
+      return units.sort((a, b) => {
         return (a.id - b.id) * (sortDir.id ? -1 : 1)
       })
     } else if (sortKey === 'skill') {
-      return models.sort((a, b) => {
+      return units.sort((a, b) => {
         const skillA = a.getMainSkill()
         const skillB = b.getMainSkill()
         return (skillA.id! - skillB.id!) * (sortDir.skill ?  -1 : 1)
       })
     } else {
-      return models.sort((a, b) => {
+      return units.sort((a, b) => {
         return (a.getParam(sortKey as ParameterName) - b.getParam(sortKey as ParameterName)) * (sortDir[sortKey] ?  -1 : 1)
       })
     }
-  }, [models, sortKey, sortDir])
+  }, [units, sortKey, sortDir])
 
   return (
     <>
@@ -59,20 +59,24 @@ function List({ models }: { models: Character[] }) {
               <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
               <th onClick={() => handleSort('skill')}>主技能 <span className="text-xs cursor-pointer">{sortDir.skill ? '▼' : '▲'}</span></th>
               <th>装備</th>
+              <th>CP</th>
+              <th>所持金</th>
             </tr>
           </thead>
           <tbody>
-            {sorted.map((model) => (
-              <tr className="cursor-pointer" key={model.id} onClick={() => navigate(`/edit/view/${String(model.id).padStart(2, '0')}`)}>
-                <td>{model.id}</td>
-                <td>{model.name}</td>
-                <td>{model.gender}</td>
-                <td>{`${model.getParamLevel('筋力')} (${model.getParam('筋力')}CP)`}</td>
-                <td>{`${model.getParamLevel('敏捷力')} (${model.getParam('敏捷力')}CP)`}</td>
-                <td>{`${model.getParamLevel('知力')} (${model.getParam('知力')}CP)`}</td>
-                <td>{`${model.getParamLevel('生命力')} (${model.getParam('生命力')}CP)`}</td>
-                <td>{`${model.getMainSkill().name}: ${model.getMainSkillLevel()}`}</td>
-                <td>{`${model.getWeapon().id !== 0 ? model.getWeapon().name : model.getMissile()!.name} / ${model.getBodyArmor().name}`}</td>
+            {sorted.map((unit) => (
+              <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`/edit/view/${String(unit.id).padStart(2, '0')}`)}>
+                <td>{unit.id}</td>
+                <td>{unit.name}</td>
+                <td>{unit.gender}</td>
+                <td>{`${unit.getParamLevel('筋力')} (${unit.getParam('筋力')}CP)`}</td>
+                <td>{`${unit.getParamLevel('敏捷力')} (${unit.getParam('敏捷力')}CP)`}</td>
+                <td>{`${unit.getParamLevel('知力')} (${unit.getParam('知力')}CP)`}</td>
+                <td>{`${unit.getParamLevel('生命力')} (${unit.getParam('生命力')}CP)`}</td>
+                <td>{`${unit.getMainSkill().name}: ${unit.getMainSkillLevel()}`}</td>
+                <td>{`${unit.getWeapon().id !== 0 ? unit.getWeapon().name : unit.getMissile()!.name} / ${unit.getBodyArmor().name}`}</td>
+                <td>{`${unit.getParamTotal()} / ${unit.points}`}</td>
+                <td>{`${unit.getGold()} / ${unit.gold}`}</td>
               </tr>
             ))}
           </tbody>

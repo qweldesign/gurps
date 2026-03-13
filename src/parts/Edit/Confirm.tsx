@@ -23,11 +23,13 @@ function Confirm() {
     name: '未設定',
     gender: '男性',
     points: [],
-    equipments: null
+    totalPoints: 10,
+    equipments: null,
+    gold: 100
   })
 
   // Detail に渡すパラメータ
-  const model = new Character(data)
+  const unit = new Character(data)
 
   // 戻る
   const back = () => {
@@ -62,7 +64,7 @@ function Confirm() {
 
   return (
     <>
-      <Detail model={model} />
+      <Detail unit={unit} />
       <section className="my-12 text-center">
         <p className="text-center">この内容で保存しますか？</p>
         <button onClick={save}>保存する</button>

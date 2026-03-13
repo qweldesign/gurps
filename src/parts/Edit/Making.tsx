@@ -5,6 +5,7 @@ import { useSessionStorage } from '../../hooks/useSessionStorage'
 import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../lib/domains/Equipments'
 import { PC_LIST } from '../../lib/domains/SampleCharacter'
+import type { CharacterData } from '../../lib/domains/Character'
 
 function Making() {
   const [points, setPoints] = useState(10)
@@ -44,7 +45,9 @@ function Making() {
     name: '未設定',
     gender: '男性',
     points: [],
-    equipments: null
+    totalPoints: 10,
+    equipments: null,
+    gold: 100
   })
   // SessionStorage から作りかけのデータを取得
   const [nextData] = useSessionStorage(uniqueKey, prevData)
@@ -143,8 +146,13 @@ function Making() {
 
   // 確認 (SessionStorage を使用)
   const confirm = () => {
-    const confirmData = {
-      id: Number(uid), name, gender, points: params.toData(), equipments: equips.toData()
+    const confirmData: CharacterData = {
+      id: Number(uid),
+      name, gender,
+      points: params.toData(),
+      totalPoints: points,
+      equipments: equips.toData(),
+      gold
     }
     sessionStorage.setItem(uniqueKey, JSON.stringify(confirmData))
     if (Number(uid)) {
