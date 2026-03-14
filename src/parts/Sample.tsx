@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useLoaderData } from 'react-router-dom'
+import { useLoaderData, Link } from 'react-router-dom'
 import List from './Sample/List'
-import Detail from './Sample/Detail'
+import Detail from './Detail'
 import { type Multiplier, createSamples } from '../lib/domains/SampleCharacter'
 
 function Sample() {
@@ -39,7 +39,12 @@ function Sample() {
       </select>
       {!sampleId
         ? <List samples={samples} />
-        : <Detail sample={samples.find(m => m.id === Number(sampleId))!} />
+        : (
+          <>
+            <Detail unit={samples.find(m => m.id === Number(sampleId))!} />
+            <Link className="ms-12 italic" to="/sample/">&lt; Back to list</Link>
+          </>
+        )
       }
     </>
   )

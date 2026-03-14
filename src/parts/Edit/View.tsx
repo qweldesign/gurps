@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage';
-import Detail from './Detail'
+import Detail from '../Detail'
 import Modal from './Modal'
 import { type CharacterData, Character } from '../../lib/domains/Character'
 
@@ -75,7 +75,7 @@ function View() {
   }
 
   return (
-    <>
+    <div className="px-6">
       <Detail unit={unit} />
       <div className="text-center">
         <button onClick={() => navigate('/edit/')}>一覧へ戻る</button>
@@ -85,7 +85,7 @@ function View() {
       {alertOpen && (
         <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={remove} />
       )}
-    </>
+    </div>
   )
 }
 

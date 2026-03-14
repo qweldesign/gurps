@@ -1,7 +1,7 @@
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage'
 import { useSessionStorage } from '../../hooks/useSessionStorage'
-import Detail from './Detail'
+import Detail from '../Detail'
 import { type CharacterData, Character } from '../../lib/domains/Character'
 
 function Confirm() {
@@ -63,14 +63,14 @@ function Confirm() {
   }
 
   return (
-    <>
+    <div className="px-6">
       <Detail unit={unit} />
       <section className="my-12 text-center">
         <p className="text-center">この内容で保存しますか？</p>
         <button onClick={save}>保存する</button>
         <button onClick={back}>作成画面へ戻る</button>
       </section>
-    </>
+    </div>
   )
 }
 
