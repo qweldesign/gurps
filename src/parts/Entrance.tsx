@@ -1,14 +1,11 @@
 import { Link } from 'react-router-dom'
-import { useLocalStorage } from '../hooks/useLocalStorage'
+import { SaveData } from '../lib/domains/SaveData'
 
 function Entrance() {
-  // LocalStorage を使用
-  const storageKey = 'savedata';
-  
-  // LocalStorage のインデックス (uid配列を格納)
-  const indexKey = `${storageKey}:index`
-  const [index] = useLocalStorage<string[]>(indexKey, [])
-  const edit = index.length ? '/edit/' : '/edit/making/'
+  // セーブデータの読み込み
+  const saveData = new SaveData()
+  const keys = saveData.loadKeys()
+  const edit = keys.size ? '/edit/' : '/edit/making/'
 
   return (
     <ul className='nav'>

@@ -1,12 +1,11 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
-import { useLocalStorage } from '../../hooks/useLocalStorage'
-import { useSessionStorage } from '../../hooks/useSessionStorage'
 import Modal from './Modal'
 import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../lib/domains/Equipments'
+import { Character, type CharacterData } from '../../lib/domains/Character'
 import { PC_LIST } from '../../lib/domains/SampleCharacter'
-import type { CharacterData } from '../../lib/domains/Character'
+import { SaveData } from '../../lib/domains/SaveData'
 
 function Setting() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
@@ -31,6 +30,16 @@ function Setting() {
   const navigate = useNavigate()
   const isFirstCreation = uid === '00' ? true : false
 
+  // セーブデータの読み込み
+  const saveData = new SaveData()
+  const keys = saveData.loadKeys()
+
+  // LocalStorage からキャラクターデータを取得
+  const prevModel = saveData.loadModel(uid)
+  
+  // SessionStorage から作りかけのデータを取得
+  const model = saveData.loadModel(uid, true)
+
   // 能力値, 技能一覧表
   const lists = []
   lists[0] = PARAMETER_LIST.filter(param => param.base === 10)
@@ -39,27 +48,7 @@ function Setting() {
   lists[3] = PARAMETER_LIST.filter(param => param.base === '敏捷力')
   lists[4] = PARAMETER_LIST.filter(param => param.base === '知力')
 
-  // LocalStorage / SessionStorage を使用
-  const storageKey = 'savedata';
-  const uniqueKey = `${storageKey}:${uid}`
-  
-  // LocalStorage のインデックス (uid配列を格納)
-  const indexKey = `${storageKey}:index`
-  const [index] = useLocalStorage<string[]>(indexKey, [])
-  
-  // LocalStorage からキャラクターデータを取得
-  const [prevData] = useLocalStorage(uniqueKey, {
-    id: 0,
-    name: '未設定',
-    gender: '男性',
-    points: [],
-    totalPoints: 10,
-    equipments: null,
-    gold: 100
-  })
-  // SessionStorage から作りかけのデータを取得
-  const [nextData] = useSessionStorage(uniqueKey, prevData)
-
+  // CP/所持金設定の更新
   const updateOptions = (value: string) => {
     const [p, m] = value.split('/')
     setPoints(Number(p))
@@ -181,7 +170,7 @@ function Setting() {
     setName(PC_LIST[n])
   }
 
-  const back = index.length ? '/edit/' : '/'
+  const back = keys.size ? '/edit/' : '/'
 
   // 確認 (SessionStorage を使用)
   const confirm = () => {
@@ -225,7 +214,10 @@ function Setting() {
       equipments: equips.toData(),
       gold
     }
-    sessionStorage.setItem(uniqueKey, JSON.stringify(confirmData))
+    
+    const unit = new Character(confirmData)
+    unit.saveTemp() // 一時保存
+
     if (Number(uid)) {
       navigate(`/edit/confirm/${uid}`)
     } else {
@@ -235,17 +227,17 @@ function Setting() {
  
   useEffect(() => {
     // 作成したキャラクターのデータを反映
-    setPoints(prevData.totalPoints)
-    setGold(prevData.gold) // 旧データを使用
-    setName(nextData.name)
-    setGender(nextData.gender)
-    setPrevParams(() => new Parameters(prevData.points))
-    setParams(() => new Parameters(nextData.points))
-    setPrevEquips(() => new Equipments(prevData.equipments))
-    setEquips(() => new Equipments(nextData.equipments))
+    setPoints(prevModel.totalPoints)
+    setGold(prevModel.gold) // 旧データを使用
+    setName(model.name)
+    setGender(model.gender)
+    setPrevParams(() => new Parameters(prevModel.points))
+    setParams(() => new Parameters(model.points))
+    setPrevEquips(() => new Equipments(prevModel.equipments))
+    setEquips(() => new Equipments(model.equipments))
 
     // 武器・防具リストのフィルター更新
-    if (nextData.points.length === 0 || nextData.points[4] === 0) { //「武術」(params 経由で取得しても React で未反映なので)
+    if (model.points.length === 0 || model.points[4] === 0) { //「武術」(params 経由で取得しても React で未反映なので)
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
     } else {

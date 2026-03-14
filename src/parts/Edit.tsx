@@ -1,10 +1,10 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useLocalStorage } from '../hooks/useLocalStorage'
 import List from './Edit/List'
 import Modal from './Edit/Modal'
-import { type CharacterData, Character } from '../lib/domains/Character'
+import { Character } from '../lib/domains/Character'
 import { createSamples } from '../lib/domains/SampleCharacter'
+import { SaveData } from '../lib/domains/SaveData'
 
 function Edit() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
@@ -12,47 +12,30 @@ function Edit() {
 
   const navigate = useNavigate()
 
-  // LocalStorage を使用
-  const storageKey = 'savedata';
-  
-  // LocalStorage のインデックス (uid配列を格納)
-  const indexKey = `${storageKey}:index`
-  const [index, setIndex] = useLocalStorage<string[]>(indexKey, [])
+  // セーブデータの読み込み
+  const saveData = new SaveData()
+  const keys = saveData.loadKeys()
 
   // List, Detail に渡すパラメータ
   const [units, setUnits] = useState<Character[]>([])
 
-  // LocalStorage が空の場合はサンプルキャラクターを生成する
-  const initUnits = (size: number, idMod:number = 0): Character[] => {
+  // サンプルキャラクター生成・保存 (idModを指定して生成)
+  const saveUnits = (size: number) => {
     const mod = Math.floor(Math.random() * 15) // 乱数 0～15 を足してサンプル生成
-    const samples = createSamples(10, 1, size, mod, idMod)
-    const units = samples.map(sample => {
-      const data = {
+    const samples = createSamples(10, 1, size, mod, 5 - size)
+    samples.forEach(sample => {
+      const model = {
         ...sample.toData(),
         totalPoints: 10,
         gold: sample.getTactic() < 3 ? 200 : 100
       }
-      return new Character(data)
+      const unit = new Character(model)
+      saveData.addKey(unit.uid) // インデックス登録
+      unit.save() // キャラクター保存
     })
-    return units
   }
 
-  // 1人目のキャラクター作成後, サンプルキャラクターを4名追加する
-  const addUnits = (size: number) => {
-    const idMod = 5 - size
-    // サンプル生成
-    const units = initUnits(size, idMod)
-    const uids = units.map((unit, i) => {
-      const uid = `${i + 1 + idMod}`.padStart(2, '0') // ID文字列生成
-      // シリアライズ用データ変換の上 LocalStorage にキャラクターを保存
-      localStorage.setItem(`${storageKey}:${uid}`, JSON.stringify(unit.toData()))
-      return uid
-    })
-    const newIndex = [...index, ...uids]
-    setIndex(newIndex) // LocalStorage にインデックスを保存
-  }
-
-  // ゲームの期化確認
+  // ゲームの初期化確認
   const confirmReset = () => {
     setAlertMessage(
       <p>本当にセーブデータを初期化しますか？</p>
@@ -63,32 +46,22 @@ function Edit() {
   // ゲームの初期化
   const reset = () => {
     setAlertOpen(false)
-    localStorage.clear()
-    sessionStorage.clear()
+    saveData.clear()
     navigate('/')
   }
 
   useEffect(() => {
-    if (index.length === 1) {
+    if (keys.size === 1) {
       // 不足メンバーを補完
-      addUnits(5 - index.length)
-    } else {
-      const next = index.sort().map(key => {
-        const stored = localStorage.getItem(`${storageKey}:${key}`)
-        const data = stored ? JSON.parse(stored) : {
-          id: 0,
-          name: '未設定',
-          gender: '男性',
-          points: [],
-          totalPoints: 10,
-          equipments: null,
-          gold: 100
-        } as CharacterData
-        return new Character(data)
-      })
-      setUnits(next)
+      saveUnits(5 - keys.size)
     }
-  }, [index])
+    const models = saveData.loadModels()
+    const next: Character[] = []
+    models.forEach(model => {
+      next.push(new Character(model))
+    })
+    setUnits(next)
+  }, [])
 
   return (
     <div className="px-6">

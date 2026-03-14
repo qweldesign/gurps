@@ -1,9 +1,9 @@
 import { type ReactNode, useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom'
-import { useLocalStorage } from '../../hooks/useLocalStorage';
 import Detail from '../Detail'
 import Modal from './Modal'
-import { type CharacterData, Character } from '../../lib/domains/Character'
+import { Character } from '../../lib/domains/Character'
+import { SaveData } from '../../lib/domains/SaveData'
 
 function View() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
@@ -12,30 +12,19 @@ function View() {
   const { uid } = useLoaderData()
   const navigate = useNavigate()
 
-  // LocalStorage を使用
-  const storageKey = 'savedata';
-  const uniqueKey = `${storageKey}:${uid}`
+  // セーブデータの読み込み
+  const saveData = new SaveData()
 
-  // LocalStorage のインデックス (uid配列を格納)
-  const indexKey = `${storageKey}:index`
-  const [index, setIndex] = useLocalStorage<string[]>(indexKey, [])
+  // LocalStorage からキャラクターデータを取得
+  const model = saveData.loadModel(uid)
 
-  const [data] = useLocalStorage<CharacterData>(uniqueKey, {
-    id: 0,
-    name: '未設定',
-    gender: '男性',
-    points: [],
-    totalPoints: 10,
-    equipments: null,
-    gold: 100
-  })
-
-  const unit = new Character(data)
+  // Detail に渡すパラメータ
+  const unit = new Character(model)
 
   // 除名確認
   const confirmRemove = () => {
     setAlertMessage(
-      <p>本当に {data.name} を除名しますか？</p>
+      <p>本当に {unit.name} を除名しますか？</p>
     )
     setAlertOpen(true)
   }
@@ -43,35 +32,8 @@ function View() {
   // 除名
   const remove = () => {
     setAlertOpen(false)
-    const order = index.indexOf(uid)
-    if (order !== -1) {
-      // 配列を詰める
-      index.forEach((uid, i) => { // 01, 02, 03, 04, 05 とすると、i = 2
-        if (i > order) {
-          // 旧キーからデータを取り出す uid='04', '05'
-          const uniqueKey = `${storageKey}:${uid}`
-          const stored = localStorage.getItem(uniqueKey) ?? 'null'
-          const data = JSON.parse(stored)
-          if (data) {
-            data.id-- // ID を更新
-            const newUid = String(data.id).padStart(2, '0')
-            const newUniqueKey = `${storageKey}:${newUid}` // 03, 04
-            const newData = JSON.stringify(data)
-            localStorage.setItem(newUniqueKey, newData) // 新キーへデータを格納
-            sessionStorage.setItem(newUniqueKey, newData)
-          }
-        }
-      })
-      // 末尾を削除
-      const latestUid = index[index.length - 1]
-      const latestUniqueKey = `${storageKey}:${latestUid}`
-      localStorage.removeItem(latestUniqueKey)
-      sessionStorage.removeItem(latestUniqueKey)
-      // インデックスを更新
-      const newIndex = index.filter(v => v !== latestUid)
-      setIndex(newIndex)
-      navigate('/edit/')
-    }
+    saveData.removeModel(uid)
+    navigate('/edit/')
   }
 
   return (

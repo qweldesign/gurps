@@ -2,6 +2,7 @@
 
 import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
 import { type Weapon, type Armor, type Dmg, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
+import { STORAGE_KEY } from './SaveData'
 
 export type CharacterData = {
   id: number
@@ -15,22 +16,26 @@ export type CharacterData = {
 
 export class Character {
   public id: number
+  public uid: string
   public name: string
   public gender: string
   protected parameters: Parameters
   public points: number
   protected equipments: Equipments
   public gold: number
+  private storageKey: string
 
   constructor(data: CharacterData) {
     const { id, name, gender, points, totalPoints, equipments, gold } = data
     this.id = id
+    this.uid = String(id).padStart(2, '0')
     this.name = name
     this.gender = gender
     this.parameters = new Parameters(points)
     this.points = totalPoints
     this.equipments = new Equipments(equipments)
     this.gold = gold
+    this.storageKey = `${STORAGE_KEY}:${this.uid}`
   }
 
   // nameとpointを指定し、Point を追加
@@ -259,5 +264,39 @@ export class Character {
       equipments: this.equipments.toData(),
       gold: this.gold
     }
+  }
+
+  // 一時保存 (確認用)
+  saveTemp() {
+    const model = this.toData()
+    const raw = JSON.stringify(model)
+    sessionStorage.setItem(this.storageKey, raw)
+  }
+
+  // 保存
+  save() {
+    const model = this.toData()
+    const raw = JSON.stringify(model)
+    localStorage.setItem(this.storageKey, raw)
+  }
+
+  // 一時読み込み (確認用)
+  loadTemp() {
+    const raw = sessionStorage.getItem(this.storageKey) ?? '{}'
+    const model = JSON.parse(raw)
+    return model
+  }
+
+  // 読み込み
+  load() {
+    const raw = localStorage.getItem(this.storageKey) ?? '{}'
+    const model = JSON.parse(raw)
+    return model
+  }
+
+  // クリア
+  clear() {
+    localStorage.removeItem(this.storageKey)
+    sessionStorage.removeItem(this.storageKey)
   }
 }

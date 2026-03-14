@@ -117,12 +117,11 @@ const NPC_LIST: string[] = [
 ]
 
 export class SampleCharacter extends Character {
-  public uid: number // キャラクター生成のアルゴリズムを決定するKey (デバッグ用)
   public tactic: number // 技能修得や装備選択、自動行動時のロジックタイプ
 
-  constructor(id: number, uid: number, totalPoints: number = 10, multiplier: Multiplier = 1) {
+  constructor(id: number, generationKey: number, totalPoints: number = 10, multiplier: Multiplier = 1) {
     const A = ABILITY_TABLE.length // 16
-    const i = Math.max(Math.min(uid, 63), 0) // 最大値・最小値指定
+    const i = Math.max(Math.min(generationKey, 63), 0) // 最大値・最小値指定
     const r1 = Math.floor(i / A) * A
     const r2 = Math.floor(i / A) * A / 4
     const r3 = i % A
@@ -139,7 +138,6 @@ export class SampleCharacter extends Character {
     const gender = g ? '女性' : '男性'
     const gold = totalPoints * 10 // 仮設定
     super({ id, name, gender, points, totalPoints, equipments: null, gold })
-    this.uid = i
 
     // 能力値の修正
     this.modifyAbilities(MOD_TABLE[b], multiplier)
@@ -351,8 +349,8 @@ export function createSamples(totalPoints = 10, multiplier: Multiplier = 1, size
 
   for (let n = 0; n < size; n++) {
     const id = n + idMod + 1 // 通常は1からカウント (呼び出すときは-1, idMod を足す)
-    const uid = Math.floor(n * step) + mod // 定数を足してサンプル生成
-    const sample = new SampleCharacter(id, uid, totalPoints, multiplier)
+    const generationKey = Math.floor(n * step) + mod // 定数を足してサンプル生成
+    const sample = new SampleCharacter(id, generationKey, totalPoints, multiplier)
     samples.push(sample)
   }
 

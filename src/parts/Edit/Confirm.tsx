@@ -1,39 +1,31 @@
 import { useLoaderData, useNavigate } from 'react-router-dom'
-import { useLocalStorage } from '../../hooks/useLocalStorage'
-import { useSessionStorage } from '../../hooks/useSessionStorage'
 import Detail from '../Detail'
-import { type CharacterData, Character } from '../../lib/domains/Character'
+import { Character } from '../../lib/domains/Character'
+import { SaveData } from '../../lib/domains/SaveData'
 
 function Confirm() {
   const { uid } = useLoaderData()
   const navigate = useNavigate()
 
-  // LocakStorage / SessionStorage を使用
-  const storageKey = 'savedata';
-  let uniqueKey = `${storageKey}:${uid}`
+  // セーブデータの読み込み
+  const saveData = new SaveData()
+  const keys = saveData.loadKeys()
 
-  // LocalStorage のインデックス (uid配列を格納)
-  const indexKey = `${storageKey}:index`
-  const [index, setIndex] = useLocalStorage<string[]>(indexKey, [])
+  // SessionStorage から作りかけのデータを取得
+  const model = saveData.loadModel(uid, true)
 
-  // SessionStorage からデータを取り出す
-  // この初期データが使われることは恐らく無い (デバッグ用)
-  const [data] = useSessionStorage<CharacterData>(uniqueKey, {
-    id: 0,
-    name: '未設定',
-    gender: '男性',
-    points: [],
-    totalPoints: 10,
-    equipments: null,
-    gold: 100
-  })
+  // 新規作成かどうかを変数に格納
+  const isFirstCreation = !model.id
+
+  // 新規の場合, 新しい ID を発行
+  if (isFirstCreation) model.id = keys.size + 1
 
   // Detail に渡すパラメータ
-  const unit = new Character(data)
+  const unit = new Character(model)
 
   // 戻る
   const back = () => {
-    if (data.id) {
+    if (!isFirstCreation) {
       navigate(`/edit/setting/${uid}`)
     } else {
       navigate(`/edit/making/`)
@@ -42,23 +34,11 @@ function Confirm() {
 
   // 保存
   const save = () => {
-    if (!data.id) {
-      // 新規の場合
-      // id から uid を作成 (インデックスの長さから生成)
-      const uid = String(index.length + 1).padStart(2, '0')
-      // 忘れずに StorageKey を更新
-      uniqueKey = `${storageKey}:${uid}`
-      // 忘れずにキャラクターのIDを更新
-      data.id = Number(uid)
-      // インデックスを更新
-      const newIndex = [...index, uid]
-      setIndex(newIndex)
+    if (isFirstCreation) {
+      saveData.addKey(unit.uid) // 新規の場合, インデックス登録
     }
-    // キャラクターデータを保存
-    localStorage.setItem(uniqueKey, JSON.stringify(data))
-    // SessionStorage を削除
-    sessionStorage.removeItem(`${storageKey}:00`)
-    sessionStorage.removeItem(storageKey)
+    unit.save() // キャラクター保存
+    sessionStorage.clear() // SessionStorage をクリア
     navigate(`/edit/`) // 戻る
   }
 
