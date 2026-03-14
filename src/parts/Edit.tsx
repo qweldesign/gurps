@@ -1,11 +1,15 @@
-import { useState, useEffect } from 'react'
+import { type ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import List from './Edit/List'
+import Modal from './Edit/Modal'
 import { type CharacterData, Character } from '../lib/domains/Character'
 import { createSamples } from '../lib/domains/SampleCharacter'
 
 function Edit() {
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
+
   const navigate = useNavigate()
 
   // LocalStorage を使用
@@ -48,8 +52,17 @@ function Edit() {
     setIndex(newIndex) // LocalStorage にインデックスを保存
   }
 
+  // ゲームの期化確認
+  const confirmReset = () => {
+    setAlertMessage(
+      <p>本当にセーブデータを初期化しますか？</p>
+    )
+    setAlertOpen(true)
+  }
+
   // ゲームの初期化
   const reset = () => {
+    setAlertOpen(false)
     localStorage.clear()
     sessionStorage.clear()
     navigate('/')
@@ -82,8 +95,11 @@ function Edit() {
       <List units={units} />
       <div className="text-center">
         <button onClick={() => navigate('./making/')}>新規作成</button>
-        <button onClick={reset}>リセット</button>
+        <button onClick={confirmReset}>リセット</button>
       </div>
+      {alertOpen && (
+        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={reset} />
+      )}
     </>
   )
 }

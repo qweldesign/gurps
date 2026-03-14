@@ -1,9 +1,14 @@
+import { type ReactNode, useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import Detail from './Detail'
+import Modal from './Modal'
 import { type CharacterData, Character } from '../../lib/domains/Character'
 
 function View() {
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
+
   const { uid } = useLoaderData()
   const navigate = useNavigate()
 
@@ -27,8 +32,17 @@ function View() {
 
   const unit = new Character(data)
 
+  // 除名確認
+  const confirmRemove = () => {
+    setAlertMessage(
+      <p>本当に {data.name} を除名しますか？</p>
+    )
+    setAlertOpen(true)
+  }
+
   // 除名
   const remove = () => {
+    setAlertOpen(false)
     const order = index.indexOf(uid)
     if (order !== -1) {
       // 配列を詰める
@@ -66,8 +80,11 @@ function View() {
       <div className="text-center">
         <button onClick={() => navigate('/edit/')}>一覧へ戻る</button>
         <button onClick={() => navigate(`/edit/making/${uid}`)}>編集</button>
-        <button onClick={remove}>除名</button>
+        <button onClick={confirmRemove}>除名</button>
       </div>
+      {alertOpen && (
+        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={remove} />
+      )}
     </>
   )
 }

@@ -463,7 +463,7 @@ function Making() {
         </section>
       </div>
       {alertOpen && (
-        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} />
+        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={null} />
       )}
     </>
   )
