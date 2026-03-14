@@ -45,44 +45,42 @@ function List({ units }: { units: Character[] }) {
   }, [units, sortKey, sortDir])
 
   return (
-    <>
-      <div className="table-wrapper">
-        <table className="w-1/1">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort('id')}>ID <span className="text-xs cursor-pointer">{sortDir.id ? '▼' : '▲'}</span></th>
-              <th>名前</th>
-              <th>性別</th>
-              <th onClick={() => handleSort('筋力')}>筋力 <span className="text-xs cursor-pointer">{sortDir['筋力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('敏捷力')}>敏捷力 <span className="text-xs cursor-pointer">{sortDir['敏捷力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('知力')}>知力 <span className="text-xs cursor-pointer">{sortDir['知力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('skill')}>主技能 <span className="text-xs cursor-pointer">{sortDir.skill ? '▼' : '▲'}</span></th>
-              <th>装備</th>
-              <th>CP</th>
-              <th>所持金</th>
+    <div className="table-wrapper">
+      <table className="w-276">
+        <thead>
+          <tr>
+            <th onClick={() => handleSort('id')}>ID <span className="text-xs cursor-pointer">{sortDir.id ? '▼' : '▲'}</span></th>
+            <th>名前</th>
+            <th>性別</th>
+            <th onClick={() => handleSort('筋力')}>筋力 <span className="text-xs cursor-pointer">{sortDir['筋力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('敏捷力')}>敏捷力 <span className="text-xs cursor-pointer">{sortDir['敏捷力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('知力')}>知力 <span className="text-xs cursor-pointer">{sortDir['知力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('skill')}>主技能 <span className="text-xs cursor-pointer">{sortDir.skill ? '▼' : '▲'}</span></th>
+            <th>装備</th>
+            <th>CP</th>
+            <th>所持金</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((unit) => (
+            <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`/edit/view/${String(unit.id).padStart(2, '0')}`)}>
+              <td>{unit.id}</td>
+              <td>{unit.name}</td>
+              <td>{unit.gender}</td>
+              <td>{`${unit.getParamLevel('筋力')} (${unit.getParam('筋力')}CP)`}</td>
+              <td>{`${unit.getParamLevel('敏捷力')} (${unit.getParam('敏捷力')}CP)`}</td>
+              <td>{`${unit.getParamLevel('知力')} (${unit.getParam('知力')}CP)`}</td>
+              <td>{`${unit.getParamLevel('生命力')} (${unit.getParam('生命力')}CP)`}</td>
+              <td>{`${unit.getMainSkill().name}: ${unit.getMainSkillLevel()}`}</td>
+              <td>{`${unit.getWeapon().id !== 0 ? unit.getWeapon().name : unit.getMissile()!.name} / ${unit.getBodyArmor().name}`}</td>
+              <td>{`${unit.getParamTotal()} / ${unit.points}`}</td>
+              <td>{`${unit.getGold()} / ${unit.gold}`}</td>
             </tr>
-          </thead>
-          <tbody>
-            {sorted.map((unit) => (
-              <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`/edit/view/${String(unit.id).padStart(2, '0')}`)}>
-                <td>{unit.id}</td>
-                <td>{unit.name}</td>
-                <td>{unit.gender}</td>
-                <td>{`${unit.getParamLevel('筋力')} (${unit.getParam('筋力')}CP)`}</td>
-                <td>{`${unit.getParamLevel('敏捷力')} (${unit.getParam('敏捷力')}CP)`}</td>
-                <td>{`${unit.getParamLevel('知力')} (${unit.getParam('知力')}CP)`}</td>
-                <td>{`${unit.getParamLevel('生命力')} (${unit.getParam('生命力')}CP)`}</td>
-                <td>{`${unit.getMainSkill().name}: ${unit.getMainSkillLevel()}`}</td>
-                <td>{`${unit.getWeapon().id !== 0 ? unit.getWeapon().name : unit.getMissile()!.name} / ${unit.getBodyArmor().name}`}</td>
-                <td>{`${unit.getParamTotal()} / ${unit.points}`}</td>
-                <td>{`${unit.getGold()} / ${unit.gold}`}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

@@ -91,7 +91,7 @@ function Edit() {
   }, [index])
 
   return (
-    <>
+    <div className="px-6">
       <List units={units} />
       <div className="text-center">
         <button onClick={() => navigate('./making/')}>新規作成</button>
@@ -100,7 +100,7 @@ function Edit() {
       {alertOpen && (
         <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={reset} />
       )}
-    </>
+    </div>
   )
 }
 

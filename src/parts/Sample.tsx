@@ -19,7 +19,7 @@ function Sample() {
   const samples = createSamples(points, multiplier)
 
   return (
-    <>
+    <div className="px-6">
       <label>CP: </label>
       <select className="w-48 m-6 ps-3 text-left" onChange={(e) => updatePoints(e.target.value)}>
         <option value="10/1">{'10CP'}</option>
@@ -46,7 +46,7 @@ function Sample() {
           </>
         )
       }
-    </>
+    </div>
   )
 }
 

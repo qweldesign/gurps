@@ -289,8 +289,8 @@ function Setting() {
   }, [name])
 
   return (
-    <>
-      <div className="w-[48em] mx-auto">
+    <div className="px-6">
+      <div className="max-w-[48em] mx-auto">
         <h3>キャラクター{isFirstCreation ? '作成' : '編集'}</h3>
         {isFirstCreation && (
           <section>
@@ -321,7 +321,7 @@ function Setting() {
             </>
           )}
           <h5>残りCP: <span className={!pointsState ? 'text-amber-400 font-bold' : 'font-bold'}>{points - params.getTotal()} 点</span></h5>
-          <div className="flex flex-wrap flex-col items-center gap-6 h-[60em]">
+          <div className="flex flex-nowrap lg:flex-wrap flex-col items-center gap-6 lg:h-[60em]">
             {lists.map((list, i) => (
               <div className="w-64" key={i}>
                 <h6>
@@ -376,7 +376,7 @@ function Setting() {
           )}
           <h5>残り所持金: <span className={!goldState ? 'text-red-600 font-bold' : 'font-bold'}>{gold - equips.getGold()} 金</span></h5>
           <div>
-            <label className="inline-block w-24 text-right">主用武器: </label>
+            <label className="inline-block w-24 sm:text-right">主用武器: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getWeapon().name} onChange={(e) => changeWeapon(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {weaponList.filter(item => (
@@ -388,7 +388,7 @@ function Setting() {
             </select>
           </div>
           <div>
-            <label className="inline-block w-24 text-right">射撃武器: </label>
+            <label className="inline-block w-24 sm:text-right">射撃武器: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getMissile().name} onChange={(e) => changeMissile(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {weaponList.filter(item => (
@@ -400,7 +400,7 @@ function Setting() {
             </select>
           </div>
           <div>
-            <label className="inline-block w-24 text-right">盾: </label>
+            <label className="inline-block w-24 sm:text-right">盾: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getShield().name} onChange={(e) => changeShield(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {weaponList.filter(item => (
@@ -412,7 +412,7 @@ function Setting() {
             </select>
           </div>
           <div>
-            <label className="inline-block w-24 text-right">胴防具: </label>
+            <label className="inline-block w-24 sm:text-right">胴防具: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getBodyArmor().name} onChange={(e) => changeArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => item.id !== 0).map((item, i) => (
@@ -421,7 +421,7 @@ function Setting() {
             </select>
           </div>
           <div>
-            <label className="inline-block w-24 text-right">頭防具: </label>
+            <label className="inline-block w-24 sm:text-right">頭防具: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getHeadArmor().parts[0]!} onChange={(e) => changeHeadArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => (
@@ -432,7 +432,7 @@ function Setting() {
             </select>
           </div>
           <div>
-            <label className="inline-block w-24 text-right">腕防具: </label>
+            <label className="inline-block w-24 sm:text-right">腕防具: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getArmArmor().parts[1]!} onChange={(e) => changeArmArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => (
@@ -443,7 +443,7 @@ function Setting() {
             </select>
           </div>
           <div>
-            <label className="inline-block w-24 text-right">脚防具: </label>
+            <label className="inline-block w-24 sm:text-right">脚防具: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getLegArmor().parts[2]!} onChange={(e) => changeLegArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => (
@@ -458,12 +458,12 @@ function Setting() {
           <section>
             <h4>4. プロフィールの設定</h4>
             <div>
-              <label className="inline-block w-24 text-right">名前: </label>
+              <label className="inline-block w-24 sm:text-right">名前: </label>
               <input className="w-72 m-6 px-3 text-left" type="text" value={name} onChange={(e) => changeName(e.target.value)} />
-              <button className="w-24 h-6 text-sm/1" onClick={autoProfile}>自動入力</button>
+              <button className="block sm:inline-block w-24 h-6 m-auto text-sm/1" onClick={autoProfile}>自動入力</button>
             </div>
             <div>
-              <label className="inline-block w-24 text-right">性別: </label>
+              <label className="inline-block w-24 sm:text-right">性別: </label>
               <select className="w-72 m-6 px-3 text-left" value={gender} onChange={(e) => changeGender(e.target.value)}>
                 <option value="男性">男性</option>
                 <option value="女性">女性</option>
@@ -484,7 +484,7 @@ function Setting() {
       {alertOpen && (
         <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={null} />
       )}
-    </>
+    </div>
   )
 }
 

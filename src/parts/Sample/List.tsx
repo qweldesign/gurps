@@ -43,48 +43,46 @@ function SampleList({ samples }: { samples: SampleCharacter[] }) {
   }, [samples, sortKey, sortDir])
 
   return (
-    <>
-      <div className="table-wrapper">
-        <table className="w-1/1">
-          <thead>
-            <tr>
-              <th onClick={() => handleSort('id')}>ID <span className="text-xs cursor-pointer">{sortDir.id ? '▼' : '▲'}</span></th>
-              <th>名前</th>
-              <th>性別</th>
-              <th onClick={() => handleSort('tactic')}>タイプ <span className="text-xs cursor-pointer">{sortDir.tactic ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('筋力')}>筋力 <span className="text-xs cursor-pointer">{sortDir['筋力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('敏捷力')}>敏捷力 <span className="text-xs cursor-pointer">{sortDir['敏捷力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('知力')}>知力 <span className="text-xs cursor-pointer">{sortDir['知力'] ? '▼' : '▲'}</span></th>
-              <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
-              <th>主技能</th>
-              <th>副技能</th>
-              <th>装備</th>
+    <div className="table-wrapper">
+      <table className="w-276">
+        <thead>
+          <tr>
+            <th onClick={() => handleSort('id')}>ID <span className="text-xs cursor-pointer">{sortDir.id ? '▼' : '▲'}</span></th>
+            <th>名前</th>
+            <th>性別</th>
+            <th onClick={() => handleSort('tactic')}>タイプ <span className="text-xs cursor-pointer">{sortDir.tactic ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('筋力')}>筋力 <span className="text-xs cursor-pointer">{sortDir['筋力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('敏捷力')}>敏捷力 <span className="text-xs cursor-pointer">{sortDir['敏捷力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('知力')}>知力 <span className="text-xs cursor-pointer">{sortDir['知力'] ? '▼' : '▲'}</span></th>
+            <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
+            <th>主技能</th>
+            <th>副技能</th>
+            <th>装備</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((sample) => (
+            <tr className="cursor-pointer" key={sample.id} onClick={() => navigate(`/sample/${String(sample.id).padStart(2, '0')}`)}>
+              <td>{sample.id}</td>
+              <td>{sample.name}</td>
+              <td>{sample.gender}</td>
+              <td>{sample.getTacticName()}</td>
+              <td>{`${sample.getParamLevel('筋力')} (${sample.getParam('筋力')}CP)`}</td>
+              <td>{`${sample.getParamLevel('敏捷力')} (${sample.getParam('敏捷力')}CP)`}</td>
+              <td>{`${sample.getParamLevel('知力')} (${sample.getParam('知力')}CP)`}</td>
+              <td>{`${sample.getParamLevel('生命力')} (${sample.getParam('生命力')}CP)`}</td>
+              <td>{`${sample.getSkillByPriority().name}: ${sample.getSkillByPriority().level}`}</td>
+              {sample.getSkillByPriority(1).point ? (
+                <td>{`${sample.getSkillByPriority(1).name}: ${sample.getSkillByPriority(1).level}`}</td>
+              ) : (
+                <td>-</td>
+              )}
+              <td>{`${sample.getWeapon().id !== 0 ? sample.getWeapon().name : sample.getMissile()!.name} / ${sample.getBodyArmor().name}`}</td>
             </tr>
-          </thead>
-          <tbody>
-            {sorted.map((sample) => (
-              <tr className="cursor-pointer" key={sample.id} onClick={() => navigate(`/sample/${String(sample.id).padStart(2, '0')}`)}>
-                <td>{sample.id}</td>
-                <td>{sample.name}</td>
-                <td>{sample.gender}</td>
-                <td>{sample.getTacticName()}</td>
-                <td>{`${sample.getParamLevel('筋力')} (${sample.getParam('筋力')}CP)`}</td>
-                <td>{`${sample.getParamLevel('敏捷力')} (${sample.getParam('敏捷力')}CP)`}</td>
-                <td>{`${sample.getParamLevel('知力')} (${sample.getParam('知力')}CP)`}</td>
-                <td>{`${sample.getParamLevel('生命力')} (${sample.getParam('生命力')}CP)`}</td>
-                <td>{`${sample.getSkillByPriority().name}: ${sample.getSkillByPriority().level}`}</td>
-                {sample.getSkillByPriority(1).point ? (
-                  <td>{`${sample.getSkillByPriority(1).name}: ${sample.getSkillByPriority(1).level}`}</td>
-                ) : (
-                  <td>-</td>
-                )}
-                <td>{`${sample.getWeapon().id !== 0 ? sample.getWeapon().name : sample.getMissile()!.name} / ${sample.getBodyArmor().name}`}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 
