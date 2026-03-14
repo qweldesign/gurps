@@ -1,7 +1,7 @@
 import { useLoaderData, useNavigate } from 'react-router-dom'
-import Detail from '../Detail'
-import { Character } from '../../lib/domains/Character'
-import { SaveData } from '../../lib/domains/SaveData'
+import Detail from '../common/Detail'
+import { Character } from '../../domains/Character'
+import { SaveData } from '../../domains/SaveData'
 
 function Confirm() {
   const { uid } = useLoaderData()

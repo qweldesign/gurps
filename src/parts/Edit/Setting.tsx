@@ -1,11 +1,11 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
-import Modal from './Modal'
-import { PARAMETER_LIST, type ParameterName, Parameters } from '../../lib/domains/Parameters'
-import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../lib/domains/Equipments'
-import { Character, type CharacterData } from '../../lib/domains/Character'
-import { PC_LIST } from '../../lib/domains/SampleCharacter'
-import { SaveData } from '../../lib/domains/SaveData'
+import Modal from '../common/Modal'
+import { PARAMETER_LIST, type ParameterName, Parameters } from '../../domains/Parameters'
+import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../domains/Equipments'
+import { Character, type CharacterData } from '../../domains/Character'
+import { PC_LIST } from '../../domains/SampleCharacter'
+import { SaveData } from '../../domains/SaveData'
 
 function Setting() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')

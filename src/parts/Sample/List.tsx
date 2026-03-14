@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { type ParameterName } from '../../lib/domains/Parameters'
-import { type SampleCharacter } from '../../lib/domains/SampleCharacter'
+import { type ParameterName } from '../../domains/Parameters'
+import { type SampleCharacter } from '../../domains/SampleCharacter'
 
 type SortKey = 'id' | 'tactic' | '筋力' | '敏捷力' | '知力' | '生命力'
 

@@ -1,4 +1,4 @@
-import { type Character } from '../lib/domains/Character'
+import { type Character } from '../../domains/Character'
 
 function Detail({ unit }: { unit: Character }) {
   return (

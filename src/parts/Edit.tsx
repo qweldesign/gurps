@@ -1,10 +1,10 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import List from './Edit/List'
-import Modal from './Edit/Modal'
-import { Character } from '../lib/domains/Character'
-import { createSamples } from '../lib/domains/SampleCharacter'
-import { SaveData } from '../lib/domains/SaveData'
+import Modal from './common/Modal'
+import { Character } from '../domains/Character'
+import { createSamples } from '../domains/SampleCharacter'
+import { SaveData } from '../domains/SaveData'
 
 function Edit() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')

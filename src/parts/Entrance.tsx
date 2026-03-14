@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { SaveData } from '../lib/domains/SaveData'
+import { SaveData } from '../domains/SaveData'
 
 function Entrance() {
   // セーブデータの読み込み

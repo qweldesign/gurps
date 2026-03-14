@@ -1,9 +1,9 @@
 import { type ReactNode, useState } from 'react';
 import { useLoaderData, useNavigate } from 'react-router-dom'
-import Detail from '../Detail'
-import Modal from './Modal'
-import { Character } from '../../lib/domains/Character'
-import { SaveData } from '../../lib/domains/SaveData'
+import Detail from '../common/Detail'
+import Modal from '../common/Modal'
+import { Character } from '../../domains/Character'
+import { SaveData } from '../../domains/SaveData'
 
 function View() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useLoaderData, Link } from 'react-router-dom'
 import List from './Sample/List'
-import Detail from './Detail'
-import { type Multiplier, createSamples } from '../lib/domains/SampleCharacter'
+import Detail from './common/Detail'
+import { type Multiplier, createSamples } from '../domains/SampleCharacter'
 
 function Sample() {
   const [points, setPoints] = useState(10)
