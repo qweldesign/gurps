@@ -289,14 +289,12 @@ function Setting() {
             <h4>1. 基本設定</h4>
             <p>キャラクター作成の条件を設定します。
               <br />初期CPや所持金が大きいほど強いキャラクターを作成できますが、初めてのプレイヤーはロックされています。
-              <br />模擬戦闘で勝利を重ねるとアンロックされます（開発中は全ての条件がアンロックされています）。
+              <br />模擬戦闘で勝利を重ねるとアンロックされます。
             </p>
             <div>
               <label>作成条件: </label>
               <select className="w-48 m-6 ps-3 text-center" onChange={(e) => updateOptions(e.target.value)}>
                 <option value="10/100">{'10CP / 100金'}</option>
-                <option value="20/200">{'20CP / 200金'}</option>
-                <option value="40/400">{'40CP / 400金'}</option>
               </select>
             </div>
           </section>
