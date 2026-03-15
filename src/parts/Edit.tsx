@@ -5,6 +5,8 @@ import Modal from './common/Modal'
 import { Character } from '../domains/Character'
 import { createSamples } from '../domains/SampleCharacter'
 import { SaveData } from '../domains/SaveData'
+import DevProgress from './DevProgress'
+import {EDIT_DEV_PROGRESS } from '../devProgress/edit'
 
 function Edit() {
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
@@ -64,16 +66,21 @@ function Edit() {
   }, [])
 
   return (
-    <div className="px-6">
-      <List units={units} />
-      <div className="text-center">
-        <button onClick={() => navigate('./making/')}>新規作成</button>
-        <button onClick={confirmReset}>リセット</button>
+    <>
+      <div className="px-6">
+        <List units={units} />
+        <div className="text-center">
+          <button onClick={() => navigate('./making/')}>新規作成</button>
+          <button onClick={confirmReset}>リセット</button>
+        </div>
+        {alertOpen && (
+          <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={reset} />
+        )} 
       </div>
-      {alertOpen && (
-        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={reset} />
-      )}
-    </div>
+      <div className="mt-24 px-6">
+        <DevProgress progress={EDIT_DEV_PROGRESS} />
+      </div>
+    </>
   )
 }
 
