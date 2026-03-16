@@ -16,8 +16,8 @@ function App() {
       <header className={headerClass}>
         <h1 className="sitebrand">
           <Link to="/">
-            <span className='sitebrand__title'>GURPS.AW</span>
-            <span className='sitebrand__tagline'>ArtOfWarによって再構成を遂げた新しいGURPS</span>
+            <span className='sitebrand__title'>GURPS.QWEL</span>
+            <span className='sitebrand__tagline'>QWELによって再構成を遂げた新しいGURPS</span>
           </Link>
         </h1>
       </header>
@@ -26,7 +26,7 @@ function App() {
       </main>
       <div className={coverClass}></div>
       <footer className="footer">
-        <small>&copy; 2016 - { new Date().getFullYear() } ArtOfWar.Site</small>
+        <small>&copy; 2016 - { new Date().getFullYear() } GURPS.QWEL.DESIGN</small>
       </footer>
     </>
   )

@@ -88,7 +88,7 @@
   }
 
   .sitebrand__title {
-    @apply block text-[3em] leading-none;
+    @apply block text-[2.25em] leading-none;
   }
 
   .sitebrand__tagline {
