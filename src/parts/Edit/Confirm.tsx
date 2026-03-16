@@ -4,34 +4,26 @@ import { Character } from '../../domains/Character'
 import { SaveData } from '../../domains/SaveData'
 
 function Confirm() {
-  const { uid } = useLoaderData()
-  const navigate = useNavigate()
-
   // セーブデータの読み込み
   const saveData = new SaveData()
   const gold = saveData.loadGold(true)
   const keys = saveData.loadKeys()
 
-  // SessionStorage から作りかけのデータを取得
-  const model = saveData.loadModel(uid, true)
+  // uid, navigate を取得
+  const { uid } = useLoaderData()
+  const navigate = useNavigate()
 
   // 新規作成かどうかを変数に格納
-  const isFirstCreation = !model.id
+  const isFirstCreation = uid === '00' ? true : false
+
+  // SessionStorage から作りかけのデータを取得
+  const model = saveData.loadModel(uid, true)
 
   // 新規の場合, 新しい ID を発行
   if (isFirstCreation) model.id = keys.size + 1
 
   // Detail に渡すパラメータ
   const unit = new Character(model)
-
-  // 戻る
-  const back = () => {
-    if (!isFirstCreation) {
-      navigate(`/edit/setting/${uid}`)
-    } else {
-      navigate(`/edit/making/`)
-    }
-  }
 
   // 保存
   const save = () => {
@@ -42,6 +34,15 @@ function Confirm() {
     unit.save() // キャラクター保存
     sessionStorage.clear() // SessionStorage をクリア
     navigate(`/edit/`) // 戻る
+  }
+
+  // 戻る
+  const back = () => {
+    if (!isFirstCreation) {
+      navigate(`/edit/setting/${uid}`)
+    } else {
+      navigate(`/edit/making/`)
+    }
   }
 
   return (

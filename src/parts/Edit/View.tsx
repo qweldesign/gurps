@@ -6,14 +6,12 @@ import { Character } from '../../domains/Character'
 import { SaveData } from '../../domains/SaveData'
 
 function View() {
-  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
-  const [alertOpen, setAlertOpen] = useState(false)
-
-  const { uid } = useLoaderData()
-  const navigate = useNavigate()
-
   // セーブデータの読み込み
   const saveData = new SaveData()
+
+  // uid, navigate を取得
+  const { uid } = useLoaderData()
+  const navigate = useNavigate()
 
   // LocalStorage からキャラクターデータを取得
   const model = saveData.loadModel(uid)
@@ -21,7 +19,11 @@ function View() {
   // Detail に渡すパラメータ
   const unit = new Character(model)
 
-  // 除名確認
+  // Modal に渡すパラメータ
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
+
+  // 除名の確認
   const confirmRemove = () => {
     setAlertMessage(
       <p>本当に {unit.name} を除名しますか？</p>

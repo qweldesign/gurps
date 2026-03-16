@@ -8,13 +8,16 @@ import { PC_LIST } from '../../domains/SampleCharacter'
 import { SaveData } from '../../domains/SaveData'
 
 function Setting() {
-  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
-  const [alertOpen, setAlertOpen] = useState(false)
+  // セーブデータの読み込み
+  const saveData = new SaveData()
+  const keys = saveData.loadKeys()
+
+  // 状態管理 → ほとんど初回の useEffect で初期化し直す (セーブデータの読み込みを反映)
   const [points, setPoints] = useState(10)
   const [pointsState, setPointsState] = useState(false) // points を使い切ったら true にする
   const [initialGold, setInitialGold] = useState(0) // 所持金
-  const [startGold, setStartGold] = useState(100) // 初回作成時のみ足される所持金
-  const [startGoldRate, setStartGoldRate] = useState(1) // 初回作成時の所持金倍率
+  const [startGold, setStartGold] = useState(100) // 新規作成時のみ足される所持金
+  const [startGoldRate, setStartGoldRate] = useState(1) // 新規作成時の所持金倍率
   const [initialEquipSet, setInitialEquipSet] = useState(false) // 装備を一度でも変更したかどうか
   const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
@@ -27,20 +30,25 @@ function Setting() {
   const [weaponList, setWeaponList] = useState(WEAPON_LIST)
   const [armorList, setArmorList] = useState(ARMOR_LIST)
   
-  // 作成したキャラクターID
+  // uid, navigate を取得
   const { uid } = useLoaderData()
   const navigate = useNavigate()
+
+  // 新規作成かどうかを変数に格納
   const isFirstCreation = uid === '00' ? true : false
 
-  // セーブデータの読み込み
-  const saveData = new SaveData()
-  const keys = saveData.loadKeys()
-
-  // LocalStorage からキャラクターデータを取得
+  // LocalStorage からキャラクターデータを取得 → 状態に反映
   const prevModel = saveData.loadModel(uid)
   
-  // SessionStorage から作りかけのデータを取得
+  // SessionStorage から作りかけのデータを取得 → 状態に反映
   const model = saveData.loadModel(uid, true)
+
+  // 作成 (編集) 中断時の戻り先
+  const back = keys.size ? '/edit/' : '/'
+
+  // Modal に渡すパラメータ
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
 
   // 能力値, 技能一覧表
   const lists = []
@@ -50,31 +58,13 @@ function Setting() {
   lists[3] = PARAMETER_LIST.filter(param => param.base === '敏捷力')
   lists[4] = PARAMETER_LIST.filter(param => param.base === '知力')
 
-  // CP/所持金設定の更新
-  const updateOptions = (value: string) => {
-    const [p, m] = value.split('/')
-    setPoints(Number(p))
-    setStartGold(Number(m))
-  }
-
-  // 増減ボタンの状態を取得 (true: 有効 / false: 無効)
-  const getButtonDisable = (name: ParameterName, size: number, i: number) => {
-    if (Number(uid) > 0 && i === 0) return true
-    const prevPoint = prevParams.get(name)
-    const currentPoint = params.get(name)
-    const next = new Parameters(params.toModel())
-    const nextPoint = next.step(name, size)
-    // 下限を下回る場合, 合計を上回る場合は disable を true に 
-    return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || next.getTotal() > points)
-  }
-
   // パラメータをステップ
   const step = (name: ParameterName, size: number) => {
     const next = new Parameters(params.toModel())
     next.step(name as ParameterName, size)
     if (params.get('武術') === 0 && next.get('武術') > 0) {
       // 武術がセットされた場合
-      if (isFirstCreation) setStartGoldRate(2) // 初回作成時は所持金を倍に
+      if (isFirstCreation) setStartGoldRate(2) // 新規作成時は所持金を倍に
       setWeaponList(WEAPON_LIST) // リストを追加
       setArmorList(ARMOR_LIST)
       if (initialEquipSet) {
@@ -89,7 +79,7 @@ function Setting() {
       }
     } else if (params.get('武術') > 0 && next.get('武術') === 0) {
       // 武術がリセットされた場合
-      if (isFirstCreation) setStartGoldRate(1)
+      if (isFirstCreation) setStartGoldRate(1) // 新規作成時は所持金を戻す
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
       resetEquips()
@@ -104,6 +94,18 @@ function Setting() {
     setParams(next)
   }
 
+  // 増減ボタンの状態を取得 (true: 有効 / false: 無効)
+  const getButtonDisable = (name: ParameterName, size: number, i: number) => {
+    if (Number(uid) > 0 && i === 0) return true
+    const prevPoint = prevParams.get(name)
+    const currentPoint = params.get(name)
+    const next = new Parameters(params.toModel())
+    const nextPoint = next.step(name, size)
+    // 下限を下回る場合, 合計を上回る場合は disable を true に 
+    return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || next.getTotal() > points)
+  }
+
+  // 所持金を計算
   const calcGold = () => {
     let gold = initialGold
     if (isFirstCreation) gold += startGold * startGoldRate
@@ -111,6 +113,14 @@ function Setting() {
     return gold
   }
 
+  // CP/所持金設定の状態更新
+  const updateOptions = (value: string) => {
+    const [p, m] = value.split('/')
+    setPoints(Number(p))
+    setStartGold(Number(m))
+  }
+
+  // 主用武器の状態更新
   const changeWeapon = (name: WeaponName) => {
     const prev = prevEquips.getWeapon()
     const next = new Equipments(equips.toModel())
@@ -124,12 +134,14 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 主用武器の売却
   const saleWeapon = (name: WeaponName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setWeapon(name, false)
     setSaleEquips(sale)
   }
 
+  // 射撃武器の状態更新
   const changeMissile = (name: WeaponName) => {
     const prev = prevEquips.getMissile()
     const next = new Equipments(equips.toModel())
@@ -143,12 +155,14 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 射撃武器の売却
   const saleMissile = (name: WeaponName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setMissile(name)
     setSaleEquips(sale)
   }
 
+  // 盾の状態更新
   const changeShield = (name: WeaponName) => {
     const prev = prevEquips.getShield()
     const next = new Equipments(equips.toModel())
@@ -162,12 +176,14 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 盾の売却
   const saleShield = (name: WeaponName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setShield(name)
     setSaleEquips(sale)
   }
 
+  // 胴防具の状態更新
   const changeArmor = (name: ArmorName) => {
     const prev = prevEquips.getBodyArmor()
     const next = new Equipments(equips.toModel())
@@ -181,12 +197,14 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 胴防具の売却
   const saleArmor = (name: ArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setBody(name, false)
     setSaleEquips(sale)
   }
 
+  // 頭防具の状態更新
   const changeHeadArmor = (name: HeadArmorName) => {
     const prev = prevEquips.getHeadArmor()
     const next = new Equipments(equips.toModel())
@@ -200,12 +218,14 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 頭防具の売却
   const saleHeadArmor = (name: HeadArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setHead(name)
     setSaleEquips(sale)
   }
 
+  // 腕防具の状態更新
   const changeArmArmor = (name: ArmArmorName) => {
     const prev = prevEquips.getArmArmor()
     const next = new Equipments(equips.toModel())
@@ -219,12 +239,14 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 腕防具の売却
   const saleArmArmor = (name: ArmArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setArm(name)
     setSaleEquips(sale)
   }
 
+  // 脚防具の状態更新
   const changeLegArmor = (name: LegArmorName) => {
     const prev = prevEquips.getLegArmor()
     const next = new Equipments(equips.toModel())
@@ -238,18 +260,21 @@ function Setting() {
     setInitialEquipSet(true)
   }
 
+  // 脚防具の売却
   const saleLegArmor = (name: LegArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
     sale.setLeg(name)
     setSaleEquips(sale)
   }
 
+  // 装備を初期状態に戻す
   const resetEquips = () => {
     const next = new Equipments(prevEquips.toModel())
     setEquips(next)
   }
 
-  const resetSale = () => {
+  // 売却状態を更新
+  const updateSale = () => {
     const prevWeapon = prevEquips.getWeapon()
     if (prevWeapon.name !== equips.getWeapon().name) {
       saleWeapon(prevWeapon.name)
@@ -280,25 +305,26 @@ function Setting() {
     }
   }
 
-  const changeName = (name: string) => {
-    setName(name)
-  }
-
-  const changeGender = (gender: string) => {
-    setGender(gender)    
-  }
-
-  const autoProfile = () => {
+  // 名前を自動決定
+  const autoName = () => {
     const g = gender === '男性' ? 0 : 1
     const n = Math.floor((Math.random() + g) * PC_LIST.length / 2)
     setName(PC_LIST[n])
   }
 
-  const back = keys.size ? '/edit/' : '/'
+  // 名前の状態更新
+  const changeName = (name: string) => {
+    setName(name)
+  }
 
-  // 確認 (SessionStorage を使用)
+  // 性別の状態更新
+  const changeGender = (gender: string) => {
+    setGender(gender)    
+  }
+
+  // 確認
   const confirm = () => {
-    // 初回作成時で points を使い切ってない場合のアラート
+    // 新規作成時で points を使い切ってない場合のアラート
     if (isFirstCreation && !pointsState) {
       const message = (
         <p className="text-center">キャラクターポイントを使い切っていません。
@@ -320,7 +346,7 @@ function Setting() {
       return
     }
 
-    // 初回作成時で名前が未設定の場合のアラート
+    // 新規作成時で名前が未設定の場合のアラート
     if (isFirstCreation && !nameState) {
       const message = (
         <p className="text-center">名前を設定してください。</p>
@@ -330,6 +356,7 @@ function Setting() {
       return
     }
 
+    // 確認用のモデルを作成
     const confirmModel: CharacterModel = {
       id: Number(uid),
       name, gender,
@@ -338,20 +365,22 @@ function Setting() {
       equipments: equips.toModel()
     }
     
-    // キャラクターデータの一時保存
+    // キャラクターデータの一時保存 (SessionStorage を使用)
     const unit = new Character(confirmModel)
     unit.save(true)
 
     // 所持金の一時保存
     saveData.saveGold(calcGold(), true)
 
-    if (Number(uid)) {
+    // 確認画面へ進む
+    if (!isFirstCreation) {
       navigate(`/edit/confirm/${uid}`)
     } else {
       navigate(`/edit/confirm/`)
     }
   }
  
+  // 最初に1回だけ実行
   useEffect(() => {
     // 作成したキャラクターのデータを反映
     setPoints(prevModel.totalPoints)
@@ -365,10 +394,7 @@ function Setting() {
     // セーブデータから所持金を読み込み
     setInitialGold(saveData.loadGold())
 
-    // 売却装備更新
-    resetSale()
-
-    // 武器・防具リストのフィルター更新
+    // 武器・防具リストのフィルター更新, 所持金倍率の更新
     if (model.points.length === 0 || model.points[4] === 0) { //「武術」(params 経由で取得しても React で未反映なので)
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
@@ -377,10 +403,13 @@ function Setting() {
       setWeaponList(WEAPON_LIST)
       setArmorList(ARMOR_LIST)
     }
+
+    // 売却装備更新
+    updateSale()
   }, [])
 
+  // points を使い切ったかどうかの判定
   useEffect(() => {
-    // points を使い切ったかどうかの判定
     if (points === params.getTotal()) {
       setPointsState(true)
     } else {
@@ -388,8 +417,8 @@ function Setting() {
     }
   }, [params])
 
+  // 装備の購入金額が所持金を超えた場合のアラート
   useEffect(() => {
-    // 装備の購入金額が所持金を超えた場合のアラート
     if (calcGold() < 0) {
       const message = (
         <p className="text-center">装備の購入金額が所持金を超えています。
@@ -400,8 +429,8 @@ function Setting() {
     }
   }, [startGold, startGoldRate, equips])
 
+  // 名前を決定したかどうかの判定
   useEffect(() => {
-    // 名前を決定したら true にする
     if (name === '未設定' || name === '') {
       setNameState(false)
     } else {
@@ -600,7 +629,7 @@ function Setting() {
             <div>
               <label className="inline-block w-24 sm:text-right">名前: </label>
               <input className="w-72 m-6 px-3 text-left" type="text" value={name} onChange={(e) => changeName(e.target.value)} />
-              <button className="block sm:inline-block w-24 h-6 m-auto text-sm/1" onClick={autoProfile}>自動入力</button>
+              <button className="block sm:inline-block w-24 h-6 m-auto text-sm/1" onClick={autoName}>自動決定</button>
             </div>
             <div>
               <label className="inline-block w-24 sm:text-right">性別: </label>
@@ -618,7 +647,7 @@ function Setting() {
             </p>
           )}
           <button onClick={confirm}>確認する</button>
-          <button onClick={() => navigate(back)}>{isFirstCreation ? '作成' : '編集'}中止</button>
+          <button onClick={() => navigate(back)}>{isFirstCreation ? '作成' : '編集'}中断</button>
         </section>
       </div>
       {alertOpen && (

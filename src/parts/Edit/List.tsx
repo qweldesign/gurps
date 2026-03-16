@@ -6,6 +6,7 @@ import { type Character } from '../../domains/Character'
 type SortKey = 'id' | 'skill' | '筋力' | '敏捷力' | '知力' | '生命力'
 
 function List({ units }: { units: Character[] }) {
+  // 状態管理
   const [sortKey, setSortKey] = useState<SortKey>('id')
   const [sortDir, setSortDir] = useState({
     id: false, // false: asc▲, true:desc▼
@@ -16,8 +17,10 @@ function List({ units }: { units: Character[] }) {
     '生命力': false
   })
 
+  // navigate を取得
   const navigate = useNavigate()
 
+  // 状態更新
   const handleSort = (key: SortKey) => {
     setSortKey(key)
     setSortDir(prev => ({
@@ -26,6 +29,7 @@ function List({ units }: { units: Character[] }) {
     }))
   }
 
+  // 状態が更新されたらソートを行う
   const sorted = useMemo((): Character[] => {
     if (sortKey === 'id') {
       return units.sort((a, b) => {

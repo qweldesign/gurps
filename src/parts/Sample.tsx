@@ -5,18 +5,23 @@ import Detail from './common/Detail'
 import { type Multiplier, createSamples } from '../domains/SampleCharacter'
 
 function Sample() {
+  // 状態管理
   const [points, setPoints] = useState(10)
   const [multiplier, setMultiplier] = useState<Multiplier>(1)
-  const { uid } = useLoaderData()
-  const sampleId = Number(uid)
+  
+  // サンプル初期化 (64名)
+  const samples = createSamples(points, multiplier)
 
+  // uid があれば 1人のサンプルを探す
+  const { uid } = useLoaderData()
+  const sample = samples.find(m => m.id === Number(uid))!
+
+  // 状態更新
   const updatePoints = (value: string) => {
     const [p, m] = value.split('/')
     setPoints(Number(p))
     setMultiplier(Number(m) as Multiplier)
   }
-
-  const samples = createSamples(points, multiplier)
 
   return (
     <div className="px-6">
@@ -37,11 +42,11 @@ function Sample() {
         <option value="48/4">{'48CP (初期40CP)'}</option>
         <option value="64/4">{'64CP (初期40CP)'}</option>
       </select>
-      {!sampleId
+      {!Number(uid)
         ? <List samples={samples} />
         : (
           <>
-            <Detail unit={samples.find(m => m.id === Number(sampleId))!} />
+            <Detail unit={sample} />
             <Link className="ms-12 italic" to="/sample/">&lt; Back to list</Link>
           </>
         )
