@@ -136,13 +136,11 @@ export class SampleCharacter extends Character {
     // ID・名前・性別・能力値・CP総計・装備・所持金の初期化
     const name = NPC_LIST[i]
     const gender = g ? '女性' : '男性'
-    const gold = totalPoints * 10 // 仮設定
-    super({ id, name, gender, points, totalPoints, equipments: null, gold })
+    super({ id, name, gender, points, totalPoints, equipments: null })
 
     // 能力値の修正
     this.modifyAbilities(MOD_TABLE[b], multiplier)
     this.tactic = this.getTactic(multiplier) // ロジックタイプを判定
-    if (this.tactic < 3) this.gold *= 2 //「武術」保有者は2倍
 
     // 技能セットの選択
     this.setSkills(totalPoints, DEFAULT_POINTS, multiplier)

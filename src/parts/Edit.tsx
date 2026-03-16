@@ -14,6 +14,7 @@ function Edit() {
 
   // セーブデータの読み込み
   const saveData = new SaveData()
+  const gold = saveData.loadGold()
   const keys = saveData.loadKeys()
 
   // List, Detail に渡すパラメータ
@@ -65,6 +66,7 @@ function Edit() {
 
   return (
     <div className="px-6">
+      <div className="mt-12 mb-6 text-right">軍資金: {gold}金</div>
       <List units={units} />
       <div className="text-center">
         <button onClick={() => navigate('./making/')}>新規作成</button>

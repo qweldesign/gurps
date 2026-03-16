@@ -12,8 +12,9 @@ function Setting() {
   const [alertOpen, setAlertOpen] = useState(false)
   const [points, setPoints] = useState(10)
   const [pointsState, setPointsState] = useState(false) // points を使い切ったら true にする
-  const [gold, setGold] = useState(100)
-  const [goldState, setGoldState] = useState(true) // 購入金額が所持金を超えた場合に false にする
+  const [initialGold, setInitialGold] = useState(0) // 所持金
+  const [startGold, setStartGold] = useState(100) // 初回作成時のみ足される所持金
+  const [startGoldRate, setStartGoldRate] = useState(1) // 初回作成時の所持金倍率
   const [initialEquipSet, setInitialEquipSet] = useState(false) // 装備を一度でも変更したかどうか
   const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
@@ -52,7 +53,7 @@ function Setting() {
   const updateOptions = (value: string) => {
     const [p, m] = value.split('/')
     setPoints(Number(p))
-    setGold(Number(m))
+    setStartGold(Number(m))
   }
 
   // 増減ボタンの状態を取得 (true: 有効 / false: 無効)
@@ -72,13 +73,13 @@ function Setting() {
     next.step(name as ParameterName, size)
     if (params.get('武術') === 0 && next.get('武術') > 0) {
       // 武術がセットされた場合
-      if (isFirstCreation) setGold(gold * 2) // 初回作成時は所持金を倍に
+      if (isFirstCreation) setStartGoldRate(2) // 初回作成時は所持金を倍に
       setWeaponList(WEAPON_LIST) // リストを追加
       setArmorList(ARMOR_LIST)
       if (initialEquipSet) {
         // 一度でも装備を変更していた場合, アラート表示 (装備は全解除しない)
         const message = (
-          <p className="text-center">「武術」がセットされたため、所持金が2倍になりました。
+          <p className="text-center">「武術」がセットされたため、ユニットの所持金が2倍になりました。
             <br />装備可能な武器・防具が変わったため、装備の選択をやり直してください。</p>
         )
         setAlertMessage(message)
@@ -87,19 +88,26 @@ function Setting() {
       }
     } else if (params.get('武術') > 0 && next.get('武術') === 0) {
       // 武術がリセットされた場合
-      if (isFirstCreation) setGold(gold / 2)
+      if (isFirstCreation) setStartGoldRate(1)
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
       resetEquips()
       // 装備を全解除しアラート表示 (initialEquipSet の値に関わらない)
       const message = (
-        <p className="text-center">「武術」がリセットされたため、所持金が半分になりました。
+        <p className="text-center">「武術」がリセットされたため、ユニットの所持金が半分になりました。
           <br />装備可能な武器・防具が変わったため、装備の選択をやり直してください。</p>
       )
       setAlertMessage(message)
       setAlertOpen(true)
     }
     setParams(next)
+  }
+
+  const calcGold = () => {
+    let gold = initialGold
+    if (isFirstCreation) gold += startGold * startGoldRate
+    gold -= equips.getGold() - prevEquips.getGold()
+    return gold
   }
 
   const changeWeapon = (name: WeaponName) => {
@@ -186,7 +194,7 @@ function Setting() {
     }
 
     // 装備の購入金額が所持金を超えている場合のアラート
-    if (!goldState) {
+    if (calcGold() < 0) {
       const message = (
         <p className="text-center">装備の購入金額が所持金を超えています。
           <br />装備を変更してください。</p>
@@ -209,14 +217,17 @@ function Setting() {
     const confirmData: CharacterData = {
       id: Number(uid),
       name, gender,
-      points: params.toData(),
       totalPoints: points,
-      equipments: equips.toData(),
-      gold
+      points: params.toData(),
+      equipments: equips.toData()
     }
     
+    // キャラクターデータの一時保存
     const unit = new Character(confirmData)
-    unit.saveTemp() // 一時保存
+    unit.save(true)
+
+    // 所持金の一時保存
+    saveData.saveGold(calcGold(), true)
 
     if (Number(uid)) {
       navigate(`/edit/confirm/${uid}`)
@@ -228,7 +239,6 @@ function Setting() {
   useEffect(() => {
     // 作成したキャラクターのデータを反映
     setPoints(prevModel.totalPoints)
-    setGold(prevModel.gold) // 旧データを使用
     setName(model.name)
     setGender(model.gender)
     setPrevParams(() => new Parameters(prevModel.points))
@@ -236,12 +246,15 @@ function Setting() {
     setPrevEquips(() => new Equipments(prevModel.equipments))
     setEquips(() => new Equipments(model.equipments))
 
+    // セーブデータから所持金を読み込み
+    setInitialGold(saveData.loadGold())
+
     // 武器・防具リストのフィルター更新
     if (model.points.length === 0 || model.points[4] === 0) { //「武術」(params 経由で取得しても React で未反映なので)
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))
       setArmorList(ARMOR_LIST.filter(item => item.wt <= 2))
     } else {
-      setGold(gold * 2)
+      if (isFirstCreation) setStartGoldRate(2)
       setWeaponList(WEAPON_LIST)
       setArmorList(ARMOR_LIST)
     }
@@ -258,18 +271,15 @@ function Setting() {
 
   useEffect(() => {
     // 装備の購入金額が所持金を超えた場合のアラート
-    if (gold < equips.getGold()) {
+    if (calcGold() < 0) {
       const message = (
         <p className="text-center">装備の購入金額が所持金を超えています。
           <br />装備を変更してください。</p>
       )
-      setGoldState(false) // 所持金のスタイルを赤字に変更
       setAlertMessage(message)
       setAlertOpen(true)
-    } else {
-      setGoldState(true) // 所持金のスタイルを元に戻す
     }
-  }, [gold, equips])
+  }, [startGold, startGoldRate, equips])
 
   useEffect(() => {
     // 名前を決定したら true にする
@@ -361,12 +371,12 @@ function Setting() {
           {isFirstCreation && (
             <>
               <h4>3. 装備の購入</h4>
-              <p>合計{gold}金の所持金でキャラクターの装備を購入します。
-                <br />「武術」の保有者は所持金が倍になります（戦いを職業としているため、優遇されます）。
+              <p>合計{initialGold + startGold * startGoldRate}金の所持金でキャラクターの装備を購入します。
+                <br />「武術」の保有者はユニットの所持金が倍になります（戦いを職業としているため、優遇されます）。
               </p>
             </>
           )}
-          <h5>残り所持金: <span className={!goldState ? 'text-red-600 font-bold' : 'font-bold'}>{gold - equips.getGold()} 金</span></h5>
+          <h5>残り所持金: <span className={calcGold() < 0 ? 'text-red-600 font-bold' : 'font-bold'}>{calcGold()} 金</span></h5>
           <div>
             <label className="inline-block w-24 sm:text-right">主用武器: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.getWeapon().name} onChange={(e) => changeWeapon(e.target.value)}>

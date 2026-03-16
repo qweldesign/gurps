@@ -6,6 +6,7 @@ export const STORAGE_KEY = 'savedata';
 export class SaveData {
   private storageKey: string
   private data: {
+    gold: number
     keys?: string[]
   }
 
@@ -17,14 +18,36 @@ export class SaveData {
   }
 
   // 保存
-  save() {
+  save(isTemporary: boolean = false) {
+    const storage = isTemporary ? sessionStorage : localStorage
     const raw = JSON.stringify(this.data)
-    localStorage.setItem(this.storageKey, raw)
+    storage.setItem(this.storageKey, raw)
   }
 
   // 全てのデータを返す
-  load() {
-    return this.data
+  load(isTemporary: boolean = false) {
+    if (isTemporary) {
+      const raw = sessionStorage.getItem(this.storageKey) ?? '{}'
+      const data = JSON.parse(raw)
+      return data
+    } else {
+      return this.data
+    }
+  }
+
+  // 所持金を更新
+  saveGold(gold: number, isTemporary: boolean = false) {
+    this.data = { ...this.data, gold }
+    this.save(isTemporary)
+  }
+
+  // 所持金を返す
+  loadGold(isTemporary: boolean = false) {
+    if (isTemporary) {
+      return this.load(true).gold ?? 0
+    } else {
+      return this.data.gold ?? 0
+    }
   }
 
   // キーを更新
@@ -66,10 +89,9 @@ export class SaveData {
       id: 0,
       name: '未設定',
       gender: '男性',
-      points: [],
       totalPoints: 10,
-      equipments: null,
-      gold: 100
+      points: [],
+      equipments: null
     }
     return model
   }

@@ -11,7 +11,6 @@ export type CharacterData = {
   points: Point[]
   totalPoints: number
   equipments: EquipmentSet | null
-  gold: number
 }
 
 export class Character {
@@ -19,22 +18,20 @@ export class Character {
   public uid: string
   public name: string
   public gender: string
-  protected parameters: Parameters
   public points: number
+  protected parameters: Parameters
   protected equipments: Equipments
-  public gold: number
   private storageKey: string
 
   constructor(data: CharacterData) {
-    const { id, name, gender, points, totalPoints, equipments, gold } = data
+    const { id, name, gender, points, totalPoints, equipments } = data
     this.id = id
     this.uid = String(id).padStart(2, '0')
     this.name = name
     this.gender = gender
-    this.parameters = new Parameters(points)
     this.points = totalPoints
+    this.parameters = new Parameters(points)
     this.equipments = new Equipments(equipments)
-    this.gold = gold
     this.storageKey = `${STORAGE_KEY}:${this.uid}`
   }
 
@@ -261,35 +258,22 @@ export class Character {
       gender: this.gender,
       points: this.parameters.toData(),
       totalPoints: this.points,
-      equipments: this.equipments.toData(),
-      gold: this.gold
+      equipments: this.equipments.toData()
     }
   }
 
-  // 一時保存 (確認用)
-  saveTemp() {
-    const model = this.toData()
-    const raw = JSON.stringify(model)
-    sessionStorage.setItem(this.storageKey, raw)
-  }
-
   // 保存
-  save() {
+  save(isTemporary: boolean = false) {
+    const storage = isTemporary ? sessionStorage : localStorage
     const model = this.toData()
     const raw = JSON.stringify(model)
-    localStorage.setItem(this.storageKey, raw)
-  }
-
-  // 一時読み込み (確認用)
-  loadTemp() {
-    const raw = sessionStorage.getItem(this.storageKey) ?? '{}'
-    const model = JSON.parse(raw)
-    return model
+    storage.setItem(this.storageKey, raw)
   }
 
   // 読み込み
-  load() {
-    const raw = localStorage.getItem(this.storageKey) ?? '{}'
+  load(isTemporary: boolean = false) {
+    const storage = isTemporary ? sessionStorage : localStorage
+    const raw = storage.getItem(this.storageKey) ?? '{}'
     const model = JSON.parse(raw)
     return model
   }

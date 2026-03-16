@@ -9,6 +9,7 @@ function Confirm() {
 
   // セーブデータの読み込み
   const saveData = new SaveData()
+  const gold = saveData.loadGold(true)
   const keys = saveData.loadKeys()
 
   // SessionStorage から作りかけのデータを取得
@@ -37,6 +38,7 @@ function Confirm() {
     if (isFirstCreation) {
       saveData.addKey(unit.uid) // 新規の場合, インデックス登録
     }
+    saveData.saveGold(gold) // 所持金保存
     unit.save() // キャラクター保存
     sessionStorage.clear() // SessionStorage をクリア
     navigate(`/edit/`) // 戻る

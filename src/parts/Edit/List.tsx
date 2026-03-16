@@ -59,7 +59,6 @@ function List({ units }: { units: Character[] }) {
             <th onClick={() => handleSort('skill')}>主技能 <span className="text-xs cursor-pointer">{sortDir.skill ? '▼' : '▲'}</span></th>
             <th>装備</th>
             <th>CP</th>
-            <th>所持金</th>
           </tr>
         </thead>
         <tbody>
@@ -75,7 +74,6 @@ function List({ units }: { units: Character[] }) {
               <td>{`${unit.getMainSkill().name}: ${unit.getMainSkillLevel()}`}</td>
               <td>{`${unit.getWeapon().id !== 0 ? unit.getWeapon().name : unit.getMissile()!.name} / ${unit.getBodyArmor().name}`}</td>
               <td>{`${unit.getParamTotal()} / ${unit.points}`}</td>
-              <td>{`${unit.getGold()} / ${unit.gold}`}</td>
             </tr>
           ))}
         </tbody>
