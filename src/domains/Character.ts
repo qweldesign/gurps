@@ -4,7 +4,7 @@ import { type Point, type ParameterName, type Parameter, Parameters } from './Pa
 import { type Weapon, type Armor, type Dmg, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
 
-export type CharacterData = {
+export type CharacterModel = {
   id: number
   name: string
   gender: string
@@ -23,8 +23,8 @@ export class Character {
   protected equipments: Equipments
   private storageKey: string
 
-  constructor(data: CharacterData) {
-    const { id, name, gender, points, totalPoints, equipments } = data
+  constructor(model: CharacterModel) {
+    const { id, name, gender, points, totalPoints, equipments } = model
     this.id = id
     this.uid = String(id).padStart(2, '0')
     this.name = name
@@ -251,21 +251,21 @@ export class Character {
   }
 
   // シリアライズ用データ変換
-  toData(): CharacterData {
+  toModel(): CharacterModel {
     return {
       id: this.id,
       name: this.name,
       gender: this.gender,
-      points: this.parameters.toData(),
+      points: this.parameters.toModel(),
       totalPoints: this.points,
-      equipments: this.equipments.toData()
+      equipments: this.equipments.toModel()
     }
   }
 
   // 保存
   save(isTemporary: boolean = false) {
     const storage = isTemporary ? sessionStorage : localStorage
-    const model = this.toData()
+    const model = this.toModel()
     const raw = JSON.stringify(model)
     storage.setItem(this.storageKey, raw)
   }

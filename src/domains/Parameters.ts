@@ -160,11 +160,11 @@ export class Parameters {
   }
 
   // シリアライズ用データ変換
-  toData(): Point[] {
-    const data: Point[] = []
+  toModel(): Point[] {
+    const points: Point[] = []
     PARAMETER_LIST.forEach(param => {
-      data.push(this.get(param.name))
+      points.push(this.get(param.name))
     })
-    return data
+    return points
   }
 }

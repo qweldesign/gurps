@@ -3,7 +3,7 @@ import { useLoaderData, useNavigate } from 'react-router-dom'
 import Modal from '../common/Modal'
 import { PARAMETER_LIST, type ParameterName, Parameters } from '../../domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../domains/Equipments'
-import { Character, type CharacterData } from '../../domains/Character'
+import { Character, type CharacterModel } from '../../domains/Character'
 import { PC_LIST } from '../../domains/SampleCharacter'
 import { SaveData } from '../../domains/SaveData'
 
@@ -62,7 +62,7 @@ function Setting() {
     if (Number(uid) > 0 && i === 0) return true
     const prevPoint = prevParams.get(name)
     const currentPoint = params.get(name)
-    const next = new Parameters(params.toData())
+    const next = new Parameters(params.toModel())
     const nextPoint = next.step(name, size)
     // 下限を下回る場合, 合計を上回る場合は disable を true に 
     return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || next.getTotal() > points)
@@ -70,7 +70,7 @@ function Setting() {
 
   // パラメータをステップ
   const step = (name: ParameterName, size: number) => {
-    const next = new Parameters(params.toData())
+    const next = new Parameters(params.toModel())
     next.step(name as ParameterName, size)
     if (params.get('武術') === 0 && next.get('武術') > 0) {
       // 武術がセットされた場合
@@ -113,7 +113,7 @@ function Setting() {
 
   const changeWeapon = (name: WeaponName) => {
     const prev = prevEquips.getWeapon()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setWeapon(name, false)
     if (name === prev.name) {
       saleWeapon()
@@ -125,14 +125,14 @@ function Setting() {
   }
 
   const saleWeapon = (name: WeaponName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setWeapon(name, false)
     setSaleEquips(sale)
   }
 
   const changeMissile = (name: WeaponName) => {
     const prev = prevEquips.getMissile()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setMissile(name)
     if (name === prev.name) {
       saleMissile()
@@ -144,14 +144,14 @@ function Setting() {
   }
 
   const saleMissile = (name: WeaponName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setMissile(name)
     setSaleEquips(sale)
   }
 
   const changeShield = (name: WeaponName) => {
     const prev = prevEquips.getShield()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setShield(name)
     if (name === prev.name) {
       saleShield()
@@ -163,14 +163,14 @@ function Setting() {
   }
 
   const saleShield = (name: WeaponName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setShield(name)
     setSaleEquips(sale)
   }
 
   const changeArmor = (name: ArmorName) => {
     const prev = prevEquips.getBodyArmor()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setBody(name, false)
     if (name === prev.name) {
       saleArmor()
@@ -182,14 +182,14 @@ function Setting() {
   }
 
   const saleArmor = (name: ArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setBody(name, false)
     setSaleEquips(sale)
   }
 
   const changeHeadArmor = (name: HeadArmorName) => {
     const prev = prevEquips.getHeadArmor()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setHead(name)
     if (name === prev.parts[0]) {
       saleHeadArmor()
@@ -201,14 +201,14 @@ function Setting() {
   }
 
   const saleHeadArmor = (name: HeadArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setHead(name)
     setSaleEquips(sale)
   }
 
   const changeArmArmor = (name: ArmArmorName) => {
     const prev = prevEquips.getArmArmor()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setArm(name)
     if (name === prev.parts[1]) {
       saleArmArmor()
@@ -220,14 +220,14 @@ function Setting() {
   }
 
   const saleArmArmor = (name: ArmArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setArm(name)
     setSaleEquips(sale)
   }
 
   const changeLegArmor = (name: LegArmorName) => {
     const prev = prevEquips.getLegArmor()
-    const next = new Equipments(equips.toData())
+    const next = new Equipments(equips.toModel())
     next.setLeg(name)
     if (name === prev.parts[2]) {
       saleLegArmor()
@@ -239,13 +239,13 @@ function Setting() {
   }
 
   const saleLegArmor = (name: LegArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toData())
+    const sale = new Equipments(saleEquips.toModel())
     sale.setLeg(name)
     setSaleEquips(sale)
   }
 
   const resetEquips = () => {
-    const next = new Equipments(prevEquips.toData())
+    const next = new Equipments(prevEquips.toModel())
     setEquips(next)
   }
 
@@ -330,16 +330,16 @@ function Setting() {
       return
     }
 
-    const confirmData: CharacterData = {
+    const confirmModel: CharacterModel = {
       id: Number(uid),
       name, gender,
       totalPoints: points,
-      points: params.toData(),
-      equipments: equips.toData()
+      points: params.toModel(),
+      equipments: equips.toModel()
     }
     
     // キャラクターデータの一時保存
-    const unit = new Character(confirmData)
+    const unit = new Character(confirmModel)
     unit.save(true)
 
     // 所持金の一時保存

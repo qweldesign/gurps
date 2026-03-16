@@ -26,7 +26,7 @@ function Edit() {
     const samples = createSamples(10, 1, size, mod, 5 - size)
     samples.forEach(sample => {
       const model = {
-        ...sample.toData(),
+        ...sample.toModel(),
         totalPoints: 10,
         gold: sample.getTactic() < 3 ? 200 : 100
       }
