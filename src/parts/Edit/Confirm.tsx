@@ -41,7 +41,7 @@ function Confirm() {
     if (!isFirstCreation) {
       navigate(`/edit/setting/${uid}`)
     } else {
-      navigate(`/edit/making/`)
+      navigate(`/edit/setting/`)
     }
   }
 

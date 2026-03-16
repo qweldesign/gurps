@@ -29,7 +29,6 @@ export const router = createBrowserRouter([
       ]},
       { path: 'edit', children: [
         { index: true, element: <Edit /> },
-        { path: 'making', element: <Setting />, loader: idLoader },
         { path: 'view', children: [
           { index: true, element: <View />, loader: idLoader },
           { path: ':uid', element: <View />, loader: idLoader }

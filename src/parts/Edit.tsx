@@ -72,7 +72,7 @@ function Edit() {
       <div className="mt-12 mb-6 text-right">軍資金: {gold}金</div>
       <List units={units} />
       <div className="text-center">
-        <button onClick={() => navigate('./making/')}>新規作成</button>
+        <button onClick={() => navigate('./setting/')}>新規作成</button>
         <button onClick={confirmReset}>リセット</button>
       </div>
       {alertOpen && (
