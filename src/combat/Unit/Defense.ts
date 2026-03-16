@@ -1,0 +1,5 @@
+// Defense
+
+export class UnitDefense {
+
+}

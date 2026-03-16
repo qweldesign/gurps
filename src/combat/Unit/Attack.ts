@@ -1,0 +1,5 @@
+// Attack
+
+export class UnitAttack {
+
+}
