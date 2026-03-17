@@ -9,7 +9,7 @@ import Setup from './parts/Setup'
 import View from './parts/Setup/View'
 import Edit from './parts/Setup/Edit'
 import Confirm from './parts/Setup/Confirm'
-import Battle from './parts/Battle'
+import Combat from './parts/Combat'
 import { docsLoader } from './loader/docsLoader'
 import { idLoader } from './loader/idLoader'
 
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
           { path: ':uid', element: <Confirm />, loader: idLoader }
         ]},
       ]},
-      { path: 'battle', element: <Battle /> }
+      { path: 'battle', element: <Combat /> }
     ]
   }
 ])

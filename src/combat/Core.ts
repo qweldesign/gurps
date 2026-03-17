@@ -15,6 +15,14 @@ export class CombatCore {
     })
   }
 
+  nextTurn() {
+    this.turnIndex++
+    if (this.turnIndex === this.units.length) {
+      this.round++
+      this.turnIndex %= this.units.length
+    }
+  }
+
   debug() {
     const { round, turnIndex, units } = this
     console.log({ round, turnIndex, units })

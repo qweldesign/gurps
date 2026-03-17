@@ -1,5 +1,9 @@
 // Unit.ts
 
+const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
+
+export type CombatId = typeof combatIds[number]
+
 export type CombatAttackModel = {
   name: string
   dmgName: string
@@ -20,7 +24,7 @@ export type CombatDefenseModel = {
 }
 
 export type CombatUnitModel = {
-  combatId: number
+  combatId: CombatId
   id: number
   name: string
   maxHP: number
@@ -32,7 +36,7 @@ export type CombatUnitModel = {
 }
 
 export class CombatUnit {
-  public combatId: number
+  public combatId: CombatId
   public id: number
   public name: string
   public maxHP: number
