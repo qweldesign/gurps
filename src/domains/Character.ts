@@ -3,6 +3,7 @@
 import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
 import { type Weapon, type Armor, type Dmg, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
+import { type CombatAttackModel, type CombatDefenseModel, type CombatUnitModel } from '../combat/Unit'
 
 export type CharacterModel = {
   id: number
@@ -279,6 +280,69 @@ export class Character {
       points: this.parameters.toModel(),
       totalPoints: this.points,
       equipments: this.equipments.toModel()
+    }
+  }
+
+  // 武器の戦闘モデル用データ変換
+  toCombatAttackModel(): CombatAttackModel[] {
+    const main = this.mainUsage
+    const sub = this.subUsage
+    const missile = this.missile
+    const shield = this.shield
+    return [
+      { name: 'main', data: main },
+      { name: 'sub', data: sub },
+      { name: 'missile', data: missile },
+      { name: 'shield', data: shield}
+    ].map(item => {
+      const name = item.name as 'main' | 'sub' | 'missile' | 'shield'
+      return {
+        name: item.data.name,
+        dmgName: this.getDmgName(name),
+        dmgDice: this.getDmg(name).dice,
+        dmgMod: this.getDmg(name).mod,
+        dmgType: this.getDmg(name).type,
+        lv: this.getLevel(name),
+        ev: item.data.ev,
+        ready: item.data.ready,
+        isMissile: item.name === 'missile' ? true : false
+      }
+    }).filter((attack, i) => attack.name !== '装備無し' || i === 0)
+  }
+
+  // 防具の戦闘モデル用データ変換
+  toCombatDefenseModel(): CombatDefenseModel[] {
+    const body = this.body
+    const head = this.head
+    const arm = this.arm
+    const leg = this.leg
+    return [
+      { name: 'body', data: body },
+      { name: 'head', data: head },
+      { name: 'arm', data: arm },
+      { name: 'leg', data: leg }
+    ].map(item => {
+      return {
+        name: item.name,
+        sdr: item.data.sdr,
+        tdr: item.data.tdr,
+        wt: item.data.wt
+      }
+    })
+  }
+
+  // 戦闘モデル用データ変換
+  toCombatUnitModel(combatId: number): CombatUnitModel {
+    return {
+      combatId,
+      id: this.id,
+      name: this.name,
+      maxHP: this.maxHP,
+      attacks: this.toCombatAttackModel(),
+      defenses: this.toCombatDefenseModel(),
+      ev: this.DEV,
+      pre: this.PRE,
+      mre: this.MRE
     }
   }
 

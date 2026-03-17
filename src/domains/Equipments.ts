@@ -26,12 +26,15 @@ export type Armor = {
   gold: number
 }
 
-export type Dmg = {
+type BaseDmg = {
   id: number
   name: string
   dice: number
   mod: number
-  type?: number
+}
+
+export type Dmg = BaseDmg & {
+  type: number
 }
 
 export const WEAPON_LIST: Weapon[] = [
@@ -76,7 +79,7 @@ export const ARMOR_LIST: Armor[] = [
   { id: 6, name: 'プレイトメイル', parts: ['クローズヘルム', 'ヴァンブレイス', 'グリーヴ'], sdr: 4, tdr: 4, dr: '4', wt: 4, gold: 320 }
 ] as const
 
-export const DMG_STEP: Dmg[] = [
+export const DMG_STEP: BaseDmg[] = [
   { id: 0, name: '1d-4', dice: 1, mod: -4 },
   { id: 1, name: '1d-3', dice: 1, mod: -3 },
   { id: 2, name: '1d-2', dice: 1, mod: -2 },
