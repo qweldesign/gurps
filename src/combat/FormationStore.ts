@@ -2,8 +2,8 @@
 
 import { CombatUnit as Unit } from './Unit'
 
-const SIDE_VALUES = ['player', 'enemy'] as const
-const POSITION_VALUES = ['back', 'left', 'center', 'right'] as const
+export const SIDE_VALUES = ['player', 'enemy'] as const
+export const POSITION_VALUES = ['back', 'left', 'center', 'right'] as const
 
 export type Side = typeof SIDE_VALUES[number]
 export type Position = typeof POSITION_VALUES[number]

@@ -52,7 +52,7 @@ function Combat() {
             </div>
             <div id="action" className="order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
               <h3 className="m-0 border-0 text-sm">Action</h3>
-              <Action />
+              <Action store={coreRef.current.actionStore} />
             </div>
             <div id="log" className="order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
               <h3 className="m-0 border-0 text-sm">Log</h3>
