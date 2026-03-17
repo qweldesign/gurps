@@ -1,4 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
+import Formation from './Combat/Formation'
+import Action from './Combat/Action'
+import Summary from './Combat/Summary'
+import Log from './Combat/Log'
 import { CombatCore as Core } from '../combat/Core'
 import { createSamples } from '../domains/SampleCharacter'
 import DevProgress from './DevProgress'
@@ -34,6 +38,28 @@ function Combat() {
     <>
       <div className="p-6">
         <p>In development...</p>
+      </div>
+      <div className="px-6">
+        <div className="table-wrapper">
+          <div className="row justify-center min-w-lg lg:min-w-5xl">
+            <div id="formation" className="order-1 w-lg h-48 p-3 bg-white/15">
+              <h3 className="m-0 border-0 text-sm">Formation</h3>
+              <Formation />
+            </div>
+            <div id="summary" className="order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
+              <h3 className="m-0 border-0 text-sm">Summary</h3>
+              <Summary />
+            </div>
+            <div id="action" className="order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
+              <h3 className="m-0 border-0 text-sm">Action</h3>
+              <Action />
+            </div>
+            <div id="log" className="order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
+              <h3 className="m-0 border-0 text-sm">Log</h3>
+              <Log />
+            </div>
+          </div>
+        </div>
       </div>
       <div className="mt-24 px-6">
         <DevProgress progress={COMBAT_DEV_PROGRESS} />
