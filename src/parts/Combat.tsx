@@ -44,7 +44,7 @@ function Combat() {
           <div className="row justify-center min-w-lg lg:min-w-5xl">
             <div id="formation" className="order-1 w-lg h-48 p-3 bg-white/15">
               <h3 className="m-0 border-0 text-sm">Formation</h3>
-              <Formation />
+              <Formation store={coreRef.current.formationStore} />
             </div>
             <div id="summary" className="order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
               <h3 className="m-0 border-0 text-sm">Summary</h3>

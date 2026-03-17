@@ -1,5 +1,7 @@
 // Unit.ts
 
+import { type Side, type Position } from './FormationStore'
+
 const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
 
 export type CombatId = typeof combatIds[number]
@@ -46,8 +48,8 @@ export class CombatUnit {
   private pre: number
   private mre: number
   public order: number
-  public side: 'player' | 'enemy'
-  public position: 'back' | 'left' | 'center' | 'right'
+  public side: Side
+  public position: Position
 
   constructor(model: CombatUnitModel, order: number) {
     const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre } = model
