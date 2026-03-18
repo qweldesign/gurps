@@ -89,7 +89,7 @@ export class SaveData {
       id: 0,
       name: '未設定',
       gender: '男性',
-      totalPoints: 10,
+      totalPoints: 0,
       points: [],
       equipments: null
     }
