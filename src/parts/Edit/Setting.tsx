@@ -1,7 +1,7 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
 import Modal from '../common/Modal'
-import { PARAMETER_LIST, type ParameterName, Parameters } from '../../domains/Parameters'
+import { type Parameter, PARAMETER_LIST, type ParameterName, Parameters } from '../../domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, Equipments } from '../../domains/Equipments'
 import { Character, type CharacterModel } from '../../domains/Character'
 import { PC_LIST } from '../../domains/SampleCharacter'
@@ -51,12 +51,13 @@ function Setting() {
   const [alertOpen, setAlertOpen] = useState(false)
 
   // 能力値, 技能一覧表
-  const lists = []
-  lists[0] = PARAMETER_LIST.filter(param => param.base === 10)
-  lists[1] = PARAMETER_LIST.filter(param => param.base === '筋力')
-  lists[2] = PARAMETER_LIST.filter(param => param.base === '生命力')
-  lists[3] = PARAMETER_LIST.filter(param => param.base === '敏捷力')
-  lists[4] = PARAMETER_LIST.filter(param => param.base === '知力')
+  const parameterGroups = [
+    { label: '能力値', filter: (p: Parameter) => p.base === 10 },
+    { label: '筋力を基準とする技能', filter: (p: Parameter) => p.base === '筋力' },
+    { label: '生命力を基準とする技能', filter: (p: Parameter) => p.base === '生命力' },
+    { label: '敏捷力を基準とする技能', filter: (p: Parameter) => p.base === '敏捷力' },
+    { label: '知力を基準とする技能', filter: (p: Parameter) => p.base === '知力' },
+  ]
 
   // パラメータをステップ
   const step = (name: ParameterName, size: number) => {
@@ -419,15 +420,9 @@ function Setting() {
           )}
           <h5>残りCP: <span className={!pointsState ? 'text-amber-400 font-bold' : 'font-bold'}>{points - params.total} 点</span></h5>
           <div className="flex flex-nowrap lg:flex-wrap flex-col items-center gap-6 lg:h-[60em]">
-            {lists.map((list, i) => (
+            {parameterGroups.map((group, i) => (
               <div className="w-64" key={i}>
-                <h6>
-                  {i === 0 ? '能力値' :
-                    i === 1 ? '筋力を基準とする技能' :
-                    i === 2 ? '生命力を基準とする技能' :
-                    i === 3 ? '敏捷力を基準とする技能' : '知力を基準とする技能'
-                  }
-                </h6>
+                <h6>{group.label}</h6>
                 <table>
                   <thead>
                     <tr>
@@ -437,7 +432,7 @@ function Setting() {
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((p, j) =>  (
+                    {PARAMETER_LIST.filter(group.filter).map((p, j) =>  (
                       <tr key={j}>
                         <td>{p.name}</td>
                         <td>
