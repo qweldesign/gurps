@@ -116,6 +116,16 @@ export class Character {
     }
   }
 
+  // 「武術」保有判定
+  get isWarrior(): boolean {
+    return this.parameters.isWarrior
+  }
+
+  // 「剣術」保有判定
+  get isFencer(): boolean {
+    return this.parameters.isFencer
+  }
+
   // Point総計を算出して返す
   get currentTotal(): number {
     return this.parameters.total

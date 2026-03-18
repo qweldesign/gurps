@@ -152,6 +152,16 @@ export class Parameters {
       .sort((a, b) => a[1].id! - b[1].id!)
   }
 
+  // 「武術」保有判定
+  get isWarrior(): boolean {
+    return this.get('武術') > 0 ? true : false
+  }
+
+  // 「剣術」保有判定
+  get isFencer(): boolean {
+    return this.get('剣術') > 0 ? true : false
+  }
+
   // Point総計を算出して返す
   get total(): number {
     let total = 0

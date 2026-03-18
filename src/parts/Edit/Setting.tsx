@@ -62,7 +62,7 @@ function Setting() {
   const step = (name: ParameterName, size: number) => {
     const next = new Parameters(params.toModel())
     next.step(name as ParameterName, size)
-    if (params.get('武術') === 0 && next.get('武術') > 0) {
+    if (!params.isWarrior && next.isWarrior) {
       // 武術がセットされた場合
       if (isFirstCreation) setStartGoldRate(2) // 新規作成時は所持金を倍に
       setWeaponList(WEAPON_LIST) // リストを追加
@@ -77,7 +77,7 @@ function Setting() {
         setAlertOpen(true)
         setInitialEquipSet(false) // 繰り返しアラート表示されるのを防ぐ
       }
-    } else if (params.get('武術') > 0 && next.get('武術') === 0) {
+    } else if (params.isWarrior && !next.isWarrior) {
       // 武術がリセットされた場合
       if (isFirstCreation) setStartGoldRate(1) // 新規作成時は所持金を戻す
       setWeaponList(WEAPON_LIST.filter(item => item.skillType !== '武術'))

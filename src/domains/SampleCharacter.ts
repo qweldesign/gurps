@@ -331,7 +331,7 @@ export class SampleCharacter extends Character {
     const weaponName = table2[t][0]
     const armorName = table2[t][1]
     const missileName = MISSILE_TABLE[this.tactic % 3]
-    const skill = this.getParam('武術') > 0 ? '武術' : this.getParam('剣術') > 0 ? '剣術' : ''
+    const skill = this.isWarrior ? '武術' : this.isFencer ? '剣術' : ''
     this.setWeapon(weaponName, true, skill)
     this.setBody(armorName)
     if ((Math.floor(this.tactic / 3) === 1 && totalPoints >= 16) || this.tactic === 5) {
