@@ -50,7 +50,7 @@ type Action =
   | { type: 'AUTO_NAME', payload: { gender: string } }
   | { type: 'CLEAR_TRANSITION' }
 
-function Setting() {
+function Edit() {
   // セーブデータの読み込み
   const saveData = new SaveData()
   const keys = saveData.loadKeys()
@@ -517,14 +517,14 @@ function Setting() {
 
     // 確認画面へ進む
     if (!isFirstCreation) {
-      navigate(`/edit/confirm/${uid}`)
+      navigate(`/setup/confirm/${uid}`)
     } else {
-      navigate(`/edit/confirm/`)
+      navigate(`/setup/confirm/`)
     }
   }
 
   // 作成 (編集) 中断
-  const back = () => navigate(keys.size ? '/edit/' : '/')
+  const back = () => navigate(keys.size ? '/setup/' : '/')
 
   return (
     <div className="px-6">
@@ -738,4 +738,4 @@ function Setting() {
   )
 }
 
-export default Setting
+export default Edit

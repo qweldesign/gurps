@@ -35,15 +35,15 @@ function View() {
   const remove = () => {
     setAlertOpen(false)
     saveData.removeModel(uid)
-    navigate('/edit/')
+    navigate('/setup/')
   }
 
   return (
     <div className="px-6">
       <Detail unit={unit} />
       <div className="text-center">
-        <button onClick={() => navigate('/edit/')}>一覧へ戻る</button>
-        <button onClick={() => navigate(`/edit/setting/${uid}`)}>編集</button>
+        <button onClick={() => navigate('/setup/')}>一覧へ戻る</button>
+        <button onClick={() => navigate(`/setup/edit/${uid}`)}>編集</button>
         <button onClick={confirmRemove}>除名</button>
       </div>
       {alertOpen && (

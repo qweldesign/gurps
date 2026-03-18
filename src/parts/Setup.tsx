@@ -1,12 +1,12 @@
 import { type ReactNode, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import List from './Edit/List'
+import List from './Setup/List'
 import Modal from './common/Modal'
 import { Character } from '../domains/Character'
 import { createSamples } from '../domains/SampleCharacter'
 import { SaveData } from '../domains/SaveData'
 
-function Edit() {
+function Setup() {
   // セーブデータの読み込み
   const saveData = new SaveData()
   const gold = saveData.loadGold()
@@ -72,7 +72,7 @@ function Edit() {
       <div className="mt-12 mb-6 text-right">軍資金: {gold}金</div>
       <List units={units} />
       <div className="text-center">
-        <button onClick={() => navigate('./setting/')}>新規作成</button>
+        <button onClick={() => navigate('./edit/')}>新規作成</button>
         <button onClick={confirmReset}>リセット</button>
       </div>
       {alertOpen && (
@@ -82,4 +82,4 @@ function Edit() {
   )
 }
 
-export default Edit
+export default Setup

@@ -5,7 +5,7 @@ function Entrance() {
   // セーブデータの読み込み
   const saveData = new SaveData()
   const keys = saveData.loadKeys()
-  const edit = keys.size ? '/edit/' : '/edit/setting/'
+  const edit = keys.size ? '/setup/' : '/setup/edit/'
 
   return (
     <ul className='nav'>

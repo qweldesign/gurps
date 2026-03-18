@@ -33,15 +33,15 @@ function Confirm() {
     saveData.saveGold(gold) // 所持金保存
     unit.save() // キャラクター保存
     sessionStorage.clear() // SessionStorage をクリア
-    navigate(`/edit/`) // 戻る
+    navigate(`/setup/`) // 戻る
   }
 
   // 戻る
   const back = () => {
     if (!isFirstCreation) {
-      navigate(`/edit/setting/${uid}`)
+      navigate(`/setup/edit/${uid}`)
     } else {
-      navigate(`/edit/setting/`)
+      navigate(`/setup/edit/`)
     }
   }
 
