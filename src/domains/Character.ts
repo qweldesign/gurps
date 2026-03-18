@@ -80,7 +80,7 @@ export class Character {
     // 胴防具の重量を加味するのは 敏捷力 ベースのパラメータのみ
     if (includeWeight && (param.name === '敏捷力' || param.base === '敏捷力')) {
       // 敏捷力への修正は 重量 - 2 と定義
-      weight = Math.max(this.getBodyArmor().wt - 2, 0)
+      weight = Math.max(this.body.wt - 2, 0)
     }
     return this.parameters.getLevel(name) - weight
   }
@@ -122,82 +122,90 @@ export class Character {
   }
 
   // 武器をセット
+  set weapon(weaponName: WeaponName) {
+    this.equipments.setWeapon(weaponName, false)
+  }
+
   // autoSet オプションで 盾もセット (技能を指定する)
   setWeapon(weaponName: WeaponName, autoSet: boolean = true, skill: string = '武術'): Weapon {
     return this.equipments.setWeapon(weaponName, autoSet, skill)
   }
 
   // 射撃武器をセット
-  setMissile(weaponName: WeaponName): Weapon {
-    return this.equipments.setMissile(weaponName)
+  set missile(weaponName: WeaponName) {
+    this.equipments.missile = weaponName
   }
 
   // 盾をセット
-  setShield(weaponName: WeaponName): Weapon {
-    return this.equipments.setShield(weaponName)
+  set shield(weaponName: WeaponName) {
+    this.equipments.shield = weaponName
   }
 
   // 胴防具をセット
+  set body(armorName: ArmorName) {
+    this.equipments.setBody(armorName, false)
+  }
+
   // autoSet オプションで 頭, 腕, 脚もセット
   setBody(armorName: ArmorName, autoSet: boolean = true): Armor {
     return this.equipments.setBody(armorName, autoSet)
   }
 
   // 頭防具をセット
-  setHead(armorName: HeadArmorName): Armor {
-    return this.equipments.setHead(armorName)
+  set head(armorName: HeadArmorName) {
+    this.equipments.head = armorName
   }
 
   // 腕防具をセット
-  setArm(armorName: ArmArmorName): Armor {
-    return this.equipments.setArm(armorName)
+  set arm(armorName: ArmArmorName) {
+    this.equipments.arm = armorName
   }
 
   // 脚防具をセット
-  setLeg(armorName: LegArmorName): Armor {
-    return this.equipments.setLeg(armorName)
+  set leg(armorName: LegArmorName) {
+    this.equipments.leg = armorName
   }
 
   // 武器を取得
-  getWeapon(): Weapon {
-    return this.equipments.getWeapon()
+  get weapon(): Weapon {
+    return this.equipments.weapon
   }
   
   // 武器の主用途を取得
-  getMainUsage(): Weapon {
-    return this.equipments.getMainUsage()
+  get mainUsage(): Weapon {
+    return this.equipments.mainUsage
   }
 
   // 武器の副用途を取得
-  getSubUsage(): Weapon {
-    return this.equipments.getSubUsage()
+  get subUsage(): Weapon {
+    return this.equipments.subUsage
   }
 
   // 射撃武器を取得
-  getMissile(): Weapon {
-    return this.equipments.getMissile()
+  get missile(): Weapon {
+    return this.equipments.missile
   }
 
   // 盾を取得
-  getShield(): Weapon {
-    return this.equipments.getShield()
+  get shield(): Weapon {
+    return this.equipments.shield
   }
 
   // 能力値と装備から Dmg を算出し、ダメージ型を足して返す
   getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption = true): Dmg {
-    return this.equipments.getDmg(key, typeOption, this.getDmgModifier())
+    return this.equipments.getDmg(key, typeOption, this.dmgModifier)
   }
 
   // 能力値と装備から Dmg を算出し、表記を返す
   getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption = true): string {
-    return this.equipments.getDmgName(key, typeOption, this.getDmgModifier())
+    return this.equipments.getDmgName(key, typeOption, this.dmgModifier)
   }
 
   // 能力値と装備から Lv を算出して返す
   getLevel(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): number {
-    const weapon = (key === 'main' ? this.getMainUsage()
-      : key === 'sub' ? this.getSubUsage()
-      : key === 'missile' ? this.getMissile() : this.getShield())
+    const weapon = key === 'main' ? this.mainUsage
+      : key === 'sub' ? this.subUsage
+      : key === 'missile' ? this.missile : this.shield
     const skill = weapon.skillType
     if (skill === '剣術') {
       // 「武術」で「剣術」技能の武器を扱う場合は技能値の高い方を返す
@@ -207,45 +215,49 @@ export class Character {
     }
   }
 
-  getMaxHP() {
+  get maxHP() {
     return this.getParamLevel('鍛錬') * 2
   }
 
-  getDmgModifier() {
+  get dmgModifier() {
     return Math.floor(this.getParamLevel('怪力') / 2) - 5
   }
 
-  getDEV() {
+  get DEV() {
     return Math.floor(this.getParamLevel('運動', true) / 2) + 5
   }
   
-  getRE() {
+  get PRE() {
+    return this.getParamLevel('生命力')
+  }
+  
+  get MRE() {
     return this.getParamLevel('修養')
   }
 
   // 胴防具を取得
-  getBodyArmor(): Armor {
-    return this.equipments.getBodyArmor()
+  get body(): Armor {
+    return this.equipments.body
   }
 
   // 頭防具を取得
-  getHeadArmor(): Armor {
-    return this.equipments.getHeadArmor()
+  get head(): Armor {
+    return this.equipments.head
   }
 
   // 腕防具を取得
-  getArmArmor(): Armor {
-    return this.equipments.getArmArmor()
+  get arm(): Armor {
+    return this.equipments.arm
   }
 
   // 脚防具を取得
-  getLegArmor(): Armor {
-    return this.equipments.getLegArmor()
+  get leg(): Armor {
+    return this.equipments.leg
   }
 
   // Gold総額を算出して返す
-  getGold(): number {
-    return this.equipments.getGold()
+  get gold(): number {
+    return this.equipments.gold
   }
 
   // シリアライズ用データ変換

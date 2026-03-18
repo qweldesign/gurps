@@ -335,7 +335,7 @@ export class SampleCharacter extends Character {
     this.setWeapon(weaponName, true, skill)
     this.setBody(armorName)
     if ((Math.floor(this.tactic / 3) === 1 && totalPoints >= 16) || this.tactic === 5) {
-      this.setMissile(missileName) // 条件に応じて射撃武器をセット
+      this.missile = missileName // 条件に応じて射撃武器をセット
     }
   }
 }

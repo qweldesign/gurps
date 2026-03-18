@@ -137,54 +137,58 @@ export function getDmgName(weapon: Weapon, typeOption: boolean, mod:number = 0):
 
 // 装備のデータを司るクラス
 export class Equipments {
-  private weapon: Weapon
-  private mainUsage: Weapon
-  private subUsage: Weapon
-  private missile: Weapon
-  private shield: Weapon
-  private body: Armor
-  private head: Armor
-  private arm: Armor
-  private leg: Armor
+  private _weapon: Weapon
+  private _mainUsage: Weapon
+  private _subUsage: Weapon
+  private _missile: Weapon
+  private _shield: Weapon
+  private _body: Armor
+  private _head: Armor
+  private _arm: Armor
+  private _leg: Armor
 
   constructor(set: EquipmentSet | null) {
     const weaponName = set?.weapon ?? WEAPON_LIST[0].name
-    this.weapon = WEAPON_LIST.find(item => item.name === weaponName)!
-    this.mainUsage = this.setMainUsage(this.weapon)
-    this.subUsage = this.setSubUsage(this.weapon)
+    this._weapon = WEAPON_LIST.find(item => item.name === weaponName)!
+    this._mainUsage = this.setMainUsage(this._weapon)
+    this._subUsage = this.setSubUsage(this._weapon)
 
     const missileName = set?.missile ?? WEAPON_LIST[0].name
-    this.missile = WEAPON_LIST.find(item => item.name === missileName)!
+    this._missile = WEAPON_LIST.find(item => item.name === missileName)!
 
     const shieldName = set?.shield ?? WEAPON_LIST[0].name
-    this.shield = WEAPON_LIST.find(item => item.name === shieldName)!
+    this._shield = WEAPON_LIST.find(item => item.name === shieldName)!
 
     const bodyArmorName = set?.body ?? ARMOR_LIST[0].name
-    this.body = ARMOR_LIST.find(item => item.name === bodyArmorName)!
+    this._body = ARMOR_LIST.find(item => item.name === bodyArmorName)!
 
     const headArmorName = set?.head ?? ARMOR_LIST[0].parts[0]
-    this.head = ARMOR_LIST.find(item => item.parts[0] === headArmorName)!
+    this._head = ARMOR_LIST.find(item => item.parts[0] === headArmorName)!
 
     const armArmorName = set?.arm ?? ARMOR_LIST[0].parts[1]
-    this.arm = ARMOR_LIST.find(item => item.parts[1] === armArmorName)!
+    this._arm = ARMOR_LIST.find(item => item.parts[1] === armArmorName)!
     
     const legArmorName = set?.leg ?? ARMOR_LIST[0].parts[2]
-    this.leg = ARMOR_LIST.find(item => item.parts[2] === legArmorName)!
+    this._leg = ARMOR_LIST.find(item => item.parts[2] === legArmorName)!
   }
 
   // 武器をセット
+  set weapon(weaponName: WeaponName) {
+    this.setWeapon(weaponName, false)
+  }
+
   // autoSet オプションで 盾もセット (技能を指定する)
   setWeapon(weaponName: WeaponName, autoSet: boolean = true, skill: string = '武術'): Weapon {
-    this.weapon = WEAPON_LIST.find(item => item.name === weaponName)!
-    this.mainUsage = this.setMainUsage(this.weapon)
-    this.subUsage = this.setSubUsage(this.weapon)
+    this._weapon = WEAPON_LIST.find(item => item.name === weaponName)!
+    this._mainUsage = this.setMainUsage(this._weapon)
+    this._subUsage = this.setSubUsage(this._weapon)
     // 盾もセット
-    const type = this.mainUsage.weaponType
+    const type = this._mainUsage.weaponType
     if ((type === 1 || type === 2) && autoSet) {
-      if (skill === '武術') this.setShield('中盾')
-      else this.setShield('小盾')
+      if (skill === '武術') this.shield = '中盾'
+      else this.shield = '小盾'
     }
-    return this.weapon
+    return this._weapon
   }
 
   // 武器の主用途をセット
@@ -215,138 +219,137 @@ export class Equipments {
   }
 
   // 射撃武器をセット
-  setMissile(weaponName: WeaponName): Weapon {
-    this.missile = WEAPON_LIST.find(item => item.name === weaponName)!
-    return this.missile
+  set missile(weaponName: WeaponName) {
+    this._missile = WEAPON_LIST.find(item => item.name === weaponName)!
   }
 
   // 盾をセット
-  setShield(weaponName: WeaponName): Weapon {
-    this.shield = WEAPON_LIST.find(item => item.name === weaponName)!
-    return this.shield
+  set shield(weaponName: WeaponName) {
+    this._shield = WEAPON_LIST.find(item => item.name === weaponName)!
   }
 
   // 胴防具をセット
+  set body(armorName: ArmorName) {
+    this.setBody(armorName, false)
+  }
+
   // autoSet オプションで 頭, 腕, 脚もセット
   setBody(armorName: ArmorName, autoSet: boolean = true): Armor {
-    this.body = ARMOR_LIST.find(item => item.name === armorName)!
+    this._body = ARMOR_LIST.find(item => item.name === armorName)!
     // 頭, 腕, 脚もセット
     if (autoSet) {
-      const replace = this.body.replace
+      const replace = this._body.replace
       if (replace) { // チェインメイルのように腕・脚防具が代替の場合
-        this.head = this.body
-        this.arm = this.leg = ARMOR_LIST.find(item => item.name === replace)!
+        this._head = this._body
+        this._arm = this._leg = ARMOR_LIST.find(item => item.name === replace)!
       } else if (replace === null) { // 服のように腕・脚防具の代替が無い場合
-        this.head = this.arm = this.leg = ARMOR_LIST[0]
+        this._head = this._arm = this._leg = ARMOR_LIST[0]
       } else if (replace === undefined) { // 代替が未定義の場合
-        this.head = this.arm = this.leg = this.body
+        this._head = this._arm = this._leg = this._body
       }
     }
-    return this.body
+    return this._body
   }
 
   // 頭防具をセット
-  setHead(armorName: HeadArmorName): Armor {
-    this.head = ARMOR_LIST.find(item => item.parts[0] === armorName)!
-    return this.head
+  set head(armorName: HeadArmorName) {
+    this._head = ARMOR_LIST.find(item => item.parts[0] === armorName)!
   }
 
   // 腕防具をセット
-  setArm(armorName: ArmArmorName): Armor {
-    this.arm = ARMOR_LIST.find(item => item.parts[1] === armorName)!
-    return this.arm
+  set arm(armorName: ArmArmorName) {
+    this._arm = ARMOR_LIST.find(item => item.parts[1] === armorName)!
   }
 
   // 脚防具をセット
-  setLeg(armorName: LegArmorName): Armor {
-    this.leg = ARMOR_LIST.find(item => item.parts[2] === armorName)!
-    return this.leg
+  set leg(armorName: LegArmorName) {
+    this._leg = ARMOR_LIST.find(item => item.parts[2] === armorName)!
   }
 
   // 武器を取得
-  getWeapon(): Weapon {
-    return this.weapon
+  get weapon(): Weapon {
+    return this._weapon
   }
 
   // 武器の主用途を取得
-  getMainUsage(): Weapon {
-    return this.mainUsage
+  get mainUsage(): Weapon {
+    return this._mainUsage
   }
 
   // 武器の副用途を取得
-  getSubUsage(): Weapon {
-    return this.subUsage
+  get subUsage(): Weapon {
+    return this._subUsage
   }
 
   // 射撃武器を取得
-  getMissile(): Weapon {
-    return this.missile
+  get missile(): Weapon {
+    return this._missile
   }
 
   // 盾を取得
-  getShield(): Weapon {
-    return this.shield
+  get shield(): Weapon {
+    return this._shield
   }
 
   // 胴防具を取得
-  getBodyArmor(): Armor {
-    return this.body
+  get body(): Armor {
+    return this._body
   }
 
   // 頭防具を取得
-  getHeadArmor(): Armor {
-    return this.head
+  get head(): Armor {
+    return this._head
   }
 
   // 腕防具を取得
-  getArmArmor(): Armor {
-    return this.arm
+  get arm(): Armor {
+    return this._arm
   }
 
   // 脚防具を取得
-  getLegArmor(): Armor {
-    return this.leg
+  get leg(): Armor {
+    return this._leg
   }
 
   // 引数の修正値から Dmg を算出し、ダメージ型を足して返す
   getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption:boolean = true, mod: number = 0): Dmg {
-    const weapon = (key === 'main' ? this.getMainUsage()
-      : key === 'sub' ? this.getSubUsage()
-      : key === 'missile' ? this.getMissile() : this.getShield())
+    const weapon = (key === 'main' ? this.mainUsage
+      : key === 'sub' ? this.subUsage
+      : key === 'missile' ? this.missile : this.shield)
     return getDmg(weapon, typeOption, mod)
   }
 
   // 引数の修正値から Dmg を算出し、表記を返す
   getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption:boolean = true, mod: number = 0): string {
-    const weapon = (key === 'main' ? this.getMainUsage()
-      : key === 'sub' ? this.getSubUsage()
-      : key === 'missile' ? this.getMissile() : this.getShield())
+    const weapon = (key === 'main' ? this.mainUsage
+      : key === 'sub' ? this.subUsage
+      : key === 'missile' ? this.missile : this.shield)
     return getDmgName(weapon, typeOption, mod)
   }
 
   // Gold総額を算出して返す
-  getGold(): number {
+  get gold(): number {
     let total = 0
-    total += this.weapon.gold
-    total += this.missile?.gold ?? 0
-    total += this.shield?.gold ?? 0
-    total += (this.body?.gold ?? 0) * 0.5
-    total += (this.head?.gold ?? 0) * 0.25
-    total += (this.arm?.gold ?? 0) * 0.1
-    total += (this.leg?.gold ?? 0) * 0.15
+    total += this._weapon.gold
+    total += this._missile?.gold ?? 0
+    total += this._shield?.gold ?? 0
+    total += (this._body?.gold ?? 0) * 0.5
+    total += (this._head?.gold ?? 0) * 0.25
+    total += (this._arm?.gold ?? 0) * 0.1
+    total += (this._leg?.gold ?? 0) * 0.15
     return total
   }
 
   // シリアライズ用データ変換
   toModel(): EquipmentSet {
     return {
-      weapon: this.getWeapon().name,
-      missile: this.getMissile().name,
-      shield: this.getShield().name,
-      body: this.getBodyArmor().name,
-      head: this.getHeadArmor().parts[0],
-      arm: this.getArmArmor().parts[1],
-      leg: this.getLegArmor().parts[2]
+      weapon: this.weapon.name,
+      missile: this.missile.name,
+      shield: this.shield.name,
+      body: this.body.name,
+      head: this.head.parts[0],
+      arm: this.arm.parts[1],
+      leg: this.leg.parts[2]
     }
   }
 }

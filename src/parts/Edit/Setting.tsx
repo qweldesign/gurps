@@ -109,7 +109,7 @@ function Setting() {
   const calcGold = () => {
     let gold = initialGold
     if (isFirstCreation) gold += startGold * startGoldRate
-    gold -= equips.getGold() - prevEquips.getGold() + Math.ceil(saleEquips.getGold() / 2)
+    gold -= equips.gold - prevEquips.gold + Math.ceil(saleEquips.gold / 2)
     return gold
   }
 
@@ -122,9 +122,9 @@ function Setting() {
 
   // 主用武器の状態更新
   const changeWeapon = (name: WeaponName) => {
-    const prev = prevEquips.getWeapon()
+    const prev = prevEquips.weapon
     const next = new Equipments(equips.toModel())
-    next.setWeapon(name, false)
+    next.weapon = name
     if (name === prev.name) {
       saleWeapon()
     } else {
@@ -137,15 +137,15 @@ function Setting() {
   // 主用武器の売却
   const saleWeapon = (name: WeaponName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setWeapon(name, false)
+    sale.weapon = name
     setSaleEquips(sale)
   }
 
   // 射撃武器の状態更新
   const changeMissile = (name: WeaponName) => {
-    const prev = prevEquips.getMissile()
+    const prev = prevEquips.missile
     const next = new Equipments(equips.toModel())
-    next.setMissile(name)
+    next.missile = name
     if (name === prev.name) {
       saleMissile()
     } else {
@@ -158,15 +158,15 @@ function Setting() {
   // 射撃武器の売却
   const saleMissile = (name: WeaponName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setMissile(name)
+    sale.missile = name
     setSaleEquips(sale)
   }
 
   // 盾の状態更新
   const changeShield = (name: WeaponName) => {
-    const prev = prevEquips.getShield()
+    const prev = prevEquips.shield
     const next = new Equipments(equips.toModel())
-    next.setShield(name)
+    next.shield = name
     if (name === prev.name) {
       saleShield()
     } else {
@@ -179,15 +179,15 @@ function Setting() {
   // 盾の売却
   const saleShield = (name: WeaponName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setShield(name)
+    sale.shield = name
     setSaleEquips(sale)
   }
 
   // 胴防具の状態更新
   const changeArmor = (name: ArmorName) => {
-    const prev = prevEquips.getBodyArmor()
+    const prev = prevEquips.body
     const next = new Equipments(equips.toModel())
-    next.setBody(name, false)
+    next.body = name
     if (name === prev.name) {
       saleArmor()
     } else {
@@ -200,15 +200,15 @@ function Setting() {
   // 胴防具の売却
   const saleArmor = (name: ArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setBody(name, false)
+    sale.body = name
     setSaleEquips(sale)
   }
 
   // 頭防具の状態更新
   const changeHeadArmor = (name: HeadArmorName) => {
-    const prev = prevEquips.getHeadArmor()
+    const prev = prevEquips.head
     const next = new Equipments(equips.toModel())
-    next.setHead(name)
+    next.head = name
     if (name === prev.parts[0]) {
       saleHeadArmor()
     } else {
@@ -221,15 +221,15 @@ function Setting() {
   // 頭防具の売却
   const saleHeadArmor = (name: HeadArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setHead(name)
+    sale.head = name
     setSaleEquips(sale)
   }
 
   // 腕防具の状態更新
   const changeArmArmor = (name: ArmArmorName) => {
-    const prev = prevEquips.getArmArmor()
+    const prev = prevEquips.arm
     const next = new Equipments(equips.toModel())
-    next.setArm(name)
+    next.arm = name
     if (name === prev.parts[1]) {
       saleArmArmor()
     } else {
@@ -242,15 +242,15 @@ function Setting() {
   // 腕防具の売却
   const saleArmArmor = (name: ArmArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setArm(name)
+    sale.arm = name
     setSaleEquips(sale)
   }
 
   // 脚防具の状態更新
   const changeLegArmor = (name: LegArmorName) => {
-    const prev = prevEquips.getLegArmor()
+    const prev = prevEquips.leg
     const next = new Equipments(equips.toModel())
-    next.setLeg(name)
+    next.leg = name
     if (name === prev.parts[2]) {
       saleLegArmor()
     } else {
@@ -263,7 +263,7 @@ function Setting() {
   // 脚防具の売却
   const saleLegArmor = (name: LegArmorName = '装備無し') => {
     const sale = new Equipments(saleEquips.toModel())
-    sale.setLeg(name)
+    sale.leg = name
     setSaleEquips(sale)
   }
 
@@ -275,32 +275,32 @@ function Setting() {
 
   // 売却状態を更新
   const updateSale = () => {
-    const prevWeapon = prevEquips.getWeapon()
-    if (prevWeapon.name !== equips.getWeapon().name) {
+    const prevWeapon = prevEquips.weapon
+    if (prevWeapon.name !== equips.weapon.name) {
       saleWeapon(prevWeapon.name)
     }
-    const prevMissile = prevEquips.getMissile()
-    if (prevMissile.name !== equips.getMissile().name) {
+    const prevMissile = prevEquips.missile
+    if (prevMissile.name !== equips.missile.name) {
       saleMissile(prevMissile.name)
     }
-    const prevShield = prevEquips.getShield()
-    if (prevShield.name !== equips.getShield().name) {
+    const prevShield = prevEquips.shield
+    if (prevShield.name !== equips.shield.name) {
       saleShield(prevShield.name)
     }
-    const prevArmor = prevEquips.getBodyArmor()
-    if (prevArmor.name !== equips.getBodyArmor().name) {
+    const prevArmor = prevEquips.body
+    if (prevArmor.name !== equips.body.name) {
       saleArmor(prevArmor.name)
     }
-    const prevHeadArmor = prevEquips.getHeadArmor()
-    if (prevHeadArmor.parts[0] !== equips.getHeadArmor().parts[0]) {
+    const prevHeadArmor = prevEquips.head
+    if (prevHeadArmor.parts[0] !== equips.head.parts[0]) {
       saleHeadArmor(prevHeadArmor.parts[0])
     }
-    const prevArmArmor = prevEquips.getArmArmor()
-    if (prevArmArmor.parts[1] !== equips.getArmArmor().parts[1]) {
+    const prevArmArmor = prevEquips.arm
+    if (prevArmArmor.parts[1] !== equips.arm.parts[1]) {
       saleArmArmor(prevArmArmor.parts[1])
     }
-    const prevLegArmor = prevEquips.getLegArmor()
-    if (prevLegArmor.parts[2] !== equips.getLegArmor().parts[2]) {
+    const prevLegArmor = prevEquips.leg
+    if (prevLegArmor.parts[2] !== equips.leg.parts[2]) {
       saleLegArmor(prevLegArmor.parts[2])
     }
   }
@@ -525,7 +525,7 @@ function Setting() {
           <h5>残り所持金: <span className={calcGold() < 0 ? 'text-red-600 font-bold' : 'font-bold'}>{calcGold()} 金</span></h5>
           <div>
             <label className="inline-block w-24 sm:text-right">主用武器: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getWeapon().name} onChange={(e) => changeWeapon(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.weapon.name} onChange={(e) => changeWeapon(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {weaponList.filter(item => (
                 // 格闘, 射撃, 盾を除く
@@ -534,13 +534,13 @@ function Setting() {
                 <option key={i} value={item.name}>{`${item.name} | 性能:${item.baseDmg / 2} (${item.gold}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getWeapon().name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getWeapon().name} を売却 (${Math.floor(saleEquips.getWeapon().gold / 2)}金)`}</span>
+            <div className={saleEquips.weapon.name === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.weapon.name} を売却 (${Math.floor(saleEquips.weapon.gold / 2)}金)`}</span>
             </div>
           </div>
           <div>
             <label className="inline-block w-24 sm:text-right">射撃武器: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getMissile().name} onChange={(e) => changeMissile(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.missile.name} onChange={(e) => changeMissile(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {weaponList.filter(item => (
                 // 射撃武器のみを取り出す
@@ -549,13 +549,13 @@ function Setting() {
                 <option key={i} value={item.name}>{`${item.name} | 性能:${item.baseDmg / 2} (${item.gold}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getMissile().name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getMissile().name} を売却 (${Math.floor(saleEquips.getMissile().gold / 2)}金)`}</span>
+            <div className={saleEquips.missile.name === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.missile.name} を売却 (${Math.floor(saleEquips.missile.gold / 2)}金)`}</span>
             </div>
           </div>
           <div>
             <label className="inline-block w-24 sm:text-right">盾: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getShield().name} onChange={(e) => changeShield(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.shield.name} onChange={(e) => changeShield(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {weaponList.filter(item => (
                 // 盾のみを取り出す
@@ -564,25 +564,25 @@ function Setting() {
                 <option key={i} value={item.name}>{`${item.name} | 性能:${item.ev} (${item.gold}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getShield().name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getShield().name} を売却 (${Math.floor(saleEquips.getShield().gold / 2)}金)`}</span>
+            <div className={saleEquips.shield.name === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.shield.name} を売却 (${Math.floor(saleEquips.shield.gold / 2)}金)`}</span>
             </div>
           </div>
           <div>
             <label className="inline-block w-24 sm:text-right">胴防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getBodyArmor().name} onChange={(e) => changeArmor(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.body.name} onChange={(e) => changeArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => item.id !== 0).map((item, i) => (
                 <option key={i} value={item.name}>{`${item.name} | 性能:${item.sdr} (${item.gold * 0.5}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getBodyArmor().name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getBodyArmor().name} を売却 (${Math.floor(saleEquips.getBodyArmor().gold * 0.5 / 2)}金)`}</span>
+            <div className={saleEquips.body.name === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.body.name} を売却 (${Math.floor(saleEquips.body.gold * 0.5 / 2)}金)`}</span>
             </div>
           </div>
           <div>
             <label className="inline-block w-24 sm:text-right">頭防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getHeadArmor().parts[0]!} onChange={(e) => changeHeadArmor(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.head.parts[0]!} onChange={(e) => changeHeadArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => (
                 item.id !== 0 && item.parts[0]
@@ -590,13 +590,13 @@ function Setting() {
                 <option key={i} value={item.parts[0]!}>{`${item.parts[0]} | 性能:${item.sdr} (${item.gold * 0.25}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getHeadArmor().parts[0] === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getHeadArmor().parts[0]} を売却 (${Math.floor(saleEquips.getHeadArmor().gold * 0.25 / 2)}金)`}</span>
+            <div className={saleEquips.head.parts[0] === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.head.parts[0]} を売却 (${Math.floor(saleEquips.head.gold * 0.25 / 2)}金)`}</span>
             </div>
           </div>
           <div>
             <label className="inline-block w-24 sm:text-right">腕防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getArmArmor().parts[1]!} onChange={(e) => changeArmArmor(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.arm.parts[1]!} onChange={(e) => changeArmArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => (
                 item.id !== 0 && item.parts[1]
@@ -604,13 +604,13 @@ function Setting() {
                 <option key={i} value={item.parts[1]!}>{`${item.parts[1]} | 性能:${item.sdr} (${item.gold * 0.1}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getArmArmor().parts[1] === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getArmArmor().parts[1]} を売却 (${Math.floor(saleEquips.getArmArmor().gold * 0.1 / 2)}金)`}</span>
+            <div className={saleEquips.arm.parts[1] === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.arm.parts[1]} を売却 (${Math.floor(saleEquips.arm.gold * 0.1 / 2)}金)`}</span>
             </div>
           </div>
           <div>
             <label className="inline-block w-24 sm:text-right">脚防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={equips.getLegArmor().parts[2]!} onChange={(e) => changeLegArmor(e.target.value)}>
+            <select className="w-72 m-6 px-3 text-left" value={equips.leg.parts[2]!} onChange={(e) => changeLegArmor(e.target.value)}>
               <option value="装備無し">装備無し</option>
               {armorList.filter(item => (
                 item.id !== 0 && item.parts[2]
@@ -618,8 +618,8 @@ function Setting() {
                 <option key={i} value={item.parts[2]!}>{`${item.parts[2]} | 性能:${item.sdr} (${item.gold * 0.15}金)`}</option>
               ))}
             </select>
-            <div className={saleEquips.getLegArmor().parts[2] === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${saleEquips.getLegArmor().parts[2]} を売却 (${Math.floor(saleEquips.getLegArmor().gold * 0.15 / 2)}金)`}</span>
+            <div className={saleEquips.leg.parts[2] === '装備無し' ? 'hidden' : 'inline-block'}>
+              <span>{`${saleEquips.leg.parts[2]} を売却 (${Math.floor(saleEquips.leg.gold * 0.15 / 2)}金)`}</span>
             </div>
           </div>
         </section>

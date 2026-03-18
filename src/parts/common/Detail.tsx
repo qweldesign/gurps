@@ -23,10 +23,10 @@ function Detail({ unit }: { unit: Character }) {
         <h4 className="mt-12 mb-6 italic text-lg">Battle Abilities</h4>
         <div className="table-wrapper">
           <div className="grid grid-cols-[45%_10%_45%] w-sm my-6">
-            <div className="text-left">{'Dmg (ダメージ)'}</div><div>{unit.getDmgModifier()}</div><div>{'{ 怪力 / 2 } - 5'}</div>
-            <div className="text-left">{'D-EV (よけ)'}</div><div>{unit.getDEV()}</div><div>{'{ 運動 / 2 } + 5'}</div>
-            <div className="text-left">{'HP (耐久点)'}</div><div>{unit.getMaxHP()}</div><div>{'{ 鍛錬 * 2 } '}</div>
-            <div className="text-left">{'RE (抵抗力)'}</div><div>{unit.getRE()}</div><div>{'{ 修養 }'}</div>
+            <div className="text-left">{'Dmg (ダメージ)'}</div><div>{unit.dmgModifier}</div><div>{'{ 怪力 / 2 } - 5'}</div>
+            <div className="text-left">{'D-EV (よけ)'}</div><div>{unit.DEV}</div><div>{'{ 運動 / 2 } + 5'}</div>
+            <div className="text-left">{'HP (耐久点)'}</div><div>{unit.maxHP}</div><div>{'{ 鍛錬 * 2 } '}</div>
+            <div className="text-left">{'RE (抵抗力)'}</div><div>{unit.MRE}</div><div>{'{ 修養 }'}</div>
           </div>
         </div>
       </div>
@@ -49,63 +49,63 @@ function Detail({ unit }: { unit: Character }) {
         <h4 className="mt-12 mb-6 italic text-lg">Equipments</h4>
         <div className="table-wrapper">
           <div className="grid grid-cols-[30%_30%_20%_20%] w-2xl my-6 text-left">
-            {unit.getMainUsage().id !== 0 && (
+            {unit.mainUsage.id !== 0 && (
               <>
-                <div>{unit.getMainUsage().name}</div>
+                <div>{unit.mainUsage.name}</div>
                 <div>{`Dmg: ${unit.getDmgName()}`}</div>
                 <div>{`Lv: ${unit.getLevel()}`}</div>
-                <div>{`P-EV: ${unit.getMainUsage().ev}`}</div>
+                <div>{`P-EV: ${unit.mainUsage.ev}`}</div>
               </>
             )}
-            {unit.getSubUsage().id !== 0 && (
+            {unit.subUsage.id !== 0 && (
               <>
-                <div>{unit.getSubUsage().name}</div>
+                <div>{unit.subUsage.name}</div>
                 <div>{`Dmg: ${unit.getDmgName('sub')}`}</div>
                 <div>{`Lv: ${unit.getLevel('sub')}`}</div>
-                <div>{`P-EV: ${unit.getSubUsage().ev}`}</div>
+                <div>{`P-EV: ${unit.subUsage.ev}`}</div>
               </>
             )}
-            {unit.getMissile().id !== 0 && (
+            {unit.missile.id !== 0 && (
               <>
-                <div>{unit.getMissile().name}</div>
+                <div>{unit.missile.name}</div>
                 <div>{`Dmg: ${unit.getDmgName('missile')}`}</div>
                 <div>{`Lv: ${unit.getLevel('missile')}`}</div>
-                <div>{`B-EV: ${unit.getMissile().ev}`}</div>
+                <div>{`B-EV: ${unit.missile.ev}`}</div>
               </>
             )}
-            {unit.getShield().id !== 0 && (
+            {unit.shield.id !== 0 && (
               <>
-                <div>{unit.getShield().name}</div>
+                <div>{unit.shield.name}</div>
                 <div>{`Dmg: ${unit.getDmgName('shield')}`}</div>
                 <div>{`Lv: ${unit.getLevel('shield')}`}</div>
-                <div>{`B-EV: ${unit.getShield().ev}`}</div>
+                <div>{`B-EV: ${unit.shield.ev}`}</div>
               </>
             )}
-            <div>{unit.getBodyArmor().name}</div>
-            <div>{`DR: ${unit.getBodyArmor().dr}`}</div>
-            <div>{`WT: ${unit.getBodyArmor().wt}`}</div>
-            <div>{`D-EV: ${unit.getDEV()}`}</div>
-            {unit.getHeadArmor().id !== 0 && (
+            <div>{unit.body.name}</div>
+            <div>{`DR: ${unit.body.dr}`}</div>
+            <div>{`WT: ${unit.body.wt}`}</div>
+            <div>{`D-EV: ${unit.DEV}`}</div>
+            {unit.head.id !== 0 && (
               <>
-                <div>{unit.getHeadArmor().parts[0]}</div>
-                <div>{`DR: ${unit.getHeadArmor().dr}`}</div>
-                <div>{`WT: ${unit.getHeadArmor().wt}`}</div>
+                <div>{unit.head.parts[0]}</div>
+                <div>{`DR: ${unit.head.dr}`}</div>
+                <div>{`WT: ${unit.head.wt}`}</div>
                 <div>-</div>
               </>
             )}
-            {unit.getArmArmor().id !== 0 && (
+            {unit.arm.id !== 0 && (
               <>
-                <div>{unit.getArmArmor().parts[1]}</div>
-                <div>{`DR: ${unit.getArmArmor().dr}`}</div>
-                <div>{`WT: ${unit.getArmArmor().wt}`}</div>
+                <div>{unit.arm.parts[1]}</div>
+                <div>{`DR: ${unit.arm.dr}`}</div>
+                <div>{`WT: ${unit.arm.wt}`}</div>
                 <div>-</div>
               </>
             )}
-            {unit.getLegArmor().id !== 0 && (
+            {unit.leg.id !== 0 && (
               <>
-                <div>{unit.getLegArmor().parts[2]}</div>
-                <div>{`DR: ${unit.getLegArmor().dr}`}</div>
-                <div>{`WT: ${unit.getLegArmor().wt}`}</div>
+                <div>{unit.leg.parts[2]}</div>
+                <div>{`DR: ${unit.leg.dr}`}</div>
+                <div>{`WT: ${unit.leg.wt}`}</div>
                 <div>-</div>
               </>
             )}

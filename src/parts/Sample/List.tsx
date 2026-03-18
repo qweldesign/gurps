@@ -77,7 +77,7 @@ function SampleList({ samples }: { samples: SampleCharacter[] }) {
               ) : (
                 <td>-</td>
               )}
-              <td>{`${sample.getWeapon().id !== 0 ? sample.getWeapon().name : sample.getMissile()!.name} / ${sample.getBodyArmor().name}`}</td>
+              <td>{`${sample.weapon.id !== 0 ? sample.weapon.name : sample.missile!.name} / ${sample.body.name}`}</td>
             </tr>
           ))}
         </tbody>
