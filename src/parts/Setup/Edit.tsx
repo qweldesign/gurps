@@ -453,7 +453,7 @@ function Edit() {
 
   // 所持金・装備変更を監視
   useEffect(() => {
-    if (calcGold(state) < 0) {
+    if (calcGold(state) < 0 && state.isEquipChanged) {
       // 所持金が赤字になった場合のアラート
       const message = (
         <p className="text-center">装備の購入金額が所持金を超えています。
