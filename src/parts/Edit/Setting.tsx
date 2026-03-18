@@ -120,151 +120,103 @@ function Setting() {
     setStartGold(Number(m))
   }
 
-  // 主用武器の状態更新
-  const changeWeapon = (name: WeaponName) => {
-    const prev = prevEquips.weapon
+  // 装備の状態更新
+  const changeEquip = <T,>({
+    getPrevName, // 元の装備の名前を取得する関数
+    set, // 装備を所定の位置にセットする関数
+    isSame, // 元の装備と新しい装備の名前を比較する関数
+    name
+  }: {
+    getPrevName: () => T
+    set: (eq: Equipments, name: T | '装備無し') => void
+    isSame: (a: T, b: T) => boolean
+    name: T
+  }) => {
+    const prevName = getPrevName()
     const next = new Equipments(equips.toModel())
-    next.weapon = name
-    if (name === prev.name) {
-      saleWeapon()
+    set(next, name)
+
+    const sale = new Equipments(saleEquips.toModel())
+    if (!isSame(prevName, name)) {
+      // 新しい装備を着用した場合, 元の装備を売却する  
+      set(sale, prevName)
     } else {
-      saleWeapon(prev.name)
+      set(sale, '装備無し')
     }
+    setSaleEquips(sale)
+
     setEquips(next)
     setInitialEquipSet(true)
   }
 
-  // 主用武器の売却
-  const saleWeapon = (name: WeaponName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.weapon = name
-    setSaleEquips(sale)
+  // 主用武器の状態更新
+  const changeWeapon = (name: WeaponName) => {
+    changeEquip({
+      getPrevName: () => prevEquips.weapon.name,
+      set: (eq, name) => eq.weapon = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 射撃武器の状態更新
   const changeMissile = (name: WeaponName) => {
-    const prev = prevEquips.missile
-    const next = new Equipments(equips.toModel())
-    next.missile = name
-    if (name === prev.name) {
-      saleMissile()
-    } else {
-      saleMissile(prev.name)
-    }
-    setEquips(next)
-    setInitialEquipSet(true)
-  }
-
-  // 射撃武器の売却
-  const saleMissile = (name: WeaponName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.missile = name
-    setSaleEquips(sale)
+    changeEquip({
+      getPrevName: () => prevEquips.missile.name,
+      set: (eq, name) => eq.missile = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 盾の状態更新
   const changeShield = (name: WeaponName) => {
-    const prev = prevEquips.shield
-    const next = new Equipments(equips.toModel())
-    next.shield = name
-    if (name === prev.name) {
-      saleShield()
-    } else {
-      saleShield(prev.name)
-    }
-    setEquips(next)
-    setInitialEquipSet(true)
-  }
-
-  // 盾の売却
-  const saleShield = (name: WeaponName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.shield = name
-    setSaleEquips(sale)
+    changeEquip({
+      getPrevName: () => prevEquips.shield.name,
+      set: (eq, name) => eq.shield = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 胴防具の状態更新
   const changeArmor = (name: ArmorName) => {
-    const prev = prevEquips.body
-    const next = new Equipments(equips.toModel())
-    next.body = name
-    if (name === prev.name) {
-      saleArmor()
-    } else {
-      saleArmor(prev.name)
-    }
-    setEquips(next)
-    setInitialEquipSet(true)
-  }
-
-  // 胴防具の売却
-  const saleArmor = (name: ArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.body = name
-    setSaleEquips(sale)
+    changeEquip({
+      getPrevName: () => prevEquips.body.name,
+      set: (eq, name) => eq.body = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 頭防具の状態更新
   const changeHeadArmor = (name: HeadArmorName) => {
-    const prev = prevEquips.head
-    const next = new Equipments(equips.toModel())
-    next.head = name
-    if (name === prev.parts[0]) {
-      saleHeadArmor()
-    } else {
-      saleHeadArmor(prev.parts[0])
-    }
-    setEquips(next)
-    setInitialEquipSet(true)
-  }
-
-  // 頭防具の売却
-  const saleHeadArmor = (name: HeadArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.head = name
-    setSaleEquips(sale)
+    changeEquip({
+      getPrevName: () => prevEquips.head.parts[0],
+      set: (eq, name) => eq.head = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 腕防具の状態更新
   const changeArmArmor = (name: ArmArmorName) => {
-    const prev = prevEquips.arm
-    const next = new Equipments(equips.toModel())
-    next.arm = name
-    if (name === prev.parts[1]) {
-      saleArmArmor()
-    } else {
-      saleArmArmor(prev.parts[1])
-    }
-    setEquips(next)
-    setInitialEquipSet(true)
-  }
-
-  // 腕防具の売却
-  const saleArmArmor = (name: ArmArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.arm = name
-    setSaleEquips(sale)
+    changeEquip({
+      getPrevName: () => prevEquips.arm.parts[1],
+      set: (eq, name) => eq.arm = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 脚防具の状態更新
   const changeLegArmor = (name: LegArmorName) => {
-    const prev = prevEquips.leg
-    const next = new Equipments(equips.toModel())
-    next.leg = name
-    if (name === prev.parts[2]) {
-      saleLegArmor()
-    } else {
-      saleLegArmor(prev.parts[2])
-    }
-    setEquips(next)
-    setInitialEquipSet(true)
-  }
-
-  // 脚防具の売却
-  const saleLegArmor = (name: LegArmorName = '装備無し') => {
-    const sale = new Equipments(saleEquips.toModel())
-    sale.leg = name
-    setSaleEquips(sale)
+    changeEquip({
+      getPrevName: () => prevEquips.leg.parts[2],
+      set: (eq, name) => eq.leg = name,
+      isSame: (a, b) => a === b,
+      name
+    })
   }
 
   // 装備を初期状態に戻す
@@ -277,34 +229,29 @@ function Setting() {
 
   // 売却状態を更新
   const updateSale = () => {
-    const prevWeapon = prevEquips.weapon
-    if (prevWeapon.name !== equips.weapon.name) {
-      saleWeapon(prevWeapon.name)
+    const sale = new Equipments(saleEquips.toModel())
+    if (prevEquips.weapon.name !== equips.weapon.name) {
+      sale.weapon = prevEquips.weapon.name
     }
-    const prevMissile = prevEquips.missile
-    if (prevMissile.name !== equips.missile.name) {
-      saleMissile(prevMissile.name)
+    if (prevEquips.missile.name !== equips.missile.name) {
+      sale.missile = prevEquips.missile.name
     }
-    const prevShield = prevEquips.shield
-    if (prevShield.name !== equips.shield.name) {
-      saleShield(prevShield.name)
+    if (prevEquips.shield.name !== equips.shield.name) {
+      sale.shield = prevEquips.shield.name
     }
-    const prevArmor = prevEquips.body
-    if (prevArmor.name !== equips.body.name) {
-      saleArmor(prevArmor.name)
+    if (prevEquips.body.name !== equips.body.name) {
+      sale.body = prevEquips.body.name
     }
-    const prevHeadArmor = prevEquips.head
-    if (prevHeadArmor.parts[0] !== equips.head.parts[0]) {
-      saleHeadArmor(prevHeadArmor.parts[0])
+    if (prevEquips.head.parts[0] !== equips.head.parts[0]) {
+      sale.head = prevEquips.head.parts[0]
     }
-    const prevArmArmor = prevEquips.arm
-    if (prevArmArmor.parts[1] !== equips.arm.parts[1]) {
-      saleArmArmor(prevArmArmor.parts[1])
+    if (prevEquips.arm.parts[1] !== equips.arm.parts[1]) {
+      sale.arm = prevEquips.arm.parts[1]
     }
-    const prevLegArmor = prevEquips.leg
-    if (prevLegArmor.parts[2] !== equips.leg.parts[2]) {
-      saleLegArmor(prevLegArmor.parts[2])
+    if (prevEquips.leg.parts[2] !== equips.leg.parts[2]) {
+      sale.leg = prevEquips.leg.parts[2]
     }
+    setSaleEquips(sale)
   }
 
   // 名前を自動決定
