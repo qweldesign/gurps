@@ -27,6 +27,8 @@ export class CombatCore {
       this.round++
       this.turnIndex %= this.units.length
     }
+    this.formationStore = new FormationStore(this.units[this.turnIndex], this.units)
+    this.actionStore = new ActionStore(this.units[this.turnIndex], this)
   }
 
   debug() {

@@ -3,13 +3,15 @@ import { type ActionRequest, CombatActionStore as Store } from '../../combat/Act
 
 type ActionPalette = 'main' | 'move'
 
-function Action({ store }: { store: Store }) {
+function Action({ store, nextTurn }: { store: Store, nextTurn: () => void }) {
   // 状態管理
   const [actionPalette, setActionPalette] = useState<ActionPalette>('main')
 
   // execute
   const execute = (type: string, option: string | null = null) => {
     store.execute({ type, option } as ActionRequest)
+    setActionPalette('main')
+    nextTurn()
   }
 
   return (
