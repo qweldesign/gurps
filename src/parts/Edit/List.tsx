@@ -37,8 +37,8 @@ function List({ units }: { units: Character[] }) {
       })
     } else if (sortKey === 'skill') {
       return units.sort((a, b) => {
-        const skillA = a.getMainSkill()
-        const skillB = b.getMainSkill()
+        const skillA = a.mainSkill
+        const skillB = b.mainSkill
         return (skillA.id! - skillB.id!) * (sortDir.skill ?  -1 : 1)
       })
     } else {
@@ -75,9 +75,9 @@ function List({ units }: { units: Character[] }) {
               <td>{`${unit.getParamLevel('敏捷力')} (${unit.getParam('敏捷力')}CP)`}</td>
               <td>{`${unit.getParamLevel('知力')} (${unit.getParam('知力')}CP)`}</td>
               <td>{`${unit.getParamLevel('生命力')} (${unit.getParam('生命力')}CP)`}</td>
-              <td>{`${unit.getMainSkill().name}: ${unit.getMainSkillLevel()}`}</td>
+              <td>{`${unit.mainSkill.name}: ${unit.mainSkill.level}`}</td>
               <td>{`${unit.getWeapon().id !== 0 ? unit.getWeapon().name : unit.getMissile()!.name} / ${unit.getBodyArmor().name}`}</td>
-              <td>{`${unit.getParamTotal()} / ${unit.points}`}</td>
+              <td>{`${unit.currentTotal} / ${unit.points}`}</td>
             </tr>
           ))}
         </tbody>

@@ -281,20 +281,20 @@ export class SampleCharacter extends Character {
     // ループ開始
     let count = 0
     while (
-      this.getParamTotal() < totalPoints // 合計がtotalPointsに達した場合
+      this.currentTotal < totalPoints // 合計がtotalPointsに達した場合
       && count < 4 // 安全装置 (最大4周) 
     ) {
       skills.map((skill, i) => {
         // 1つの技能を修得して下記条件に達したらループを抜ける
         while (
-          this.getParamTotal() < totalPoints // 合計がtotalPointsに達した場合
+          this.currentTotal < totalPoints // 合計がtotalPointsに達した場合
           && ((i === 0 && this.getParam(skill) < firstPoint) // 1つ目の技能にfirstPoint消費した場合
             || (i > 0 && this.getParam(skill) < maxPoint)) // 1つの技能にmaxPoint消費した場合
           && this.getParamLevel(skill) < maxLevel // 技能値がmaxLevelに達した場合
         ) {
           this.stepParam(skill)
         }
-        if (this.getParamTotal() > totalPoints) this.stepParam(skill, -1) // CP総計を越えたら取消
+        if (this.currentTotal > totalPoints) this.stepParam(skill, -1) // CP総計を越えたら取消
       })
       maxPoint *= 2 // maxPointをシフト
       maxLevel++ // maxLevelをシフト

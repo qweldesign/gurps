@@ -102,7 +102,7 @@ function Setting() {
     const next = new Parameters(params.toModel())
     const nextPoint = next.step(name, size)
     // 下限を下回る場合, 合計を上回る場合は disable を true に 
-    return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || next.getTotal() > points)
+    return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || next.total > points)
   }
 
   // 所持金を計算
@@ -410,7 +410,7 @@ function Setting() {
 
   // points を使い切ったかどうかの判定
   useEffect(() => {
-    if (points === params.getTotal()) {
+    if (points === params.total) {
       setPointsState(true)
     } else {
       setPointsState(false)
@@ -468,7 +468,7 @@ function Setting() {
               </p>
             </>
           )}
-          <h5>残りCP: <span className={!pointsState ? 'text-amber-400 font-bold' : 'font-bold'}>{points - params.getTotal()} 点</span></h5>
+          <h5>残りCP: <span className={!pointsState ? 'text-amber-400 font-bold' : 'font-bold'}>{points - params.total} 点</span></h5>
           <div className="flex flex-nowrap lg:flex-wrap flex-col items-center gap-6 lg:h-[60em]">
             {lists.map((list, i) => (
               <div className="w-64" key={i}>

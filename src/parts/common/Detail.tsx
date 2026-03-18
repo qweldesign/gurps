@@ -34,12 +34,12 @@ function Detail({ unit }: { unit: Character }) {
         <h4 className="mt-12 mb-6 italic text-lg">Skills</h4>
         <div className="table-wrapper">
           <div className="grid grid-cols-[50%_50%] w-2xl mt-6 mb-24">
-            {Array.from(unit.getAllSkills()).map(([key, value]) => (
+            {unit.skills.map(([key, value]) => (
               <div className="grid grid-cols-[32%_16%_32%_20%]" key={key}>
                 <div className="text-left">{key}</div><div>{unit.getParamLevel(key)}</div><div>{value.point}CP</div><div>&nbsp;</div>
               </div>
             ))}
-            {Array.from(unit.getAllSkills()).length % 2 === 1 && (
+            {unit.skills.length % 2 === 1 && (
               <div className="grid grid-cols-4">
                 <div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div><div>&nbsp;</div>
               </div>

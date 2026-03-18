@@ -11,6 +11,7 @@ export type Parameter = {
   name: string
   base: string | 10
   point?: Point
+  level?: number
 }
 
 export const PARAMETER_LIST: Parameter[] = [
@@ -139,19 +140,20 @@ export class Parameters {
     return baseValue + POINT_STEP.indexOf(point) - 2
   }
 
-  // 全てのパラメータを取得
-  getAllParams(): Map<ParameterName, Parameter> {
-    return this.points
+  // 全てのパラメータを配列に変換して取得
+  get params(): [ParameterName, Parameter][] {
+    return [...this.points]
   }
 
-  // 全ての技能を取得 (ソート込み)
-  getAllSkills() {
-    return [...this.points].filter(p => p[1].base !== 10 && p[1].point! > 0)
+  // 全ての技能を配列に変換して取得 (ソート込み)
+  get skills(): [ParameterName, Parameter][] {
+    return [...this.points]
+      .filter(p => p[1].base !== 10 && p[1].point! > 0)
       .sort((a, b) => a[1].id! - b[1].id!)
   }
 
   // Point総計を算出して返す
-  getTotal(): number {
+  get total(): number {
     let total = 0
     for (const p of this.points.values()) {
       total += p.point || 0
