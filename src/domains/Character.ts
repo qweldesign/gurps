@@ -10,7 +10,7 @@ export type CharacterModel = {
   gender: string
   points: Point[]
   totalPoints: number
-  equipments: EquipmentSet | null
+  equipments: EquipmentSet
 }
 
 export class Character {

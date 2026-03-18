@@ -108,13 +108,13 @@ export type ArmArmorName = typeof ARMOR_LIST[number]['parts'][1]
 export type LegArmorName = typeof ARMOR_LIST[number]['parts'][2]
 
 export type EquipmentSet = {
-  weapon: WeaponName
-  missile: WeaponName
-  shield: WeaponName
-  body: ArmorName
-  head: HeadArmorName
-  arm: ArmArmorName
-  leg: LegArmorName
+  weapon?: WeaponName
+  missile?: WeaponName
+  shield?: WeaponName
+  body?: ArmorName
+  head?: HeadArmorName
+  arm?: ArmArmorName
+  leg?: LegArmorName
 }
 
 // ダメージ型の有効/無効で, それぞれダメージを算出して返す
@@ -147,7 +147,7 @@ export class Equipments {
   private _arm: Armor
   private _leg: Armor
 
-  constructor(set: EquipmentSet | null) {
+  constructor(set: EquipmentSet) {
     const weaponName = set?.weapon ?? WEAPON_LIST[0].name
     this._weapon = WEAPON_LIST.find(item => item.name === weaponName)!
     this._mainUsage = this.setMainUsage(this._weapon)
@@ -159,7 +159,7 @@ export class Equipments {
     const shieldName = set?.shield ?? WEAPON_LIST[0].name
     this._shield = WEAPON_LIST.find(item => item.name === shieldName)!
 
-    const bodyArmorName = set?.body ?? ARMOR_LIST[0].name
+    const bodyArmorName = set?.body ?? ARMOR_LIST[1].name // 最低限「服」を装備
     this._body = ARMOR_LIST.find(item => item.name === bodyArmorName)!
 
     const headArmorName = set?.head ?? ARMOR_LIST[0].parts[0]

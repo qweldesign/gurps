@@ -136,7 +136,7 @@ export class SampleCharacter extends Character {
     // ID・名前・性別・能力値・CP総計・装備・所持金の初期化
     const name = NPC_LIST[i]
     const gender = g ? '女性' : '男性'
-    super({ id, name, gender, points, totalPoints, equipments: null })
+    super({ id, name, gender, points, totalPoints, equipments: {} })
 
     // 能力値の修正
     this.modifyAbilities(MOD_TABLE[b], multiplier)

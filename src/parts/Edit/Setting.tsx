@@ -21,9 +21,9 @@ function Setting() {
   const [initialEquipSet, setInitialEquipSet] = useState(false) // 装備を一度でも変更したかどうか
   const [prevParams, setPrevParams] = useState(() => new Parameters([]))
   const [params, setParams] = useState(() => new Parameters([]))
-  const [prevEquips, setPrevEquips] = useState(() => new Equipments(null))
-  const [equips, setEquips] = useState(() => new Equipments(null))
-  const [saleEquips, setSaleEquips] = useState(() => new Equipments(null))
+  const [prevEquips, setPrevEquips] = useState(() => new Equipments({}))
+  const [equips, setEquips] = useState(() => new Equipments({}))
+  const [saleEquips, setSaleEquips] = useState(() => new Equipments({ body: '装備無し' }))
   const [name, setName] = useState('')
   const [gender, setGender] = useState('男性')
   const [nameState, setNameState] = useState(false) // 名前を決定したら true にする
@@ -270,7 +270,9 @@ function Setting() {
   // 装備を初期状態に戻す
   const resetEquips = () => {
     const next = new Equipments(prevEquips.toModel())
+    const sale = new Equipments({ body: '装備無し' })
     setEquips(next)
+    setSaleEquips(sale)
   }
 
   // 売却状態を更新
@@ -571,7 +573,6 @@ function Setting() {
           <div>
             <label className="inline-block w-24 sm:text-right">胴防具: </label>
             <select className="w-72 m-6 px-3 text-left" value={equips.body.name} onChange={(e) => changeArmor(e.target.value)}>
-              <option value="装備無し">装備無し</option>
               {armorList.filter(item => item.id !== 0).map((item, i) => (
                 <option key={i} value={item.name}>{`${item.name} | 性能:${item.sdr} (${item.gold * 0.5}金)`}</option>
               ))}
