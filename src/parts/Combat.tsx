@@ -42,19 +42,19 @@ function Combat() {
       <div className="px-6">
         <div className="table-wrapper">
           <div className="row justify-center min-w-lg lg:min-w-5xl">
-            <div id="formation" className="order-1 w-lg h-48 p-3 bg-white/15">
+            <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
               <h3 className="m-0 border-0 text-sm">Formation</h3>
               <Formation store={coreRef.current.formationStore} />
             </div>
-            <div id="summary" className="order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
+            <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
               <h3 className="m-0 border-0 text-sm">Summary</h3>
-              <Summary />
+              <Summary store={coreRef.current.summaryStore} />
             </div>
-            <div id="action" className="order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
+            <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
               <h3 className="m-0 border-0 text-sm">Action</h3>
               <Action store={coreRef.current.actionStore} nextTurn={nextTurn} />
             </div>
-            <div id="log" className="order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
+            <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
               <h3 className="m-0 border-0 text-sm">Log</h3>
               <Log />
             </div>

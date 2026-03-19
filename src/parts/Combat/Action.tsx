@@ -16,6 +16,7 @@ function Action({ store, nextTurn }: { store: Store, nextTurn: () => void }) {
 
   return (
     <>
+      <div className="absolute top-0 left-0 w-1/1 my-3 italic text-sm text-center">第 {store.round} ターン / {store.actor.name} の行動</div>
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}

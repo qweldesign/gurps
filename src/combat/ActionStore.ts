@@ -23,11 +23,15 @@ type ActionDefinition = {
 export class CombatActionStore {
   public actor: Unit
   private core: Core
+  public round: number
+  public turnIndex: number
   private readonly actions: ActionDefinition
 
   constructor(actor: Unit, core: Core) {
     this.actor = actor
     this.core = core
+    this.round = core.round
+    this.turnIndex = core.turnIndex
     this.actions = {
       move: {
         options: POSITION_VALUES,

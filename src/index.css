@@ -217,6 +217,30 @@
     @apply w-36 h-9 m-0 rounded-none bg-black/50 hover:bg-white/50 text-[15px] disabled:hidden;
   }
 
+  .summary {
+    @apply p-3;
+  }
+
+  .summary__turn {
+    @apply italic text-[15px];
+  }
+
+  .summary__grid {
+    @apply grid grid-rows-9 text-[15px] text-center;
+  }
+
+  .summary__row {
+    @apply grid grid-cols-4 h-9 leading-9;
+  }
+
+  .summary__row.is-current {
+    @apply bg-emerald-400/50;
+  }
+
+  .summary__row:first-child {
+    @apply border-b border-white;
+  }
+
   .grid.grid-rows-16 {
     @apply grid-rows-16;
   }

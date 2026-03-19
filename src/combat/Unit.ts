@@ -1,6 +1,8 @@
 // Unit.ts
 
 import { type Side, type Position } from './FormationStore'
+import { UnitHealth as Health } from './Unit/Health'
+import { UnitSummary as Summary } from './Unit/Summary'
 
 const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
 
@@ -42,28 +44,32 @@ export class CombatUnit {
   public id: number
   public name: string
   public maxHP: number
-  private attacks: CombatAttackModel[]
-  private defenses: CombatDefenseModel[]
-  private ev: number
-  private pre: number
-  private mre: number
+  //private attacks: CombatAttackModel[]
+  //private defenses: CombatDefenseModel[]
+  //private ev: number
+  //private pre: number
+  //private mre: number
   public order: number
   public side: Side
   public position: Position
+  public health: Health
+  public summary: Summary
 
   constructor(model: CombatUnitModel, order: number) {
-    const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre } = model
+    const { combatId, id, name, maxHP/*, attacks, defenses, ev, pre, mre*/ } = model
     this.combatId = combatId
     this.id = id
     this.name = name
     this.maxHP = maxHP
-    this.attacks = attacks
-    this.defenses = defenses
-    this.ev = ev
-    this.pre = pre
-    this.mre = mre
+    //this.attacks = attacks
+    //this.defenses = defenses
+    //this.ev = ev
+    //this.pre = pre
+    //this.mre = mre
     this.order = order
     this.side = combatId < 4 ? 'player' : 'enemy'
     this.position = 'back'
+    this.health = new Health() // 後の Summary が Health を見るので順序厳守
+    this.summary = new Summary(this)
   }
 }
