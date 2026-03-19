@@ -13,9 +13,7 @@ function EquipmentsSetting({ isFirstCreation, state, dispatch, calcGold }: { isF
       {isFirstCreation && (
         <>
           <h4>3. 装備の購入</h4>
-          <p>合計{calcGold(state, true)}金の所持金でキャラクターの装備を購入します。
-            <br />「武術」の保有者はユニットの所持金が倍になります（戦いを職業としているため、優遇されます）。
-          </p>
+          <p>合計{calcGold(state, true)}金の所持金でキャラクターの装備を購入します。</p>
         </>
       )}
       <h5>残り所持金: <span className={calcGold(state, false) < 0 ? 'text-red-600 font-bold' : 'font-bold'}>{calcGold(state, false)} 金</span></h5>

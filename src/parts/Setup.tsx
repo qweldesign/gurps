@@ -29,8 +29,7 @@ function Setup() {
     samples.forEach(sample => {
       const model = {
         ...sample.toModel(),
-        totalPoints: 10,
-        gold: sample.getTactic() < 3 ? 200 : 100
+        totalPoints: 10
       }
       const unit = new Character(model)
       saveData.addKey(unit.uid) // インデックス登録

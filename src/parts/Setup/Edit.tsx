@@ -348,9 +348,8 @@ function Edit() {
   // 所持金を計算 isMax: true で持ち金を返す
   const calcGold = (state: ParamsState, isMax: boolean = false): number => {
     let gold = state.initialGold
-    //「武術」保有の有無で新規作成時のユニットの所持金倍率が変化
-    const startGoldRate = state.params.isWarrior ? 2 : 1
-    if (isFirstCreation) gold += state.startGold * startGoldRate
+    // 新規作成時のユニットの所持金を加算
+    if (isFirstCreation) gold += state.startGold
     // 現在と元の装備の差分 (購入分 - 売却分) を算出
     if (!isMax) gold -= state.equips.gold - state.prevEquips.gold + Math.ceil(state.saleEquips.gold / 2)
     // 算出結果を返す
@@ -376,9 +375,10 @@ function Edit() {
     if (state.transitions.becameWarrior && state.isEquipChanged) {
       //「武術」セット時 & 一度でも装備を変更していた場合
       // アラート表示 (装備解除はしない)
+      // startGold 廃止に伴いメッセージ変更
       const message = (
-        <p className="text-center">「武術」がセットされたため、ユニットの所持金が2倍になりました。
-          <br />装備可能な武器・防具が変わったため、装備の選択をやり直してください。</p>
+        <p className="text-center">「武術」がセットされ、装備可能な武器・防具が変わりました。
+          <br />装備の選択をやり直してください。</p>
       )
       setAlertMessage(message)
       setAlertOpen(true)
@@ -386,9 +386,10 @@ function Edit() {
     } else if (state.transitions.lostWarrior) {
       //「武術」リセット時
       // アラート表示 & 装備解除
+      // startGold 廃止に伴いメッセージ変更
       const message = (
-        <p className="text-center">「武術」がリセットされたため、ユニットの所持金が半分になりました。
-          <br />装備可能な武器・防具が変わったため、装備の選択をやり直してください。</p>
+        <p className="text-center">「武術」がリセットされ、装備可能な武器・防具が変わりました。
+          <br />装備の選択をやり直してください。</p>
       )
       setAlertMessage(message)
       setAlertOpen(true)
