@@ -3,7 +3,7 @@ import { type Character } from '../../domains/Character'
 function Detail({ unit }: { unit: Character }) {
   return (
     <div className="row justify-around">
-      <div className="summary w-1/1 max-w-sm">
+      <div className="w-1/1 max-w-sm">
         <h4 className="mt-12 mb-6 italic text-lg">Profile</h4>
         <div className="table-wrapper">
           <div className="grid grid-cols-[45%_55%] w-sm my-6">
@@ -30,7 +30,7 @@ function Detail({ unit }: { unit: Character }) {
           </div>
         </div>
       </div>
-      <div className="details w-1/1 max-w-2xl">
+      <div className="w-1/1 max-w-2xl">
         <h4 className="mt-12 mb-6 italic text-lg">Skills</h4>
         <div className="table-wrapper">
           <div className="grid grid-cols-[50%_50%] w-2xl mt-6 mb-24">
