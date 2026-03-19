@@ -54,9 +54,9 @@ export class CombatActionStore {
 
   canMove(position: Position) {
     if (position === 'back') {
-      return this.core.formationStore.back.get(this.actor.combatId) === '' ? true : false
+      return this.core.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
     } else {
-      return this.core.formationStore.front.get(`${this.actor.side}-${position}`) === '' ? true : false
+      return this.core.formationStore[this.actor.side].front[position] === null ? true : false
     }
   }
 
