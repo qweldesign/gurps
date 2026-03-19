@@ -1,13 +1,17 @@
 import { type ReactNode, type Reducer, useState, useReducer, useEffect } from 'react'
 import { useLoaderData, useNavigate } from 'react-router-dom'
+import OptionsSetting from './Edit/OptionsSetting'
+import ParametersSetting from './Edit/ParametersSetting'
+import EquipmentsSetting from './Edit/EquipmentsSetting'
+import ProfileSetting from './Edit/ProfileSetting'
 import Modal from '../common/Modal'
-import { type Parameter, PARAMETER_LIST, type ParameterName, Parameters } from '../../domains/Parameters'
+import { type ParameterName, Parameters } from '../../domains/Parameters'
 import { WEAPON_LIST, ARMOR_LIST, type Weapon, type Armor, Equipments } from '../../domains/Equipments'
 import { Character, type CharacterModel as Model } from '../../domains/Character'
 import { PC_LIST } from '../../domains/SampleCharacter'
 import { SaveData } from '../../domains/SaveData'
 
-type ParamsState = {
+export type ParamsState = {
   // CP
   initialPoints: number // CP: 初期値 0
   startPoints: number // 新規作成時のみ足されるCP
@@ -39,7 +43,7 @@ type ParamsState = {
   }
 }
 
-type Action =
+export type Action =
   | { type: 'INIT', payload: { prevModel: Model,  model: Model } }
   | { type: 'SET_OPTIONS', payload: { value: string } }
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterName, size: number } }
@@ -321,46 +325,10 @@ function Edit() {
     dispatch({ type: 'INIT', payload: { prevModel, model } })
   }
 
-  // SET_OPTIONS
-  const onSetOptions = (value: string) => {
-    // 発火
-    dispatch({ type: 'SET_OPTIONS', payload: { value } })
-  }
-
-  // STEP_PARAM
-  const onStepParam = (name: ParameterName, size: number) => {
-    // 発火
-    dispatch({ type: 'STEP_PARAM', payload: { prevParams: state.params , name, size } }) 
-  }
-
   // RESET_EQUIPS
   const onResetEquip = (prevModel: Model) => {
     // 発火
     dispatch({ type: 'RESET_EQUIPS', payload: { prevModel } }) 
-  }
-
-  // CHANGE_EQUIP
-  const onChangeEquip = (slot: 'weapon' | 'missile' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string) => {
-    // 発火
-    dispatch({ type: 'CHANGE_EQUIP', payload: { slot, name } }) 
-  }
-
-  // SET_NAME
-  const onSetName = (name: string) => {
-    // 発火
-    dispatch({ type: 'SET_NAME', payload: { name } })
-  }
-
-  // SET_GENDER
-  const onSetGender = (gender: string) => {
-    // 発火
-    dispatch({ type: 'SET_GENDER', payload: { gender } })
-  }
-
-  // AUTO_NAME
-  const autoName = () => {
-    // 発火
-    dispatch({ type: 'AUTO_NAME', payload: { gender: state.gender } })
   }
 
   // CLEAR_TRANSITION
@@ -375,26 +343,6 @@ function Edit() {
     if (isFirstCreation) points += state.startPoints
     if (!isMax) points -= state.params.total
     return points
-  }
-
-  // 能力値, 技能一覧表
-  const parameterGroups = [
-    { label: '能力値', filter: (p: Parameter) => p.base === 10 },
-    { label: '筋力を基準とする技能', filter: (p: Parameter) => p.base === '筋力' },
-    { label: '生命力を基準とする技能', filter: (p: Parameter) => p.base === '生命力' },
-    { label: '敏捷力を基準とする技能', filter: (p: Parameter) => p.base === '敏捷力' },
-    { label: '知力を基準とする技能', filter: (p: Parameter) => p.base === '知力' },
-  ]
-
-  // 増減ボタンの状態を取得 (true: 有効 / false: 無効)
-  const getButtonDisable = (name: ParameterName, size: number, i: number) => {
-    if (Number(uid) > 0 && i === 0) return true
-    const prevPoint = state.prevParams.get(name)
-    const currentPoint = state.params.get(name)
-    const nextParams = new Parameters(state.params.toModel())
-    const nextPoint = nextParams.step(name, size)
-    // 下限を下回る場合, 合計を上回る場合は disable を true に 
-    return ((prevPoint === nextPoint && currentPoint === 0) || prevPoint > nextPoint || nextParams.total > calcPoints(state, true))
   }
 
   // 所持金を計算 isMax: true で持ち金を返す
@@ -531,195 +479,12 @@ function Edit() {
       <div className="max-w-[48em] mx-auto">
         <h3>キャラクター{isFirstCreation ? '作成' : '編集'}</h3>
         {isFirstCreation && (
-          <section>
-            <h4>1. 基本設定</h4>
-            <p>キャラクター作成の条件を設定します。
-              <br />初期CPや所持金が大きいほど強いキャラクターを作成できますが、初めてのプレイヤーはロックされています。
-              <br />模擬戦闘で勝利を重ねるとアンロックされます。
-            </p>
-            <div>
-              <label>作成条件: </label>
-              <select className="w-48 m-6 ps-3 text-center" onChange={(e) => onSetOptions(e.target.value)}>
-                <option value="10/100">{'10CP / 100金'}</option>
-              </select>
-            </div>
-          </section>
+          <OptionsSetting dispatch={dispatch} />
         )}
-        <section>
-          {isFirstCreation && (
-            <>
-              <h4>2. キャラクターポイントの振り分け</h4>
-              <p>合計{calcPoints(state, true)}点のキャラクターポイントを振り分けてキャラクターを作成します。
-                <br />能力値や技能値は、値が高くなるほどポイントを多く消耗します。
-                <br />能力値は技能値の基準となるので、多めに振り分けましょう。
-                <br />ポイントは最小0.5点単位で振り分けることができます。
-              </p>
-            </>
-          )}
-          <h5>残りCP: <span className={calcPoints(state) > 0 ? 'text-amber-400 font-bold' : 'font-bold'}>{calcPoints(state)} 点</span></h5>
-          <div className="flex flex-nowrap lg:flex-wrap flex-col items-center gap-6 lg:h-[60em]">
-            {parameterGroups.map((group, i) => (
-              <div className="w-64" key={i}>
-                <h6>{group.label}</h6>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>{i === 0 ? '能力値' : '技能'}</th>
-                      <th className="text-center">Lv</th>
-                      <th className="text-center">CP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {PARAMETER_LIST.filter(group.filter).map((p, j) =>  (
-                      <tr key={j}>
-                        <td>{p.name}</td>
-                        <td>
-                          <button
-                            className="w-6 h-6 my-0 mx-3 leading-1"
-                            disabled={getButtonDisable(p.name, -1, i)}
-                            onClick={() => onStepParam(p.name, -1)}
-                          >-</button>
-                          <span className="inline-block w-6 text-center">{state.params.getLevel(p.name)}</span>
-                          <button
-                            className="w-6 h-6 my-0 mx-3 leading-1"
-                            disabled={getButtonDisable(p.name, 1, i)}
-                            onClick={() => onStepParam(p.name, 1)}
-                          >+</button>
-                        </td>
-                        <td className="w-6 text-center">{state.params.get(p.name)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))}
-          </div>
-        </section>
-        <section>
-          {isFirstCreation && (
-            <>
-              <h4>3. 装備の購入</h4>
-              <p>合計{calcGold(state, true)}金の所持金でキャラクターの装備を購入します。
-                <br />「武術」の保有者はユニットの所持金が倍になります（戦いを職業としているため、優遇されます）。
-              </p>
-            </>
-          )}
-          <h5>残り所持金: <span className={calcGold(state) < 0 ? 'text-red-600 font-bold' : 'font-bold'}>{calcGold(state)} 金</span></h5>
-          <div>
-            <label className="inline-block w-24 sm:text-right">主用武器: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.weapon.name} onChange={(e) => onChangeEquip('weapon', e.target.value)}>
-              <option value="装備無し">装備無し</option>
-              {state.weaponList.filter(item => (
-                // 格闘, 射撃, 盾を除く
-                item.weaponType !== 0 && item.weaponType !== 5 && item.weaponType !== 6
-              )).map((item, i) => (
-                <option key={i} value={item.name}>{`${item.name} | 性能:${item.baseDmg / 2} (${item.gold}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.weapon.name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.weapon.name} を売却 (${Math.floor(state.saleEquips.weapon.gold / 2)}金)`}</span>
-            </div>
-          </div>
-          <div>
-            <label className="inline-block w-24 sm:text-right">射撃武器: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.missile.name} onChange={(e) => onChangeEquip('missile', e.target.value)}>
-              <option value="装備無し">装備無し</option>
-              {state.weaponList.filter(item => (
-                // 射撃武器のみを取り出す
-                item.weaponType === 5
-              )).map((item, i) => (
-                <option key={i} value={item.name}>{`${item.name} | 性能:${item.baseDmg / 2} (${item.gold}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.missile.name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.missile.name} を売却 (${Math.floor(state.saleEquips.missile.gold / 2)}金)`}</span>
-            </div>
-          </div>
-          <div>
-            <label className="inline-block w-24 sm:text-right">盾: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.shield.name} onChange={(e) => onChangeEquip('shield', e.target.value)}>
-              <option value="装備無し">装備無し</option>
-              {state.weaponList.filter(item => (
-                // 盾のみを取り出す
-                item.weaponType === 6
-              )).map((item, i) => (
-                <option key={i} value={item.name}>{`${item.name} | 性能:${item.ev} (${item.gold}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.shield.name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.shield.name} を売却 (${Math.floor(state.saleEquips.shield.gold / 2)}金)`}</span>
-            </div>
-          </div>
-          <div>
-            <label className="inline-block w-24 sm:text-right">胴防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.body.name} onChange={(e) => onChangeEquip('body', e.target.value)}>
-              {state.armorList.filter(item => item.id !== 0).map((item, i) => (
-                <option key={i} value={item.name}>{`${item.name} | 性能:${item.sdr} (${item.gold * 0.5}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.body.name === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.body.name} を売却 (${Math.floor(state.saleEquips.body.gold * 0.5 / 2)}金)`}</span>
-            </div>
-          </div>
-          <div>
-            <label className="inline-block w-24 sm:text-right">頭防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.head.parts[0]!} onChange={(e) => onChangeEquip('head', e.target.value)}>
-              <option value="装備無し">装備無し</option>
-              {state.armorList.filter(item => (
-                item.id !== 0 && item.parts[0]
-              )).map((item, i) => (
-                <option key={i} value={item.parts[0]!}>{`${item.parts[0]} | 性能:${item.sdr} (${item.gold * 0.25}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.head.parts[0] === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.head.parts[0]} を売却 (${Math.floor(state.saleEquips.head.gold * 0.25 / 2)}金)`}</span>
-            </div>
-          </div>
-          <div>
-            <label className="inline-block w-24 sm:text-right">腕防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.arm.parts[1]!} onChange={(e) => onChangeEquip('arm', e.target.value)}>
-              <option value="装備無し">装備無し</option>
-              {state.armorList.filter(item => (
-                item.id !== 0 && item.parts[1]
-              )).map((item, i) => (
-                <option key={i} value={item.parts[1]!}>{`${item.parts[1]} | 性能:${item.sdr} (${item.gold * 0.1}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.arm.parts[1] === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.arm.parts[1]} を売却 (${Math.floor(state.saleEquips.arm.gold * 0.1 / 2)}金)`}</span>
-            </div>
-          </div>
-          <div>
-            <label className="inline-block w-24 sm:text-right">脚防具: </label>
-            <select className="w-72 m-6 px-3 text-left" value={state.equips.leg.parts[2]!} onChange={(e) => onChangeEquip('leg', e.target.value)}>
-              <option value="装備無し">装備無し</option>
-              {state.armorList.filter(item => (
-                item.id !== 0 && item.parts[2]
-              )).map((item, i) => (
-                <option key={i} value={item.parts[2]!}>{`${item.parts[2]} | 性能:${item.sdr} (${item.gold * 0.15}金)`}</option>
-              ))}
-            </select>
-            <div className={state.saleEquips.leg.parts[2] === '装備無し' ? 'hidden' : 'inline-block'}>
-              <span>{`${state.saleEquips.leg.parts[2]} を売却 (${Math.floor(state.saleEquips.leg.gold * 0.15 / 2)}金)`}</span>
-            </div>
-          </div>
-        </section>
+        <ParametersSetting isFirstCreation={isFirstCreation} state={state} dispatch={dispatch} calcPoints={calcPoints} />
+        <EquipmentsSetting isFirstCreation={isFirstCreation} state={state} dispatch={dispatch} calcGold={calcGold} />
         {isFirstCreation && (
-          <section>
-            <h4>4. プロフィールの設定</h4>
-            <div>
-              <label className="inline-block w-24 sm:text-right">名前: </label>
-              <input className="w-72 m-6 px-3 text-left" type="text" value={state.name} onChange={(e) => onSetName(e.target.value)} />
-              <button className="block sm:inline-block w-24 h-6 m-auto text-sm/1" onClick={autoName}>自動決定</button>
-            </div>
-            <div>
-              <label className="inline-block w-24 sm:text-right">性別: </label>
-              <select className="w-72 m-6 px-3 text-left" value={state.gender} onChange={(e) => onSetGender(e.target.value)}>
-                <option value="男性">男性</option>
-                <option value="女性">女性</option>
-              </select>
-            </div>
-          </section>
+          <ProfileSetting state={state} dispatch={dispatch} />
         )}
         <section className="my-12 text-center">
           {isFirstCreation && (
