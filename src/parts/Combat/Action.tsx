@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { type Position } from '../../combat/FormationStore'
 import { type ActionType, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
-import { CombatLog as Log } from '../../combat/Log'
+import { POSITION_LABELS, CombatLog as Log } from '../../combat/Log'
 import { CombatUnit as Unit } from '../../combat/Unit'
 
 type ActionPalette = 'main' | 'move' | 'hidden'
@@ -53,25 +54,16 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
           onClick={() => { setIsExecuted(true); }}
         >待機</button>
       </div>
-      <div className="actions subActions" data-disable={actionPalette !== 'move'}>
+      <div className="actions option" data-disable={actionPalette !== 'move'}>
+        {Object.entries(POSITION_LABELS).map((arr) => (
+          <button
+            key={arr[0]}
+            disabled={!store.availability.move[arr[0] as Position]}
+            onClick={() => { setActionOptions({ position: arr[0] as Position }); setIsExecuted(true); }}
+          >{arr[1]}</button>
+        ))}
         <button
-          disabled={!store.availability.move.left}
-          onClick={() => { setActionOptions({ position: 'left' }); setIsExecuted(true); }}
-        >左翼</button>
-        <button
-          disabled={!store.availability.move.center}
-          onClick={() => { setActionOptions({ position: 'center' }); setIsExecuted(true); }}
-        >中央</button>
-        <button
-          disabled={!store.availability.move.right}
-          onClick={() => { setActionOptions({ position: 'right' }); setIsExecuted(true); }}
-        >右翼</button>
-        <button
-          disabled={!store.availability.move.back}
-          onClick={() => { setActionOptions({ position: 'back' }); setIsExecuted(true); }}
-        >後退</button>
-        <button
-          onClick={() => { setActionPalette('main'); setActionType('wait'); }}
+          onClick={() => { reset(); }}
         >戻る</button>
       </div>
     </>
