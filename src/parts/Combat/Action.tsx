@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
+import { type ActionType, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
+import { CombatLog as Log } from '../../combat/Log'
 
 type ActionPalette = 'main' | 'move'
 
-function Action({ store, nextTurn }: { store: Store, nextTurn: () => void }) {
+function Action({ store, nextTurn }: { store: Store, nextTurn: (log: Log) => void }) {
   // 状態管理
   const [actionPalette, setActionPalette] = useState<ActionPalette>('main')
 
   // execute
-  const execute = (type: string, option: string | null = null) => {
-    store.execute({ type, option } as ActionRequest)
+  const execute = (type: ActionType, option: string | null = null) => {
+    const request = { type, option } as ActionRequest
+    store.execute(request)
     setActionPalette('main')
-    nextTurn()
+    const log = new Log(store.actor, request)
+    nextTurn(log)
   }
 
   return (

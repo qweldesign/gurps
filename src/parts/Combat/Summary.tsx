@@ -12,7 +12,7 @@ function Summary({ store }: { store: Store }) {
             <div>{summary.name}</div>
             <div>{summary.HP} / {summary.maxHP}</div>
             <div>{summary.condition}</div>
-            <div>{''}</div>
+            <div>{summary.history?.label ?? ''}</div>
           </div>
         ))}
       </div>

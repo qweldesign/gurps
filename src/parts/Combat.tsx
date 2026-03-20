@@ -2,8 +2,9 @@ import { useRef, useState, useEffect } from 'react'
 import Formation from './Combat/Formation'
 import Action from './Combat/Action'
 import Summary from './Combat/Summary'
-import Log from './Combat/Log'
+import Timeline from './Combat/Timeline'
 import { CombatCore as Core } from '../combat/Core'
+import { CombatLog as Log } from '../combat/Log'
 import { createSamples } from '../domains/SampleCharacter'
 import DevProgress from './DevProgress'
 import { COMBAT_DEV_PROGRESS } from '../devProgress/combat'
@@ -24,8 +25,8 @@ function Combat() {
   const [turnIndex, setTurnIndex] = useState(0)
 
   // 状態更新
-  const nextTurn = () => {
-    coreRef.current.nextTurn()
+  const nextTurn = (log: Log) => {
+    coreRef.current.nextTurn(log)
     setTurnIndex(coreRef.current.turnIndex)
   }
 
@@ -56,7 +57,7 @@ function Combat() {
             </div>
             <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
               <h3 className="m-0 border-0 text-sm">Log</h3>
-              <Log />
+              <Timeline />
             </div>
           </div>
         </div>

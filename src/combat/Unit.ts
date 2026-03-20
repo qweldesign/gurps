@@ -1,5 +1,6 @@
 // Unit.ts
 
+import { CombatLog as Log } from './Log'
 import { type Side, type Position } from './FormationStore'
 import { UnitHealth as Health } from './Unit/Health'
 import { UnitSummary as Summary } from './Unit/Summary'
@@ -71,5 +72,13 @@ export class CombatUnit {
     this.position = 'back'
     this.health = new Health() // 後の Summary が Health を見るので順序厳守
     this.summary = new Summary(this)
+  }
+
+  set history(log: Log) {
+    this.summary.history = log
+  }
+
+  get history() {
+    return this.summary.history
   }
 }

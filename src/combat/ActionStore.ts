@@ -4,6 +4,8 @@ import { CombatCore as Core } from './Core'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
+export type ActionType = 'move' | 'wait'
+
 export type ActionRequest =
   | { type: 'move', option: Position }
   | { type: 'wait', option: null }

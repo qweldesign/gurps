@@ -3,6 +3,7 @@
 import { type CombatUnitModel as Model, CombatUnit as Unit } from './Unit'
 import { CombatFormationStore as FormationStore } from './FormationStore'
 import { CombatActionStore as ActionStore } from './ActionStore'
+import { CombatLog as Log } from './Log'
 import { CombatSummaryStore as SummaryStore } from './SummaryStore'
 
 export class CombatCore {
@@ -26,7 +27,7 @@ export class CombatCore {
     this.summaryStore = new SummaryStore(this.actor, this)
   }
 
-  nextTurn() {
+  nextTurn(log: Log) {
     this.turnIndex++
     if (this.turnIndex === this.units.length) {
       this.round++
@@ -35,7 +36,7 @@ export class CombatCore {
     this.actor = this.units[this.turnIndex]
     this.formationStore = new FormationStore(this.units[this.turnIndex], this.units)
     this.actionStore = new ActionStore(this.units[this.turnIndex], this)
-    this.summaryStore = new SummaryStore(this.units[this.turnIndex], this)
+    this.summaryStore = new SummaryStore(this.units[this.turnIndex], this, log) // 行動履歴を渡す
   }
 
   debug() {
