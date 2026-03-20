@@ -1,7 +1,7 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { ACTIONS, type ActionRequest } from './ActionStore'
+import { type ActionRequest } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
 
 export const ACTION_LABELS = {
@@ -36,8 +36,19 @@ export class CombatLog {
 
   receiveRequest(request: ActionRequest) {
     this.request = request
-    this.label = ACTIONS[request.type].label
+    this.label = this.createLabel()
     this.resultMessages = this.createMessages()
+  }
+
+  createLabel() {
+    const request = this.request ?? { type: 'wait' }
+    switch (request.type) {
+      case 'move':
+        return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
+
+      default: // case 'wait':
+        return ACTION_LABELS[request.type]
+    }
   }
 
   createMessages() {
@@ -46,7 +57,7 @@ export class CombatLog {
     const messages = []
     switch (request.type) {
       case 'move':
-        messages.push(<>{`${actor} は ${POSITION_LABELS[request.option]} へ移動した`}</>)
+        messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
 
       default: // case 'wait':

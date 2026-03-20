@@ -1,26 +1,44 @@
-import { useState } from 'react'
-import { type ActionType, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
+import { useState, useEffect } from 'react'
+import { type ActionType, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
 import { CombatLog as Log } from '../../combat/Log'
+import { CombatUnit as Unit } from '../../combat/Unit'
 
 type ActionPalette = 'main' | 'move' | 'hidden'
 
 function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (log: Log) => Promise<void> }) {
   // 状態管理
   const [actionPalette, setActionPalette] = useState<ActionPalette>('main')
+  const [actionType, setActionType] = useState<ActionType>('wait')
+  const [actionOptions, setActionOptions] = useState<ActionOptions>({})
+  const [actionTargets, setActionTargets] = useState<Unit[]>([])
+  const [isExecuted, setIsExecuted] = useState<boolean>(false)
 
   // execute
-  const execute = async (type: ActionType, option: string | null = null) => {
+  const execute = async () => {
     // パレットを非表示
     setActionPalette('hidden')
     // ActionRequest を作成し, execute
-    const request = { type, option } as ActionRequest
+    const request = { type: actionType, options: actionOptions, targets: actionTargets } as ActionRequest
     store.execute(request)
     // ログを更新し, 親コンポーネントに返す
     log.receiveRequest(request)
     await nextTurn(log) // ログの再生完了を待つ
-    // ログの再生完了後にパレットを戻す
-    setActionPalette('main')
+    reset()
   }
+
+  // execute後, 変数を初期状態に戻す
+  const reset = () => {
+    setActionPalette('main')
+    setActionType('wait')
+    setActionOptions({})
+    setActionTargets([])
+    setIsExecuted(false)
+  }
+
+  useEffect(() => {
+    // isExecuted が true に変わるのを検知して実行
+    if(isExecuted) execute()
+  }, [isExecuted])
 
   return (
     <>
@@ -28,32 +46,32 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
-          onClick={() => setActionPalette('move')}
+          onClick={() => { setActionPalette('move'); setActionType('move'); }}
         >移動</button>
         <button
           disabled={!store.availability.wait}
-          onClick={() => execute('wait')}
+          onClick={() => { setIsExecuted(true); }}
         >待機</button>
       </div>
       <div className="actions subActions" data-disable={actionPalette !== 'move'}>
         <button
           disabled={!store.availability.move.left}
-          onClick={() => execute('move', 'left')}
+          onClick={() => { setActionOptions({ position: 'left' }); setIsExecuted(true); }}
         >左翼</button>
         <button
           disabled={!store.availability.move.center}
-          onClick={() => execute('move', 'center')}
+          onClick={() => { setActionOptions({ position: 'center' }); setIsExecuted(true); }}
         >中央</button>
         <button
           disabled={!store.availability.move.right}
-          onClick={() => execute('move', 'right')}
+          onClick={() => { setActionOptions({ position: 'right' }); setIsExecuted(true); }}
         >右翼</button>
         <button
           disabled={!store.availability.move.back}
-          onClick={() => execute('move', 'back')}
+          onClick={() => { setActionOptions({ position: 'back' }); setIsExecuted(true); }}
         >後退</button>
         <button
-          onClick={() => setActionPalette('main')}
+          onClick={() => { setActionPalette('main'); setActionType('wait'); }}
         >戻る</button>
       </div>
     </>

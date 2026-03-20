@@ -6,9 +6,13 @@ import { CombatUnit as Unit } from './Unit'
 
 export type ActionType = 'move' | 'wait'
 
+export type ActionOptions = {
+  position?: Position
+}
+
 export type ActionRequest =
-  | { type: 'move', option: Position }
-  | { type: 'wait', option: null }
+  | { type: 'move', options: { position: Position }, targets: [] }
+  | { type: 'wait', options: {}, targets: [] }
 
 type ActionDefinition = {
   move: {
@@ -69,8 +73,8 @@ export class CombatActionStore {
   execute(action: ActionRequest) {
     switch (action.type) {
       case 'move':
-        if (!this.actions.move.canExecute(action.option)) return
-        this.actions.move.execute(action.option)
+        if (!this.actions.move.canExecute(action.options.position)) return
+        this.actions.move.execute(action.options.position)
         break
 
       default: // case 'wait':
