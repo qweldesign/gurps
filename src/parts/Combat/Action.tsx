@@ -2,19 +2,24 @@ import { useState } from 'react'
 import { type ActionType, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
 import { CombatLog as Log } from '../../combat/Log'
 
-type ActionPalette = 'main' | 'move'
+type ActionPalette = 'main' | 'move' | 'hidden'
 
-function Action({ store, nextTurn }: { store: Store, nextTurn: (log: Log) => void }) {
+function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (log: Log) => Promise<void> }) {
   // 状態管理
   const [actionPalette, setActionPalette] = useState<ActionPalette>('main')
 
   // execute
-  const execute = (type: ActionType, option: string | null = null) => {
+  const execute = async (type: ActionType, option: string | null = null) => {
+    // パレットを非表示
+    setActionPalette('hidden')
+    // ActionRequest を作成し, execute
     const request = { type, option } as ActionRequest
     store.execute(request)
+    // ログを更新し, 親コンポーネントに返す
+    log.receiveRequest(request)
+    await nextTurn(log) // ログの再生完了を待つ
+    // ログの再生完了後にパレットを戻す
     setActionPalette('main')
-    const log = new Log(store.actor, request)
-    nextTurn(log)
   }
 
   return (

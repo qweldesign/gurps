@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { type ReactNode, useRef, useState, useEffect } from 'react'
 import Formation from './Combat/Formation'
 import Action from './Combat/Action'
 import Summary from './Combat/Summary'
@@ -20,20 +20,71 @@ function Combat() {
     return units.map(unit => unit.toCombatUnitModel(unit.id - 1)) // combatId は 0～7
   }
 
-  // 状態管理
+  // ターン管理
   const coreRef = useRef(new Core(initModels()))
   const [turnIndex, setTurnIndex] = useState(0)
+  
+  // ログ管理
+  const timelineRef = useRef<HTMLDivElement | null>(null)
+  const resolveQueue = useRef<(() => void)[]>([]) // ログ再生完了待ちを登録
+  const [log, setLog] = useState<Log>(new Log(coreRef.current.actor))
+  const [queue, setQueue] = useState<ReactNode[]>([]) // 未表示 (待機中)
+  const [messages, setMessages] = useState<ReactNode[]>([]) // 表示済み
 
-  // 状態更新
-  const nextTurn = (log: Log) => {
-    coreRef.current.nextTurn(log)
-    setTurnIndex(coreRef.current.turnIndex)
+  // Action に渡すログ・ターン更新のための関数 
+  const nextTurn = async (log: Log): Promise<void> => {
+    // Promiseでログ再生完了を待つ
+    return new Promise<void>(resolve => {
+      // queueの配列末尾にログを積む
+      setQueue(prev => [...prev, ...log.resultMessages])
+      // resolveを登録
+      resolveQueue.current.push(resolve)
+    }).then(() => {
+      // ログ再生完了後にターン進行
+      coreRef.current.nextTurn(log)
+      setTurnIndex(coreRef.current.turnIndex)
+      // 新しいログを作成
+      const newLog = new Log(coreRef.current.actor)
+      setLog(newLog)
+      setQueue(prev => [...prev, ...newLog.startMessages])
+    })
   }
+
+  // ログ再生 (queue → messages に流す)
+  useEffect(() => {
+    // 完了検知
+    if (queue.length === 0) {
+      const resolve = resolveQueue.current.shift()
+      resolve?.()
+      return
+    }
+    // ログ再生
+    // 上方向にスクロール
+    if (messages.length >= 10){
+      timelineRef.current?.classList.add('is-scrolling')
+    }
+    const timer = setTimeout(() => {
+      // queueの配列先頭をmessagesの配列末尾に移動 → 再生
+      const [next, ...rest] = queue
+      setMessages(prev => [...prev, next].slice(-10)) // 末尾10件のみ表示
+      setQueue(rest)
+      if (messages.length >= 10){
+        timelineRef.current?.classList.remove('is-scrolling')
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [queue])
 
   // ターン毎にデバッグ
   useEffect(() => {
     coreRef.current.debug()
   }, [turnIndex])
+
+  // 開幕
+  useEffect(() => {
+    setQueue(prev => [...prev, ...log.startMessages])
+  }, [])
 
   return (
     <>
@@ -53,11 +104,11 @@ function Combat() {
             </div>
             <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
               <h3 className="m-0 border-0 text-sm">Action</h3>
-              <Action store={coreRef.current.actionStore} nextTurn={nextTurn} />
+              <Action store={coreRef.current.actionStore} log={log} nextTurn={nextTurn} />
             </div>
             <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
               <h3 className="m-0 border-0 text-sm">Log</h3>
-              <Timeline />
+              <Timeline ref={timelineRef} messages={messages} />
             </div>
           </div>
         </div>

@@ -241,6 +241,18 @@
     @apply border-b border-white;
   }
 
+  .timeline {
+    @apply transition-none duration-300;
+  }
+
+  .timeline.is-scrolling {
+    @apply -mt-8 transition-all;
+  }
+
+  .timeline > p:not(:has(span)) {
+    @apply px-3
+  }
+
   .grid.grid-rows-16 {
     @apply grid-rows-16;
   }
