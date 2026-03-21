@@ -14,6 +14,7 @@ export class CombatState {
   public formationStore: FormationStore
   public actionStore: ActionStore
   public summaryStore: SummaryStore
+  private logs: Log[]
 
   constructor(models: Model[]) {
     this.round = 0
@@ -25,6 +26,7 @@ export class CombatState {
     this.formationStore = new FormationStore(this.actor, this.units)
     this.actionStore = new ActionStore(this.actor, this)
     this.summaryStore = new SummaryStore(this.actor, this)
+    this.logs = []
   }
 
   nextTurn(log: Log) {
@@ -37,10 +39,11 @@ export class CombatState {
     this.formationStore = new FormationStore(this.units[this.turnIndex], this.units)
     this.actionStore = new ActionStore(this.units[this.turnIndex], this)
     this.summaryStore = new SummaryStore(this.units[this.turnIndex], this, log) // 行動履歴を渡す
+    this.logs.push(log) // こちらでも履歴を保持
   }
 
   debug() {
-    const { round, turnIndex, units, formationStore } = this
-    console.log({ round, turnIndex, units, formationStore })
+    const { round, turnIndex, units, logs } = this
+    console.log({ round, turnIndex, units, logs })
   }
 }

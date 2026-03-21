@@ -21,13 +21,13 @@ function Combat() {
   }
 
   // ターン管理
-  const stateRef = useRef(new State(initModels()))
+  const stateRef = useRef<State | null>(null)
   const [turnIndex, setTurnIndex] = useState(0)
   
   // ログ管理
   const timelineRef = useRef<HTMLDivElement | null>(null)
   const resolveQueue = useRef<(() => void)[]>([]) // ログ再生完了待ちを登録
-  const [log, setLog] = useState<Log>(new Log(stateRef.current.actor))
+  const [log, setLog] = useState<Log | null>(null)
   const [queue, setQueue] = useState<ReactNode[]>([]) // 未表示 (待機中)
   const [messages, setMessages] = useState<ReactNode[]>([]) // 表示済み
 
@@ -40,6 +40,7 @@ function Combat() {
       // resolveを登録
       resolveQueue.current.push(resolve)
     }).then(() => {
+      if (!stateRef.current) return
       // ログ再生完了後にターン進行
       stateRef.current.nextTurn(log)
       setTurnIndex(stateRef.current.turnIndex)
@@ -78,12 +79,18 @@ function Combat() {
 
   // ターン毎にデバッグ
   useEffect(() => {
+    if (!stateRef.current) return
     stateRef.current.debug()
   }, [turnIndex])
 
   // 開幕
   useEffect(() => {
-    setQueue(prev => [...prev, ...log.startMessages])
+    if (!stateRef.current) {
+      stateRef.current = new State(initModels())
+      const newLog = new Log(stateRef.current.actor)
+      setLog(newLog)
+      setQueue(prev => [...prev, ...newLog.startMessages])
+    }
   }, [])
 
   return (
@@ -91,28 +98,30 @@ function Combat() {
       <div className="p-6">
         <p>In development...</p>
       </div>
-      <div className="px-6">
-        <div className="table-wrapper">
-          <div className="row justify-center min-w-lg lg:min-w-5xl">
-            <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
-              <h3 className="m-0 border-0 text-sm">Formation</h3>
-              <Formation store={stateRef.current.formationStore} />
-            </div>
-            <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
-              <h3 className="m-0 border-0 text-sm">Summary</h3>
-              <Summary store={stateRef.current.summaryStore} />
-            </div>
-            <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
-              <h3 className="m-0 border-0 text-sm">Action</h3>
-              <Action store={stateRef.current.actionStore} log={log} nextTurn={nextTurn} />
-            </div>
-            <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
-              <h3 className="m-0 border-0 text-sm">Log</h3>
-              <Timeline ref={timelineRef} messages={messages} />
+      {( stateRef.current && log &&
+        <div className="px-6">
+          <div className="table-wrapper">
+            <div className="row justify-center min-w-lg lg:min-w-5xl">
+              <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
+                <h3 className="m-0 border-0 text-sm">Formation</h3>
+                <Formation store={stateRef.current.formationStore} />
+              </div>
+              <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
+                <h3 className="m-0 border-0 text-sm">Summary</h3>
+                <Summary store={stateRef.current.summaryStore} />
+              </div>
+              <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
+                <h3 className="m-0 border-0 text-sm">Action</h3>
+                <Action store={stateRef.current.actionStore} log={log} nextTurn={nextTurn} />
+              </div>
+              <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
+                <h3 className="m-0 border-0 text-sm">Log</h3>
+                <Timeline ref={timelineRef} messages={messages} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="mt-24 px-6">
         <DevProgress progress={COMBAT_DEV_PROGRESS} />
       </div>
