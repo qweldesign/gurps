@@ -18,6 +18,7 @@ export const POSITION_LABELS = {
 
 let count = 0
 
+// タイムラインへのログ表示を司るクラス / Timelineコンポーネントに対応 (名前の競合を回避)
 export class CombatLog {
   public id: number
   public actor: Unit
@@ -26,6 +27,7 @@ export class CombatLog {
   public request?: ActionRequest
   public label?: string
 
+  // インスタンス生成時は「XXXXの行動順」を表示する
   constructor(actor: Unit) {
     this.id = count++
     this.actor = actor
@@ -34,12 +36,14 @@ export class CombatLog {
     this.resultMessages = []
   }
 
+  // Action コンポーネントで ActionRequet を受け取り, ラベルと結果ログを生成する
   receiveRequest(request: ActionRequest) {
     this.request = request
     this.label = this.createLabel()
     this.resultMessages = this.createMessages()
   }
 
+  // ラベル生成 (Summary履歴用)
   createLabel() {
     const request = this.request ?? { type: 'wait' }
     switch (request.type) {
@@ -51,6 +55,7 @@ export class CombatLog {
     }
   }
 
+  // 結果ログ生成
   createMessages() {
     const actor = this.actor.name
     const request = this.request ?? { type: '' }

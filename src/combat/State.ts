@@ -6,6 +6,7 @@ import { CombatActionStore as ActionStore } from './ActionStore'
 import { CombatLog as Log } from './Log'
 import { CombatSummaryStore as SummaryStore } from './SummaryStore'
 
+// 全ての情報を集約・管理するクラス
 export class CombatState {
   public round: number // 経過時間
   public turnIndex: number // 行動順

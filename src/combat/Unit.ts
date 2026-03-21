@@ -9,6 +9,7 @@ const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
 
 export type CombatId = typeof combatIds[number]
 
+// 攻撃手段の定義
 export type CombatAttackModel = {
   name: string
   dmgName: string
@@ -21,6 +22,7 @@ export type CombatAttackModel = {
   isMissile: boolean
 }
 
+// 防御部位の定義
 export type CombatDefenseModel = {
   name: string
   sdr: number
@@ -28,6 +30,8 @@ export type CombatDefenseModel = {
   wt: number
 }
 
+// 戦闘ユニットのモデル
+// Characterクラスのメソッド toCombatUnitModel() でデータ変換
 export type CombatUnitModel = {
   combatId: CombatId
   id: number
@@ -40,6 +44,7 @@ export type CombatUnitModel = {
   mre: number
 }
 
+// 戦闘ユニットを司るクラス
 export class CombatUnit {
   public combatId: CombatId
   public id: number

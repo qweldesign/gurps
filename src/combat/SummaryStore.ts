@@ -5,6 +5,7 @@ import { CombatUnit as Unit } from './Unit'
 import { CombatLog as Log } from './Log'
 import { UnitSummary as Summary } from './Unit/Summary'
 
+// ユニット全員の概要表示を司るクラス / Summaryコンポーネントに対応
 export class CombatSummaryStore {
   public actor: Unit
   public summaries: Summary[]

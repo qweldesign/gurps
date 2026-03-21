@@ -15,6 +15,7 @@ type BackFormation = Record<number, Unit | null>
 type FrontFormation = Record<Position, Unit | null>
 type Formation = { back: BackFormation, front: FrontFormation }
 
+// ユニットの配置を司るクラス / Formationコンポーネントに対応
 export class CombatFormationStore {
   public actor: Unit
   private back: Map<number, Unit | null>
@@ -49,6 +50,7 @@ export class CombatFormationStore {
     })
   }
 
+  // Store[Side][Position] でユニットへ静的アクセスできる
   getFormation(side: Side): { back: BackFormation, front: FrontFormation } {
     const back = BACK_VALUES[side].reduce<BackFormation>((acc, value) => {
       acc[value] = this.back.get(value) ?? null

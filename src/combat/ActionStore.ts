@@ -4,16 +4,20 @@ import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
+// コマンド名の定義
 export type ActionType = 'move' | 'wait'
 
+// コマンドオプションの定義
 export type ActionOptions = {
   position?: Position
 }
 
+// コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
+// コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
   move: {
     options: readonly Position[]
@@ -26,6 +30,7 @@ type ActionDefinition = {
   }
 }
 
+// コマンド (行動) の管理と実行を司るクラス / Actionコンポーネントに対応
 export class CombatActionStore {
   public actor: Unit
   private state: State
@@ -62,6 +67,8 @@ export class CombatActionStore {
     }
   }
 
+  // 「移動」実行可否取得
+  // 後退は自身が後方に配置されていないこと, 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
   canMove(position: Position) {
     if (position === 'back') {
       return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
@@ -70,6 +77,8 @@ export class CombatActionStore {
     }
   }
 
+  // 実行
+  // ActionRequest のプロパティ (type, options, targets) を引数に取って処理を進める
   execute(action: ActionRequest) {
     switch (action.type) {
       case 'move':
@@ -84,6 +93,7 @@ export class CombatActionStore {
     }
   }
 
+  // 「移動」実行
   move(position: Position) {
     this.actor.position = position
   }
