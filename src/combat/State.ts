@@ -1,4 +1,4 @@
-// Core.ts
+// State.ts
 
 import { type CombatUnitModel as Model, CombatUnit as Unit } from './Unit'
 import { CombatFormationStore as FormationStore } from './FormationStore'
@@ -6,7 +6,7 @@ import { CombatActionStore as ActionStore } from './ActionStore'
 import { CombatLog as Log } from './Log'
 import { CombatSummaryStore as SummaryStore } from './SummaryStore'
 
-export class CombatCore {
+export class CombatState {
   public round: number // 経過時間
   public turnIndex: number // 行動順
   public units: Unit[]

@@ -1,6 +1,6 @@
 // ActionStore.ts
 
-import { CombatCore as Core } from './Core'
+import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
@@ -28,16 +28,16 @@ type ActionDefinition = {
 
 export class CombatActionStore {
   public actor: Unit
-  private core: Core
+  private state: State
   public round: number
   public turnIndex: number
   private readonly actions: ActionDefinition
 
-  constructor(actor: Unit, core: Core) {
+  constructor(actor: Unit, state: State) {
     this.actor = actor
-    this.core = core
-    this.round = core.round
-    this.turnIndex = core.turnIndex
+    this.state = state
+    this.round = state.round
+    this.turnIndex = state.turnIndex
     this.actions = {
       move: {
         options: POSITION_VALUES,
@@ -64,9 +64,9 @@ export class CombatActionStore {
 
   canMove(position: Position) {
     if (position === 'back') {
-      return this.core.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
+      return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
     } else {
-      return this.core.formationStore[this.actor.side].front[position] === null ? true : false
+      return this.state.formationStore[this.actor.side].front[position] === null ? true : false
     }
   }
 
