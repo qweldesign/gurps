@@ -17,6 +17,17 @@ export type ActionRequest =
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
+// ロール定義
+type Roll = {
+  roll: number // 出目
+}
+
+// 判定定義
+type Judge = Roll & {
+  success: boolean // 成功/失敗
+  critical: boolean // クリティカル/ファンブル
+}
+
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
   move: {
@@ -96,6 +107,29 @@ export class CombatActionStore {
         this.actions.wait.execute()
         break
     }
+  }
+
+  // ロール結果 (Roll型) を返す
+  private roll(count: number = 3, mod: number = 0, sides: number = 6): Roll {
+    const roll = this.getRoll(count, mod, sides)
+    return { roll }
+  }
+
+  // 判定結果 (Judge型) を返す
+  private judge(target: number): Judge {
+    const roll = this.getRoll()
+    const criticalTarget = Math.max(4, Math.min((target - 10), 6)) // クリティカル
+    const fumbleTarget = Math.max(17, Math.min((target + 1), 18)) // ファンブル
+    const success = roll <= criticalTarget || (roll <= target && roll < 17)
+    const critical = roll <= criticalTarget || roll >= fumbleTarget
+    return { roll, success, critical }
+  }
+
+  // ダイスを振った出目を取得
+  private getRoll(count: number = 3, mod: number = 0, sides: number = 6): number {
+    return Array.from<number>({ length: count }).reduce(sum => {
+      return sum + Math.ceil(Math.random() * sides)
+    }, 0) + mod
   }
 
   // 「移動」実行
