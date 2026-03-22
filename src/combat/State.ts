@@ -37,9 +37,9 @@ export class CombatState {
       this.turnIndex %= this.units.length
     }
     this.actor = this.units[this.turnIndex]
-    this.formationStore = new FormationStore(this.units[this.turnIndex], this.units)
-    this.actionStore = new ActionStore(this.units[this.turnIndex], this)
-    this.summaryStore = new SummaryStore(this.units[this.turnIndex], this, log) // 行動履歴を渡す
+    this.formationStore.update(this.actor, this.units)
+    this.actionStore.update(this.actor, this)
+    this.summaryStore.update(this.actor, this, log) // 行動履歴を渡す
     this.logs.push(log) // こちらでも履歴を保持
   }
 

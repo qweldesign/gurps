@@ -35,14 +35,12 @@ export class CombatActionStore {
   public actor: Unit
   private state: State
   public round: number
-  public turnIndex: number
   private readonly actions: ActionDefinition
 
   constructor(actor: Unit, state: State) {
     this.actor = actor
     this.state = state
     this.round = state.round
-    this.turnIndex = state.turnIndex
     this.actions = {
       move: {
         options: POSITION_VALUES,
@@ -54,6 +52,13 @@ export class CombatActionStore {
         execute: () => {}
       }
     }
+  }
+
+  // ターン毎に更新
+  update(actor: Unit, state: State) {
+    this.actor = actor
+    this.state = state
+    this.round = state.round
   }
 
   // availability を結果として生成

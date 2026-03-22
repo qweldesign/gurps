@@ -17,29 +17,28 @@ type Formation = { back: BackFormation, front: FrontFormation }
 
 // ユニットの配置を司るクラス / Formationコンポーネントに対応
 export class CombatFormationStore {
-  public actor: Unit
+  public actor: Unit // CSSマーク用
   private back: Map<number, Unit | null>
   private front: Map<string, Unit | null>
 
   constructor(actor: Unit, units: Unit[]) {
     this.actor = actor
-    // Back 初期化
     this.back = new Map<number, Unit | null>()
-    units.forEach((unit, i) => {
-      this.back.set(i, unit)
-    })
-    // Front 初期化
     this.front = new Map<string, Unit | null>()
+    // ユニット配置
+    this.update(actor, units)
+  }
+
+  // ターン毎に更新
+  update(actor: Unit, units: Unit[]) {
+    this.actor = actor
+    // Front 初期化
     SIDE_VALUES.forEach(side => {
       POSITION_VALUES.slice(1).forEach(position => {
         this.front.set(`${side}-${position}`, null)
       })
     })
-    // 更新
-    this.update(units)
-  }
-
-  update(units: Unit[]) {
+    // ユニット配置 (Back 初期化含む)
     units.forEach((unit, i) => {
       if (unit.position === 'back') {
         this.back.set(i, unit)
