@@ -86,7 +86,7 @@ export class Parameters {
   }
 
   // nameを指定してPointを減らし、変化後のPointを返す
-  decrease(name: ParameterName, size: number = 1): number {
+  private decrease(name: ParameterName, size: number = 1): number {
     let result = 0 as Point
     for (let i = 0; i < size; i++) {
       const point = this.get(name)
@@ -102,7 +102,7 @@ export class Parameters {
   }
 
   // nameを指定してPointを増やし、変化後のPointを返す
-  increase(name: ParameterName, size: number = 1): number {
+  private increase(name: ParameterName, size: number = 1): number {
     let result = 0 as Point
     for (let i = 0; i < size; i++) {
       const point = this.get(name)

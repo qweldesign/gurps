@@ -18,14 +18,14 @@ export class SaveData {
   }
 
   // 保存
-  save(isTemporary: boolean = false) {
+  private save(isTemporary: boolean = false) {
     const storage = isTemporary ? sessionStorage : localStorage
     const raw = JSON.stringify(this.data)
     storage.setItem(this.storageKey, raw)
   }
 
   // 全てのデータを返す
-  load(isTemporary: boolean = false) {
+  private load(isTemporary: boolean = false) {
     if (isTemporary) {
       const raw = sessionStorage.getItem(this.storageKey) ?? '{}'
       const data = JSON.parse(raw)

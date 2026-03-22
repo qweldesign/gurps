@@ -50,17 +50,17 @@ export class Character {
   // Mapに無ければ追加する
   stepParam(name: ParameterName, size: number = 1): number {
     if (size === 0) return this.getParam(name)
-    return (size > 0) ? this.parameters.increase(name, Math.abs(size)) : this.parameters.decrease(name, Math.abs(size))
+    return (size > 0) ? this.increaseParam(name, Math.abs(size)) : this.decreaseParam(name, Math.abs(size))
   }
 
   // nameを指定してPointを減らし、変化後のPointを返す
-  decreaseParam(name: ParameterName, size: number = 1): number {
-    return this.parameters.decrease(name, size)
+  private decreaseParam(name: ParameterName, size: number = 1): number {
+    return this.parameters.step(name, -size)
   }
 
   // nameを指定してPointを増やし、変化後のPointを返す
-  increaseParam(name: ParameterName, size: number = 1): number {
-    return this.parameters.increase(name, size)
+  private increaseParam(name: ParameterName, size: number = 1): number {
+    return this.parameters.step(name, size)
   }
 
   // nameを指定してPointを取り出す

@@ -149,7 +149,7 @@ export class SampleCharacter extends Character {
     this.setEquipments(a, b, totalPoints)
   }
 
-  modifyAbilities(mod: ParameterName, multiplier: Multiplier = 1) {
+  private modifyAbilities(mod: ParameterName, multiplier: Multiplier = 1) {
     let level = 12
     while (multiplier > 1) {
       level++
@@ -174,7 +174,7 @@ export class SampleCharacter extends Character {
   }
 
   // 技能修得や装備選択、自動行動時のロジックタイプを設定
-  getTactic(multiplier: Multiplier = 1): number {
+  private getTactic(multiplier: Multiplier = 1): number {
     let level = 12
     while (multiplier > 1) {
       level++
@@ -219,7 +219,7 @@ export class SampleCharacter extends Character {
   }
 
   // 技能の初期化
-  setSkills(totalPoints: number, defaultPoints: number = 10, multiplier: Multiplier = 1) {
+  private setSkills(totalPoints: number, defaultPoints: number = 10, multiplier: Multiplier = 1) {
     const skills = TACTIC_TABLE[this.tactic]
 
     if (totalPoints > defaultPoints * multiplier) {
@@ -234,7 +234,7 @@ export class SampleCharacter extends Character {
   }
 
   // Points合計に対して主技能を設定
-  setMainSkill(skill: ParameterName, totalPoints: number, multiplier: Multiplier = 1) {
+  private setMainSkill(skill: ParameterName, totalPoints: number, multiplier: Multiplier = 1) {
     if (multiplier === 1) {
       if (totalPoints >= 32) this.setParam(skill, Math.floor(totalPoints / 16) * 8 as Point)
         // 32CP = 初期:10 + 主:16 + 副:6
@@ -263,7 +263,7 @@ export class SampleCharacter extends Character {
   }
 
   // 技能テーブルから順に技能を修得
-  setSkillLoop(skills: ParameterName[], totalPoints: number, multiplier: Multiplier = 1) {
+  private setSkillLoop(skills: ParameterName[], totalPoints: number, multiplier: Multiplier = 1) {
     // Multiplierが有効な場合、1つ目の技能には必ず振る
     // 能力値が16以上の場合、技能無しで maxLevel に到達してループを無視されるため
     if (multiplier > 1) this.stepParam(skills[0])
@@ -311,7 +311,7 @@ export class SampleCharacter extends Character {
   }
 
   // 装備セットのマップ番号を取得
-  getEquipmentSetMap() {
+  private getEquipmentSetMap() {
     return [
       0, 1, 0,
       3, 3, 4,
@@ -320,7 +320,7 @@ export class SampleCharacter extends Character {
   }
 
   // 装備の初期化
-  setEquipments(a: number, b: number, totalPoints: number) {
+  private setEquipments(a: number, b: number, totalPoints: number) {
     const e = this.getEquipmentSetMap()
     const table1 = EQUIPMENTS_TABLE[e]
     const len1 = table1.length

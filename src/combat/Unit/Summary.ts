@@ -10,7 +10,7 @@ export class UnitSummary {
   public maxHP: number
   public health: Health
   public condition: 'good' | 'bad' | 'worse' | 'worst'
-  public logs: Log[]
+  private logs: Log[]
 
   constructor(unit: Unit) {
     this.unit = unit

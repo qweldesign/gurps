@@ -74,7 +74,7 @@ export class CombatActionStore {
 
   // 「移動」実行可否取得
   // 後退は自身が後方に配置されていないこと, 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
-  canMove(position: Position) {
+  private canMove(position: Position) {
     if (position === 'back') {
       return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
     } else {
@@ -99,7 +99,7 @@ export class CombatActionStore {
   }
 
   // 「移動」実行
-  move(position: Position) {
+  private move(position: Position) {
     this.actor.position = position
   }
 }

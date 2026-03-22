@@ -44,7 +44,7 @@ export class CombatLog {
   }
 
   // ラベル生成 (Summary履歴用)
-  createLabel() {
+  private createLabel() {
     const request = this.request ?? { type: 'wait' }
     switch (request.type) {
       case 'move':
@@ -56,7 +56,7 @@ export class CombatLog {
   }
 
   // 結果ログ生成
-  createMessages() {
+  private createMessages() {
     const actor = this.actor.name
     const request = this.request ?? { type: '' }
     const messages = []

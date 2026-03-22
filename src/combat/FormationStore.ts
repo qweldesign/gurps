@@ -50,7 +50,7 @@ export class CombatFormationStore {
   }
 
   // Store[Side][Position] でユニットへ静的アクセスできる
-  getFormation(side: Side): { back: BackFormation, front: FrontFormation } {
+  private getFormation(side: Side): { back: BackFormation, front: FrontFormation } {
     const back = BACK_VALUES[side].reduce<BackFormation>((acc, value) => {
       acc[value] = this.back.get(value) ?? null
       return acc
