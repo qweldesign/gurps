@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { type Position } from '../../combat/FormationStore'
-import { type ActionType, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
-import { POSITION_LABELS, CombatLog as Log } from '../../combat/Log'
+import { type ActionType, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
+import { CombatLog as Log } from '../../combat/Log'
 import { CombatUnit as Unit } from '../../combat/Unit'
 
 type ActionPalette = 'main' | 'move' | 'hidden'

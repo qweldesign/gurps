@@ -1,20 +1,8 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { type ActionRequest } from './ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
-
-export const ACTION_LABELS = {
-  move: '移動',
-  wait: '待機'
-} as const
-
-export const POSITION_LABELS = {
-  back: '後方',
-  left: '左翼',
-  center: '中央',
-  right: '右翼'
-} as const
 
 let count = 0
 

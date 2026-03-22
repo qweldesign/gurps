@@ -5,12 +5,27 @@ import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
 // コマンド名の定義
-export type ActionType = 'move' | 'wait'
+export const ACTIONS = ['move', 'wait'] as const
+
+export type ActionType = typeof ACTIONS[number]
+
+export const ACTION_LABELS: Record<ActionType, string> = {
+  move: '移動',
+  wait: '待機'
+} as const
 
 // コマンドオプションの定義
 export type ActionOptions = {
   position?: Position
 }
+
+//「移動」オプションの定義
+export const POSITION_LABELS: Record<Position, string> = {
+  back: '後方',
+  left: '左翼',
+  center: '中央',
+  right: '右翼'
+} as const
 
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
