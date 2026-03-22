@@ -4,11 +4,14 @@ import { type ActionType, POSITION_LABELS, type ActionOptions, type ActionReques
 import { CombatLog as Log } from '../../combat/Log'
 import { CombatUnit as Unit } from '../../combat/Unit'
 
-type ActionPalette = 'main' | 'move' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'move' | 'target' | 'hidden'
+
+type TargetPalette = 'attack' | 'all'
 
 function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (log: Log) => Promise<void> }) {
   // 状態管理
   const [actionPalette, setActionPalette] = useState<ActionPalette>('main')
+  const [targetPalette, setTargetPalette] = useState<TargetPalette>('all')
   const [actionType, setActionType] = useState<ActionType>('wait')
   const [actionOptions, setActionOptions] = useState<ActionOptions>({})
   const [actionTargets, setActionTargets] = useState<Unit[]>([])
@@ -46,6 +49,10 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
       <div className="absolute top-0 left-0 w-1/1 my-3 italic text-sm text-center">第 {store.round} ターン / {store.actor.name} の行動</div>
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
+          disabled={!store.availability.attack}
+          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionType('attack'); }}
+        >攻撃</button>
+        <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionType('move'); }}
         >移動</button>
@@ -53,6 +60,14 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
           disabled={!store.availability.wait}
           onClick={() => { setIsExecuted(true); }}
         >待機</button>
+      </div>
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
+        <button
+          onClick={() => { setIsExecuted(true); }}
+        >実行</button>
+        <button
+          onClick={() => { setActionPalette('target'); setActionTargets([]); }}
+        >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'move'}>
         {Object.entries(POSITION_LABELS).map((arr) => (
@@ -65,6 +80,21 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
         <button
           onClick={() => { reset(); }}
         >戻る</button>
+      </div>
+      <div className="actions target" data-disable={actionPalette !== 'target'}>
+        {targetPalette === 'attack' && (
+          <>
+            {store.target.melee.map(target => (
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }}
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { reset(); }}
+            >戻る</button>
+          </>
+        )}
       </div>
     </>
   )

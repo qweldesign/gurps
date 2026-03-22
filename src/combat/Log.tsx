@@ -35,6 +35,8 @@ export class CombatLog {
   private createLabel() {
     const request = this.request ?? { type: 'wait' }
     switch (request.type) {
+      case 'attack':
+        return `${ACTION_LABELS[request.type]}`
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
 
@@ -49,6 +51,10 @@ export class CombatLog {
     const request = this.request ?? { type: '' }
     const messages = []
     switch (request.type) {
+      case 'attack':
+        messages.push(<>{`${actor} の攻撃!`}</>)
+        break
+
       case 'move':
         messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break

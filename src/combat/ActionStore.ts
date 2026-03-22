@@ -5,11 +5,12 @@ import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
 // コマンド名の定義
-export const ACTIONS = ['move', 'wait'] as const
+export const ACTIONS = ['attack', 'move', 'wait'] as const
 
 export type ActionType = typeof ACTIONS[number]
 
 export const ACTION_LABELS: Record<ActionType, string> = {
+  attack: '攻撃',
   move: '移動',
   wait: '待機'
 } as const
@@ -29,6 +30,7 @@ export const POSITION_LABELS: Record<Position, string> = {
 
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
+  | { type: 'attack', options: {}, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
@@ -45,6 +47,10 @@ type Judge = Roll & {
 
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
+  attack: {
+    canExecute: () => boolean
+    execute: (target: Unit) => void
+  }
   move: {
     options: readonly Position[]
     canExecute: (position: Position) => boolean
@@ -68,6 +74,10 @@ export class CombatActionStore {
     this.state = state
     this.round = state.round
     this.actions = {
+      attack: {
+        canExecute: () => this.canAttack(),
+        execute: (target) => this.attack(target)
+      },
       move: {
         options: POSITION_VALUES,
         canExecute: (position) => this.canMove(position),
@@ -90,12 +100,19 @@ export class CombatActionStore {
   // availability を結果として生成
   get availability() {
     return {
+      attack: this.actions.attack.canExecute(),
       move: this.actions.move.options.reduce((acc, position) => {
         acc[position] = this.actions.move.canExecute(position)
         return acc
       }, {} as Record<Position, boolean>),
       wait: this.actions.wait.canExecute()
     }
+  }
+
+  // 「攻撃」実行可否取得
+  // 自身が前方に配置されていることが条件 (暫定)
+  private canAttack() {
+    return this.actor.position !== 'back'
   }
 
   // 「移動」実行可否取得
@@ -107,11 +124,60 @@ export class CombatActionStore {
       return this.state.formationStore[this.actor.side].front[position] === null ? true : false
     }
   }
+  
+  // ターゲットを結果として生成 (暫定)
+  get target() {
+    return {
+      all: this.state.units,
+      allies: this.getAllies(),
+      enemies: this.getEnemies(),
+      melee: this.getMeleeTarget(),
+    }
+  }
+
+  // 味方取得
+  private getAllies() {
+    return this.state.units.filter(unit => unit.side === this.actor.side)
+  }
+
+  // 敵取得
+  private getEnemies() {
+    return this.state.units.filter(unit => unit.side !== this.actor.side)
+  }
+
+  // 近接攻撃対象取得
+  private getMeleeTarget() {
+    const enemies = this.getEnemies()
+    switch (this.actor.position) {
+      case 'left':
+        return enemies.filter(unit => {
+          return unit.position === 'right' || unit.position === 'center'
+        })
+      
+      case 'center':
+        return enemies.filter(unit => {
+          return unit.position !== 'back'
+        })
+
+      case 'right':
+        return enemies.filter(unit => {
+          return unit.position === 'left' || unit.position === 'center'
+        })
+
+      default: // case 'back':
+        return []
+    }
+  }
 
   // 実行
   // ActionRequest のプロパティ (type, options, targets) を引数に取って処理を進める
   execute(action: ActionRequest) {
     switch (action.type) {
+      case 'attack':
+        if (!this.actions.attack.canExecute()) return
+        this.actions.attack.execute(action.targets[0])
+        break
+
       case 'move':
         if (!this.actions.move.canExecute(action.options.position)) return
         this.actions.move.execute(action.options.position)
@@ -145,6 +211,11 @@ export class CombatActionStore {
     return Array.from<number>({ length: count }).reduce(sum => {
       return sum + Math.ceil(Math.random() * sides)
     }, 0) + mod
+  }
+
+  // 「攻撃」実行 (暫定: コンソール出力のみ)
+  private attack(target: Unit) {
+    console.log({ target })
   }
 
   // 「移動」実行
