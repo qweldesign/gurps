@@ -18,8 +18,22 @@ export const ACTION_LABELS: Record<ActionType, string> = {
 // コマンドオプションの定義
 export type ActionOptions = {
   aim?: Aim
+  fullPower?: FullPower
   position?: Position
 }
+
+// 攻撃オプションの定義
+export const FULL_POWER_KEYS = ['none', 'dmg', 'level', 'feint', 'double'] as const
+
+export type FullPower = typeof FULL_POWER_KEYS[number]
+
+export const FULL_POWER_OPTIONS: Record<FullPower, { label: string }> = {
+  none: { label: '通常攻撃' },
+  dmg: { label: 'ダメージ安定' },
+  level: { label: '技能値+4' },
+  feint: { label: 'フェイント即攻撃' },
+  double: { label: '2回攻撃' }
+} as const
 
 // 「部位狙い」オプションの定義
 export const AIM_KEYS = ['head', 'ear', 'eye', 'body', 'neck', 'stomach', 'arm', 'hand', 'leg', 'foot'] as const
@@ -49,7 +63,7 @@ export const POSITION_LABELS: Record<Position, string> = {
 
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
-  | { type: 'attack', options: { aim: Aim }, targets: [Unit] }
+  | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
@@ -67,12 +81,12 @@ type Judge = Roll & {
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
   attack: {
-    options: readonly Aim[]
+    options: { aim: readonly Aim[], fullPower: readonly FullPower[] }
     canExecute: () => boolean
-    execute: (aim: Aim, target: Unit) => void
+    execute: (aim: Aim, fullPower: FullPower, target: Unit) => void
   }
   move: {
-    options: readonly Position[]
+    options: { position: readonly Position[] }
     canExecute: (position: Position) => boolean
     execute: (position: Position) => void
   }
@@ -95,12 +109,12 @@ export class CombatActionStore {
     this.round = state.round
     this.actions = {
       attack: {
-        options: AIM_KEYS,
+        options: { aim: AIM_KEYS, fullPower: FULL_POWER_KEYS },
         canExecute: () => this.canAttack(),
-        execute: (aim, target) => this.attack(aim, target)
+        execute: (aim, fullPower, target) => this.attack(aim, fullPower, target)
       },
       move: {
-        options: POSITION_VALUES,
+        options: { position: POSITION_VALUES },
         canExecute: (position) => this.canMove(position),
         execute: (position) => this.move(position)
       },
@@ -122,7 +136,7 @@ export class CombatActionStore {
   get availability() {
     return {
       attack: this.actions.attack.canExecute(),
-      move: this.actions.move.options.reduce((acc, position) => {
+      move: this.actions.move.options.position.reduce((acc, position) => {
         acc[position] = this.actions.move.canExecute(position)
         return acc
       }, {} as Record<Position, boolean>),
@@ -196,7 +210,7 @@ export class CombatActionStore {
     switch (action.type) {
       case 'attack':
         if (!this.actions.attack.canExecute()) return
-        this.actions.attack.execute(action.options.aim, action.targets[0])
+        this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
         break
 
       case 'move':
@@ -235,8 +249,8 @@ export class CombatActionStore {
   }
 
   // 「攻撃」実行 (暫定: コンソール出力のみ)
-  private attack(aim: Aim, target: Unit) {
-    console.log({ aim: AIM_OPTIONS[aim], target })
+  private attack(aim: Aim, fullPower: FullPower, target: Unit) {
+    console.log({ aim: AIM_OPTIONS[aim], fullPower: FULL_POWER_OPTIONS[fullPower], target })
   }
 
   // 「移動」実行
