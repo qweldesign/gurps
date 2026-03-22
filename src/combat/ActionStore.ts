@@ -17,8 +17,27 @@ export const ACTION_LABELS: Record<ActionType, string> = {
 
 // コマンドオプションの定義
 export type ActionOptions = {
+  aim?: Aim
   position?: Position
 }
+
+// 「部位狙い」オプションの定義
+export const AIM_KEYS = ['head', 'ear', 'eye', 'body', 'neck', 'stomach', 'arm', 'hand', 'leg', 'foot'] as const
+
+export type Aim = typeof AIM_KEYS[number]
+
+export const AIM_OPTIONS: Record<Aim, { label: string, mod: number }> = {
+  head: { label: '頭', mod: -3 }, 
+  ear: { label: '耳', mod: -5 },
+  eye: { label: '目', mod: -7 },
+  body: { label: '体', mod: 0 },
+  neck: { label: '喉', mod: -5 },
+  stomach: { label: '肚', mod: -3 },
+  arm: { label: '腕', mod: -2 },
+  hand: { label: '手首', mod: -4 },
+  leg: { label: '脚', mod: -2 },
+  foot: { label: '足首', mod: -4 }
+ } as const
 
 //「移動」オプションの定義
 export const POSITION_LABELS: Record<Position, string> = {
@@ -30,7 +49,7 @@ export const POSITION_LABELS: Record<Position, string> = {
 
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
-  | { type: 'attack', options: {}, targets: [Unit] }
+  | { type: 'attack', options: { aim: Aim }, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
@@ -48,8 +67,9 @@ type Judge = Roll & {
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
   attack: {
+    options: readonly Aim[]
     canExecute: () => boolean
-    execute: (target: Unit) => void
+    execute: (aim: Aim, target: Unit) => void
   }
   move: {
     options: readonly Position[]
@@ -75,8 +95,9 @@ export class CombatActionStore {
     this.round = state.round
     this.actions = {
       attack: {
+        options: AIM_KEYS,
         canExecute: () => this.canAttack(),
-        execute: (target) => this.attack(target)
+        execute: (aim, target) => this.attack(aim, target)
       },
       move: {
         options: POSITION_VALUES,
@@ -175,7 +196,7 @@ export class CombatActionStore {
     switch (action.type) {
       case 'attack':
         if (!this.actions.attack.canExecute()) return
-        this.actions.attack.execute(action.targets[0])
+        this.actions.attack.execute(action.options.aim, action.targets[0])
         break
 
       case 'move':
@@ -214,8 +235,8 @@ export class CombatActionStore {
   }
 
   // 「攻撃」実行 (暫定: コンソール出力のみ)
-  private attack(target: Unit) {
-    console.log({ target })
+  private attack(aim: Aim, target: Unit) {
+    console.log({ aim: AIM_OPTIONS[aim], target })
   }
 
   // 「移動」実行

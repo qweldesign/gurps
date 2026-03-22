@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { type Position } from '../../combat/FormationStore'
-import { type ActionType, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
+import { type ActionType, POSITION_LABELS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
 import { CombatLog as Log } from '../../combat/Log'
 import { CombatUnit as Unit } from '../../combat/Unit'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'aim' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'all'
 
@@ -50,8 +50,12 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
           disabled={!store.availability.attack}
-          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionType('attack'); }}
+          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionType('attack'); setActionOptions({ aim: 'body' }); }}
         >攻撃</button>
+        <button
+          disabled={!store.availability.attack}
+          onClick={() => { setActionPalette('aim'); setActionType('attack'); }}
+        >特殊攻撃</button>
         <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionType('move'); }}
@@ -67,6 +71,18 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
         >実行</button>
         <button
           onClick={() => { setActionPalette('target'); setActionTargets([]); }}
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'aim'}>
+        {AIM_KEYS.map(key => (
+          <button
+            className="is-small"
+            key={key}
+            onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionOptions({ aim: key }); }}
+          >{`${AIM_OPTIONS[key].label} (${AIM_OPTIONS[key].mod})`}</button>
+        ))}
+        <button
+          onClick={() => { reset(); }}
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'move'}>
@@ -90,9 +106,16 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
                 onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }}
               >{target.name}</button>
             ))}
-            <button
-              onClick={() => { reset(); }}
-            >戻る</button>
+            {actionOptions.aim === 'body' && (
+              <button
+                onClick={() => { reset(); }}
+              >戻る</button>
+            )}
+            {actionOptions.aim !== 'body' && (
+              <button
+                onClick={() => { setActionPalette('aim'); setActionOptions({}); }}
+              >戻る</button>
+            )}
           </>
         )}
       </div>
