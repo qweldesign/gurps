@@ -6,7 +6,7 @@ export type Weapon = {
   secondName?: string
   weaponType: number // 0: 格闘, 1: 通常, 2: 鎖状, 3: 両手, 4: 竿状, 5: 射撃, 6: 盾
   baseDmg: number
-  dmgType: number
+  dmgType: number // 0: 叩, 1: 切, 2: 刺
   skillType: string
   ready: number
   ev: number

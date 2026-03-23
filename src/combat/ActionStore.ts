@@ -16,6 +16,9 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   wait: '待機'
 } as const
 
+// 防御名の定義
+export type DefenseType = 'parry' | 'block' | 'dodge'
+
 // コマンドオプションの定義
 export type ActionOptions = {
   aim?: Aim
@@ -74,10 +77,30 @@ type Roll = {
 }
 
 // 判定定義
-type Judge = Roll & {
+export type Judge = Roll & {
   success: boolean // 成功/失敗
   critical: boolean // クリティカル/ファンブル
 }
+
+// 攻撃判定結果
+export type AttackResult = Judge & {
+  aim: Aim
+  fullPower: FullPower
+}
+
+// 防御判定結果
+export type DefenseResult = Judge & {
+  defenseType: DefenseType
+}
+
+// ダメージ判定結果
+export type DmgResult = Judge
+
+// コマンド実行後の判定結果の定義
+export type ActionResult = 
+  | { type: 'attack', judge: AttackResult }
+  | { type: 'defense', judge: DefenseResult }
+  | { type: 'dmg', judge: DmgResult }
 
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
@@ -226,9 +249,9 @@ export class CombatActionStore {
     }
   }
 
-  // ロール結果 (Roll型) を返す
-  private roll(count: number = 3, mod: number = 0, sides: number = 6): Roll {
-    const roll = this.getRoll(count, mod, sides)
+  // ロール結果 (Roll型) を返す (ダメージ判定)
+  private roll(count: number = 3, mod: number = 0, rate: number = 1,sides: number = 6): Roll {
+    const roll = Math.floor(this.getRoll(count, mod, sides) * rate)
     return { roll }
   }
 
@@ -247,6 +270,69 @@ export class CombatActionStore {
     return Array.from<number>({ length: count }).reduce(sum => {
       return sum + Math.ceil(Math.random() * sides)
     }, 0) + mod
+  }
+  
+  // 攻撃の判定結果を返す
+  private judgeAttack(aim: Aim, fullPower: FullPower): ActionResult {
+    let target = this.actor.attack.target
+    target += AIM_OPTIONS[aim].mod
+    target += fullPower === 'level' ? 4 : 0
+    return {
+      type: 'attack',
+      judge: { aim, fullPower, ...this.judge(target) } as AttackResult
+    }
+  }
+
+  // 防御の判定結果を返す
+  private judgeDefanse(target: Unit): ActionResult {
+   if (target.defense.canBlock) {
+      return this.judgeBlock(target)
+    } else if (target.defense.canParry) {
+      return this.judgeParry(target)
+    } else {
+      return this.judgeDodge(target)
+    }
+  }
+
+  // 「受け」の判定結果を返す
+  private judgeParry(target: Unit): ActionResult {
+    return {
+      type: 'defense',
+      judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget) } as DefenseResult
+    }
+  }
+
+  // 「止め」の判定結果を返す
+  private judgeBlock(target: Unit): ActionResult {
+    return {
+      type: 'defense',
+      judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget) } as DefenseResult
+    }
+  }
+
+  // 「よけ」の判定結果を返す
+  private judgeDodge(target: Unit): ActionResult {
+    return {
+      type: 'defense',
+      judge: { defenseType: 'dodge', ...this.judge(target.defense.dodgeTarget) } as DefenseResult
+    }
+  }
+
+  // ダメージ判定結果を返す
+  private rollDmg(aim: Aim, fullPower: FullPower, target: Unit): ActionResult {
+    const attack = this.actor.attack.model
+    const defense = target.defense.getModel(AIM_OPTIONS[aim].group)
+    const dmgType = attack.dmgType
+    let count = attack.dmgDice
+    count -= fullPower === 'dmg' ? 1 : 0 // 全力攻撃オプション「ダメージ安定」
+    let mod = attack.dmgMod = (dmgType ? defense.sdr : defense.tdr)
+    mod += fullPower === 'dmg' ? 6 : 0 // 全力攻撃オプション「ダメージ安定」
+    const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
+    const roll = this.roll(count, mod, rate).roll
+    return {
+      type: 'dmg',
+      judge: { roll, success: roll > 0, critical: roll >= 10 } as DmgResult
+    }
   }
 
   // 「攻撃」実行 (暫定: コンソール出力のみ)
