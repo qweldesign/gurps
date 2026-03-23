@@ -1,5 +1,6 @@
 // ActionStore.ts
 
+import { type DefanseKey } from '../domains/Equipments'
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
@@ -40,17 +41,17 @@ export const AIM_KEYS = ['head', 'ear', 'eye', 'body', 'neck', 'stomach', 'arm',
 
 export type Aim = typeof AIM_KEYS[number]
 
-export const AIM_OPTIONS: Record<Aim, { label: string, mod: number }> = {
-  head: { label: '頭', mod: -3 }, 
-  ear: { label: '耳', mod: -5 },
-  eye: { label: '目', mod: -7 },
-  body: { label: '体', mod: 0 },
-  neck: { label: '喉', mod: -5 },
-  stomach: { label: '肚', mod: -3 },
-  arm: { label: '腕', mod: -2 },
-  hand: { label: '手首', mod: -4 },
-  leg: { label: '脚', mod: -2 },
-  foot: { label: '足首', mod: -4 }
+export const AIM_OPTIONS: Record<Aim, { label: string, group: DefanseKey, mod: number }> = {
+  head: { label: '頭', group: 'head', mod: -3 }, 
+  ear: { label: '耳', group: 'head', mod: -5 },
+  eye: { label: '目', group: 'head', mod: -7 },
+  body: { label: '体', group: 'body', mod: 0 },
+  neck: { label: '喉', group: 'body', mod: -5 },
+  stomach: { label: '肚', group: 'body', mod: -3 },
+  arm: { label: '腕', group: 'arm', mod: -2 },
+  hand: { label: '手首', group: 'arm', mod: -4 },
+  leg: { label: '脚', group: 'leg', mod: -2 },
+  foot: { label: '足首', group: 'leg', mod: -4 }
  } as const
 
 //「移動」オプションの定義

@@ -1,9 +1,9 @@
 // Character.ts
 
 import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
-import { type Weapon, type Armor, type Dmg, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
+import { type Weapon, type Armor, type Dmg, type AttackKey, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments, type DefanseKey } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
-import { type CombatAttackModel, type CombatDefenseModel, type CombatUnitModel } from '../combat/Unit'
+import { type CombatAttackModels, type CombatDefenseModels, type CombatUnitModel } from '../combat/Unit'
 
 export type CharacterModel = {
   id: number
@@ -203,17 +203,17 @@ export class Character {
   }
 
   // 能力値と装備から Dmg を算出し、ダメージ型を足して返す
-  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption = true): Dmg {
+  getDmg(key: AttackKey = 'main', typeOption = true): Dmg {
     return this.equipments.getDmg(key, typeOption, this.dmgModifier)
   }
 
   // 能力値と装備から Dmg を算出し、表記を返す
-  getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption = true): string {
+  getDmgName(key: AttackKey = 'main', typeOption = true): string {
     return this.equipments.getDmgName(key, typeOption, this.dmgModifier)
   }
 
   // 能力値と装備から Lv を算出して返す
-  getLevel(key: 'main' | 'sub' | 'missile' | 'shield' = 'main'): number {
+  getLevel(key: AttackKey = 'main'): number {
     const weapon = key === 'main' ? this.mainUsage
       : key === 'sub' ? this.subUsage
       : key === 'missile' ? this.missile : this.shield
@@ -284,51 +284,47 @@ export class Character {
   }
 
   // 武器の戦闘モデル用データ変換
-  toCombatAttackModel(): CombatAttackModel[] {
+  toCombatAttackModel(): CombatAttackModels {
     const main = this.mainUsage
     const sub = this.subUsage
     const missile = this.missile
     const shield = this.shield
-    return [
-      { name: 'main', data: main },
-      { name: 'sub', data: sub },
-      { name: 'missile', data: missile },
-      { name: 'shield', data: shield}
-    ].map(item => {
-      const name = item.name as 'main' | 'sub' | 'missile' | 'shield'
-      return {
-        name: item.data.name,
-        dmgName: this.getDmgName(name),
-        dmgDice: this.getDmg(name).dice,
-        dmgMod: this.getDmg(name).mod,
-        dmgType: this.getDmg(name).type,
-        lv: this.getLevel(name),
-        ev: item.data.ev,
-        ready: item.data.ready,
-        isMissile: item.name === 'missile' ? true : false
+    return Object.entries({
+      main, sub, missile, shield
+    }).reduce<CombatAttackModels>((acc, arr: [AttackKey, Weapon]) => {
+      const key = arr[0]
+      const item = arr[1]
+      acc[key] = {
+        name: item.name,
+        dmgName: this.getDmgName(key),
+        dmgDice: this.getDmg(key).dice,
+        dmgMod: this.getDmg(key).mod,
+        dmgType: this.getDmg(key).type,
+        level: this.getLevel(key),
+        ev: item.ev,
+        ready: item.ready,
+        isMissile: key === 'missile' ? true : false
       }
-    }).filter((attack, i) => attack.name !== '装備無し' || i === 0)
+      return acc
+    }, {})
   }
 
   // 防具の戦闘モデル用データ変換
-  toCombatDefenseModel(): CombatDefenseModel[] {
-    const body = this.body
-    const head = this.head
-    const arm = this.arm
-    const leg = this.leg
-    return [
-      { name: 'body', data: body },
-      { name: 'head', data: head },
-      { name: 'arm', data: arm },
-      { name: 'leg', data: leg }
-    ].map(item => {
-      return {
-        name: item.name,
-        sdr: item.data.sdr,
-        tdr: item.data.tdr,
-        wt: item.data.wt
+  toCombatDefenseModel(): CombatDefenseModels {
+    const { body, head, arm, leg } = this
+    return Object.entries({
+      body, head, arm, leg
+    }).reduce<CombatDefenseModels>((acc, arr: [DefanseKey, Armor]) => {
+      const key = arr[0]
+      const armor = arr[1]
+      acc[key] = {
+        name: armor.name,
+        sdr: armor.sdr,
+        tdr: armor.tdr,
+        wt: armor.wt
       }
-    })
+      return acc
+    }, {})
   }
 
   // 戦闘モデル用データ変換

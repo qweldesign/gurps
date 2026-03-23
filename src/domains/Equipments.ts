@@ -37,6 +37,14 @@ export type Dmg = BaseDmg & {
   type: number
 }
 
+const ATTACK_KEYS = ['main', 'sub', 'missile', 'shield']
+
+export type AttackKey = typeof ATTACK_KEYS[number]
+
+const DEFENSE_KEYS = ['body', 'head', 'arm', 'leg']
+
+export type DefanseKey = typeof DEFENSE_KEYS[number]
+
 export const WEAPON_LIST: Weapon[] = [
   { id: 0, name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, gold: 0},
   { id: 1, name: 'ダガー', weaponType: 1, baseDmg: 6, dmgType: 2, skillType: '剣術', ready: 0, ev: 1, gold: 30 },
@@ -315,7 +323,7 @@ export class Equipments {
   }
 
   // 引数の修正値から Dmg を算出し、ダメージ型を足して返す
-  getDmg(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption:boolean = true, mod: number = 0): Dmg {
+  getDmg(key: AttackKey = 'main', typeOption:boolean = true, mod: number = 0): Dmg {
     const weapon = (key === 'main' ? this.mainUsage
       : key === 'sub' ? this.subUsage
       : key === 'missile' ? this.missile : this.shield)
@@ -323,7 +331,7 @@ export class Equipments {
   }
 
   // 引数の修正値から Dmg を算出し、表記を返す
-  getDmgName(key: 'main' | 'sub' | 'missile' | 'shield' = 'main', typeOption:boolean = true, mod: number = 0): string {
+  getDmgName(key: AttackKey = 'main', typeOption:boolean = true, mod: number = 0): string {
     const weapon = (key === 'main' ? this.mainUsage
       : key === 'sub' ? this.subUsage
       : key === 'missile' ? this.missile : this.shield)

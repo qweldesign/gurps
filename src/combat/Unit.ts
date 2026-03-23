@@ -1,5 +1,6 @@
 // Unit.ts
 
+import { type AttackKey, type DefanseKey } from '../domains/Equipments'
 import { CombatLog as Log } from './Log'
 import { type Side, type Position } from './FormationStore'
 import { UnitHealth as Health } from './Unit/Health'
@@ -16,11 +17,14 @@ export type CombatAttackModel = {
   dmgDice: number
   dmgMod: number
   dmgType: number
-  lv: number
+  level: number
   ev: number
   ready: number
   isMissile: boolean
 }
+
+// 総攻撃手段の定義
+export type CombatAttackModels = Record<AttackKey, CombatAttackModel>
 
 // 防御部位の定義
 export type CombatDefenseModel = {
@@ -30,6 +34,9 @@ export type CombatDefenseModel = {
   wt: number
 }
 
+// 総防御部位の定義
+export type CombatDefenseModels = Record<DefanseKey, CombatDefenseModel>
+
 // 戦闘ユニットのモデル
 // Characterクラスのメソッド toCombatUnitModel() でデータ変換
 export type CombatUnitModel = {
@@ -37,8 +44,8 @@ export type CombatUnitModel = {
   id: number
   name: string
   maxHP: number
-  attacks: CombatAttackModel[]
-  defenses: CombatDefenseModel[]
+  attacks: CombatAttackModels
+  defenses: CombatDefenseModels
   ev: number
   pre: number
   mre: number
@@ -50,11 +57,11 @@ export class CombatUnit {
   public id: number
   public name: string
   public maxHP: number
-  //private attacks: CombatAttackModel[]
-  //private defenses: CombatDefenseModel[]
-  //private ev: number
-  //private pre: number
-  //private mre: number
+  public attacks: CombatAttackModels
+  public defenses: CombatDefenseModels
+  public ev: number
+  public pre: number
+  public mre: number
   public order: number
   public side: Side
   public position: Position
@@ -62,16 +69,16 @@ export class CombatUnit {
   public summary: Summary
 
   constructor(model: CombatUnitModel, order: number) {
-    const { combatId, id, name, maxHP/*, attacks, defenses, ev, pre, mre*/ } = model
+    const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre } = model
     this.combatId = combatId
     this.id = id
     this.name = name
     this.maxHP = maxHP
-    //this.attacks = attacks
-    //this.defenses = defenses
-    //this.ev = ev
-    //this.pre = pre
-    //this.mre = mre
+    this.attacks = attacks
+    this.defenses = defenses
+    this.ev = ev
+    this.pre = pre
+    this.mre = mre
     this.order = order
     this.side = combatId < 4 ? 'player' : 'enemy'
     this.position = 'back'
