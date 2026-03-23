@@ -1,7 +1,7 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult } from './ActionStore'
+import { type ActionType, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
 
 let count = 0
@@ -31,9 +31,11 @@ export class CombatLog {
 
   // ラベル生成 (Summary履歴用)
   private createLabel(request: ActionRequest, results: ActionResult[]) {
-    switch (request.type) {
+    const type = request.type
+    const resultLabel = this.createResultLabel(type, results)
+    switch (type) {
       case 'attack':
-        return `${ACTION_LABELS[request.type]}`
+        return `${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
 
@@ -42,24 +44,93 @@ export class CombatLog {
     }
   }
 
+  private createResultLabel(type: ActionType, results: ActionResult[]): string {
+    switch (type) {
+      case 'attack':
+        let success = false
+        // 攻撃(成功) → 防御(失敗) → ダメージ(貫通) の場合のみ「成功」を返す
+        results.forEach(result => {
+          switch (result.type) {
+            case 'attack':
+              const attackResult = result.judge as AttackResult
+              success = attackResult.success
+              break
+            case 'defense':
+              const defenseResult = result.judge as DefenseResult
+              success = !defenseResult.success
+              break
+            case 'dmg':
+              const dmgResult = result.judge as DmgResult
+              success = dmgResult.success
+              break
+          }
+        })
+        return success ? '成功' : '失敗'
+
+      default: // case 'move': case 'wait':
+        return ''
+    }
+  }
+
   // 結果ログ生成
   private createMessages(request: ActionRequest, results: ActionResult[]) {
     const actor = this.actor.name
-    const messages = []
-    switch (request.type) {
-      case 'attack':
-        messages.push(<>{`${actor} の攻撃!`}</>)
-        break
-
+    const type = request.type
+    const messages = this.createResultMessages(type, request, results)
+    switch (type) {
       case 'move':
         messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
 
-      default: // case 'wait':
+      case 'wait':
         messages.push(<>{`${actor} は 待機している`}</>)
+        break
+      
+      default: // case 'attack':
         break
     }
     messages.push(<>&nbsp;</>)
     return messages
+  }
+
+  private createResultMessages(type: ActionType, request: ActionRequest, results: ActionResult[]): ReactNode[] {
+    const actor = this.actor.name
+    const messages: ReactNode[] = []
+    switch (type) {
+      case 'attack': // 攻撃の結果ログを作成
+        const target = request.targets[0]?.name
+        results.forEach(result => {
+          switch (result.type) {
+            case 'attack': // 攻撃判定の結果ログ
+              const attackResult = result.judge as AttackResult
+              messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
+              messages.push(<>{`出目は ${attackResult.roll}、${this.getResultLabel(attackResult)}`}</>)
+              break
+            case 'defense': // 防御判定の結果ログ
+              const defenseResult = result.judge as DefenseResult
+              const defnseTypeLabel = defenseResult.defenseType === 'parry' ? '武器による受け流し'
+                : defenseResult.defenseType === 'block' ? '盾による受け止め': '回避'
+              messages.push(<>{`${target} は ${defnseTypeLabel} を試みた!`}</>)
+              messages.push(<>{`出目は ${defenseResult.roll}、${this.getResultLabel(defenseResult)}`}</>)
+              break
+            case 'dmg': // ダメージ判定の結果ログ
+              const dmgResult = result.judge as DmgResult
+              if (dmgResult.roll < 1) messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
+              else if (!dmgResult.critical) messages.push(<>{`${target} は ${dmgResult.roll} 点のダメージを受けた!!`}</>)
+              else if (dmgResult.critical) messages.push(<>{`${target} は ${dmgResult.roll} 点のダメージを受けた!!!`}</>)
+              break
+          }
+        })
+        return messages
+
+      default: // case 'move': case 'wait':
+        return messages
+    }
+  }
+
+  private getResultLabel(judge: Judge) {
+    return judge.success && judge.critical ? 'クリティカル!!'
+      : judge.success && !judge.critical ? '成功!'
+      : !judge.success && !judge.critical ? '失敗!' : 'ファンブル!!!'
   }
 }
