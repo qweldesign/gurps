@@ -225,6 +225,14 @@
     @apply w-48;
   }
 
+  .actions.confirm {
+    @apply py-2;
+  }
+
+  .confirm__grid {
+    @apply grid grid-cols-2 w-md mx-auto text-sm/relaxed text-center;
+  }
+
   .summary {
     @apply p-3;
   }

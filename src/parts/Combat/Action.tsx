@@ -66,6 +66,16 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
         >待機</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
+        <div className="confirm__grid">
+          <div>{store.actor.name}</div>
+          <div>{actionTargets[0]?.name}</div>
+          <div>{store.actor.attack.model.name}: {store.actor.attack.model.dmgName}</div>
+          <div>{(actionTargets[0]?.defense.getModel(AIM_OPTIONS[actionOptions.aim ?? 'body'].group))?.name}: {(actionTargets[0]?.defense.getModel(AIM_OPTIONS[actionOptions.aim ?? 'body'].group))?.dr}</div>
+          <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower!)}</div>
+          <div>防御目標値: {actionTargets[0]?.defense.target}</div>
+          <div>効果: </div>
+          <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', actionTargets[0]?.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType))} 点</div>
+        </div>
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
