@@ -321,7 +321,11 @@ export class Character {
       const key = arr[0]
       const armor = arr[1]
       acc[key] = {
-        name: armor.name,
+        name: key === 'head' ? armor.parts[0]!
+          : key === 'arm' ? armor.parts[1]!
+          : key === 'leg' ? armor.parts[2]!
+          : armor.name,
+        dr: armor.dr,
         sdr: armor.sdr,
         tdr: armor.tdr,
         wt: armor.wt

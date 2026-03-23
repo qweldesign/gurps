@@ -34,6 +34,7 @@ export type CombatAttackModels = Record<AttackKey, CombatAttackModel>
 // 防御部位の定義
 export type CombatDefenseModel = {
   name: string
+  dr: string
   sdr: number
   tdr: number
   wt: number
