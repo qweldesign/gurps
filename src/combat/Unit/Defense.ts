@@ -1,6 +1,6 @@
 // Defense.ts
 
-import { type AttackKey } from '../../domains/Equipments'
+import { type AttackKey, type DefanseKey } from '../../domains/Equipments'
 import { type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels } from '../Unit'
 
 export class UnitDefense {
@@ -84,5 +84,19 @@ export class UnitDefense {
   // 脚防御モデルを取得
   get leg(): DefenseModel {
     return this.models.leg
+  }
+
+  // 防御キーを指定して防御モデルを取得
+  getModel(key: DefanseKey = 'body'): DefenseModel {
+    if (key === 'head') return this.head
+    else if (key === 'arm') return this.arm
+    else if (key === 'leg') return this.leg
+    else return this.body
+  }
+
+  // 防御キーとダメージ型を指定してダメージ抵抗を取得
+  getDR(key: DefanseKey = 'body', dmgType: number = 0) {
+    const model = this.getModel(key)
+    return dmgType === 2 ? model.tdr : model.sdr
   }
 }

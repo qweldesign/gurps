@@ -1,6 +1,7 @@
 // Attack.ts
 
 import { type AttackKey } from '../../domains/Equipments'
+import { type Aim, AIM_OPTIONS, type FullPower } from '../ActionStore'
 import { type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels } from '../Unit'
 
 export class UnitAttack {
@@ -28,5 +29,23 @@ export class UnitAttack {
   // 攻撃モデルの目標値を取得
   get target(): number {
     return this.model.level
+  }
+
+  // 攻撃モデルの目標値を, 諸条件 (部位狙い・全力攻撃オプション) に合わせて取得
+  getTarget(aim: Aim = 'body', fullPower: FullPower = 'none') {
+    const aimMod = AIM_OPTIONS[aim].mod
+    const fullPowerMod = fullPower === 'level' ? 4 : 0
+    return this.target + aimMod + fullPowerMod
+  }
+
+  // 攻撃モデルのダメージ期待値を, ダメージ抵抗に合わせて取得
+  getExpectedDmg(fullPower: FullPower = 'none', dr: number = 0) {
+    const dmgType = this.model.dmgType
+    let count = this.model.dmgDice
+    count -= fullPower === 'dmg' ? 1 : 0
+    let mod = this.model.dmgMod - dr
+    mod += fullPower === 'dmg' ? 6 : 0
+    const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
+    return Math.floor((count * 3.5 + mod) * rate)
   }
 }
