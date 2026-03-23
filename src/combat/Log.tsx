@@ -1,7 +1,7 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest } from './ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
 
 let count = 0
@@ -12,7 +12,6 @@ export class CombatLog {
   public actor: Unit
   public startMessages: ReactNode[]
   public resultMessages: ReactNode[]
-  public request?: ActionRequest
   public label?: string
 
   // インスタンス生成時は「XXXXの行動順」を表示する
@@ -24,16 +23,14 @@ export class CombatLog {
     this.resultMessages = []
   }
 
-  // Action コンポーネントで ActionRequet を受け取り, ラベルと結果ログを生成する
-  receiveRequest(request: ActionRequest) {
-    this.request = request
-    this.label = this.createLabel()
-    this.resultMessages = this.createMessages()
+  // Action コンポーネントで ActionRequet, ActionResult の配列を受け取り, ラベルと結果ログを生成する
+  receiveResults(request: ActionRequest, results: ActionResult[]) {
+    this.label = this.createLabel(request, results)
+    this.resultMessages = this.createMessages(request, results)
   }
 
   // ラベル生成 (Summary履歴用)
-  private createLabel() {
-    const request = this.request ?? { type: 'wait' }
+  private createLabel(request: ActionRequest, results: ActionResult[]) {
     switch (request.type) {
       case 'attack':
         return `${ACTION_LABELS[request.type]}`
@@ -46,9 +43,8 @@ export class CombatLog {
   }
 
   // 結果ログ生成
-  private createMessages() {
+  private createMessages(request: ActionRequest, results: ActionResult[]) {
     const actor = this.actor.name
-    const request = this.request ?? { type: '' }
     const messages = []
     switch (request.type) {
       case 'attack':

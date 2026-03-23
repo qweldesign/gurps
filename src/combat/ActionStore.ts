@@ -107,16 +107,16 @@ type ActionDefinition = {
   attack: {
     options: { aim: readonly Aim[], fullPower: readonly FullPower[] }
     canExecute: () => boolean
-    execute: (aim: Aim, fullPower: FullPower, target: Unit) => void
+    execute: (aim: Aim, fullPower: FullPower, target: Unit) => ActionResult[]
   }
   move: {
     options: { position: readonly Position[] }
     canExecute: (position: Position) => boolean
-    execute: (position: Position) => void
+    execute: (position: Position) => ActionResult[]
   }
   wait: {
     canExecute: () => boolean
-    execute: () => void
+    execute: () => ActionResult[]
   }
 }
 
@@ -144,7 +144,7 @@ export class CombatActionStore {
       },
       wait: {
         canExecute: () => true,
-        execute: () => {}
+        execute: () => []
       }
     }
   }
@@ -229,23 +229,21 @@ export class CombatActionStore {
   }
 
   // 実行
-  // ActionRequest のプロパティ (type, options, targets) を引数に取って処理を進める
-  execute(action: ActionRequest) {
+  // ActionRequest のプロパティ (type, options, targets) を引数に取って処理を進め, 
+  // ActionResult の配列を返す
+  execute(action: ActionRequest): ActionResult[] {
     switch (action.type) {
       case 'attack':
-        if (!this.actions.attack.canExecute()) return
-        this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
-        break
+        if (!this.actions.attack.canExecute()) return []
+        return this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
 
       case 'move':
-        if (!this.actions.move.canExecute(action.options.position)) return
-        this.actions.move.execute(action.options.position)
-        break
-
+        if (!this.actions.move.canExecute(action.options.position)) return []
+        return this.actions.move.execute(action.options.position)
+        
       default: // case 'wait':
-        if (!this.actions.wait.canExecute()) return
-        this.actions.wait.execute()
-        break
+        if (!this.actions.wait.canExecute()) return []
+        return this.actions.wait.execute()
     }
   }
 
@@ -336,12 +334,14 @@ export class CombatActionStore {
   }
 
   // 「攻撃」実行 (暫定: コンソール出力のみ)
-  private attack(aim: Aim, fullPower: FullPower, target: Unit) {
+  private attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
     console.log({ aim: AIM_OPTIONS[aim], fullPower: FULL_POWER_OPTIONS[fullPower], target })
+    return []
   }
 
   // 「移動」実行
-  private move(position: Position) {
+  private move(position: Position): ActionResult[] {
     this.actor.position = position
+    return []
   }
 }

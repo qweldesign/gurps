@@ -23,9 +23,9 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
     setActionPalette('hidden')
     // ActionRequest を作成し, execute
     const request = { type: actionType, options: actionOptions, targets: actionTargets } as ActionRequest
-    store.execute(request)
+    const results = store.execute(request)
     // ログを更新し, 親コンポーネントに返す
-    log.receiveRequest(request)
+    log.receiveResults(request, results)
     await nextTurn(log) // ログの再生完了を待つ
     reset()
   }
