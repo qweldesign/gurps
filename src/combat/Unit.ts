@@ -20,7 +20,10 @@ export type CombatAttackModel = {
   level: number
   ev: number
   ready: number
+  isChain: boolean
+  isPole: boolean
   isMissile: boolean
+  isShield: boolean
 }
 
 // 総攻撃手段の定義

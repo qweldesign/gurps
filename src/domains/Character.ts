@@ -303,7 +303,10 @@ export class Character {
         level: this.getLevel(key),
         ev: item.ev,
         ready: item.ready,
-        isMissile: key === 'missile' ? true : false
+        isChain: item.weaponType === 2 ? true : false, // 鎖状
+        isPole: item.weaponType === 4 ? true : false, // 竿状
+        isMissile: item.weaponType === 5 && key === 'missile' ? true : false,
+        isShield: item.weaponType === 6 && key === 'shield' ? true : false
       }
       return acc
     }, {})
