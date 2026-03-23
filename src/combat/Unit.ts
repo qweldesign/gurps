@@ -4,6 +4,8 @@ import { type AttackKey, type DefanseKey } from '../domains/Equipments'
 import { CombatLog as Log } from './Log'
 import { type Side, type Position } from './FormationStore'
 import { UnitHealth as Health } from './Unit/Health'
+import { UnitAttack as Attack } from './Unit/Attack'
+import { UnitDefense as Defense } from './Unit/Defense'
 import { UnitSummary as Summary } from './Unit/Summary'
 
 const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -60,14 +62,11 @@ export class CombatUnit {
   public id: number
   public name: string
   public maxHP: number
-  public attacks: CombatAttackModels
-  public defenses: CombatDefenseModels
-  public ev: number
-  public pre: number
-  public mre: number
   public order: number
   public side: Side
   public position: Position
+  public attack: Attack
+  public defense: Defense
   public health: Health
   public summary: Summary
 
@@ -77,14 +76,11 @@ export class CombatUnit {
     this.id = id
     this.name = name
     this.maxHP = maxHP
-    this.attacks = attacks
-    this.defenses = defenses
-    this.ev = ev
-    this.pre = pre
-    this.mre = mre
     this.order = order
     this.side = combatId < 4 ? 'player' : 'enemy'
     this.position = 'back'
+    this.defense = new Defense(attacks, defenses, ev, pre, mre)
+    this.attack = new Attack(attacks, this.defense.changeAttackKey)
     this.health = new Health() // 後の Summary が Health を見るので順序厳守
     this.summary = new Summary(this)
   }
