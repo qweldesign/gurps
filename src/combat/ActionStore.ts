@@ -333,10 +333,34 @@ export class CombatActionStore {
     }
   }
 
-  // 「攻撃」実行 (暫定: コンソール出力のみ)
+  // 「攻撃」実行
   private attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
-    console.log({ aim: AIM_OPTIONS[aim], fullPower: FULL_POWER_OPTIONS[fullPower], target })
-    return []
+    // 判定結果の配列
+    const results = []
+    
+    // 攻撃判定
+    const attackResult = this.judgeAttack(aim, fullPower)
+    results.push(attackResult)
+    if (!attackResult.judge.success) return results // 攻撃失敗時はここで処理を止める
+
+    // 防御判定
+    // 攻撃判定がクリティカルであれば, 防御判定はスキップ
+    if (!attackResult.judge.critical) {
+      const defenseResult = this.judgeDefanse(target)
+      results.push(defenseResult)
+      if (defenseResult.judge.success) return results // 防御成功時はここで処理を止める
+    }
+
+    // ダメージ判定
+    const dmgResult = this.rollDmg(aim, fullPower, target)
+    results.push(dmgResult)
+    if (!dmgResult.judge.success) return results // ダメージが通らなかった時はここで処理を止める
+
+    //
+    // ダメージ効果の実装 (未着手)
+    //
+    
+    return results
   }
 
   // 「移動」実行
