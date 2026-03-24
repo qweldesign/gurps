@@ -347,7 +347,9 @@ export class Character {
       defenses: this.toCombatDefenseModel(),
       ev: this.DEV,
       pre: this.PRE,
-      mre: this.MRE
+      mre: this.MRE,
+      dmgBuff: this.getParamLevel('怪力') % 2,
+      evBuff: this.getParamLevel('運動', true) %2
     }
   }
 

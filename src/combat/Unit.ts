@@ -6,11 +6,16 @@ import { type Side, type Position } from './FormationStore'
 import { UnitHealth as Health } from './Unit/Health'
 import { UnitAttack as Attack } from './Unit/Attack'
 import { UnitDefense as Defense } from './Unit/Defense'
+import { UnitStatusEffects as StatusEffects } from './Unit/StatusEffects'
+import { UnitStatusBuff as StatusBuff } from './Unit/StatusBuff'
 import { UnitSummary as Summary } from './Unit/Summary'
 
 const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
 
 export type CombatId = typeof combatIds[number]
+
+// 姿勢の定義
+export type Posture = 'standing' | 'crouching' | 'kneeling' | 'prone'
 
 // 攻撃手段の定義
 export type CombatAttackModel = {
@@ -55,6 +60,8 @@ export type CombatUnitModel = {
   ev: number
   pre: number
   mre: number
+  dmgBuff: number //「怪力」端数 (バフ)
+  evBuff: number //「運動」端数 (バフ)
 }
 
 // 戦闘ユニットを司るクラス
@@ -66,13 +73,16 @@ export class CombatUnit {
   public order: number
   public side: Side
   public position: Position
+  public posture: Posture
   public attack: Attack
   public defense: Defense
   public health: Health
+  public statusEffects: StatusEffects
+  public statusBuff: StatusBuff
   public summary: Summary
 
   constructor(model: CombatUnitModel, order: number) {
-    const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre } = model
+    const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre, dmgBuff, evBuff } = model
     this.combatId = combatId
     this.id = id
     this.name = name
@@ -80,9 +90,12 @@ export class CombatUnit {
     this.order = order
     this.side = combatId < 4 ? 'player' : 'enemy'
     this.position = 'back'
+    this.posture = 'standing'
     this.defense = new Defense(attacks, defenses, ev, pre, mre)
     this.attack = new Attack(attacks, this.defense.changeAttackKey)
-    this.health = new Health() // 後の Summary が Health を見るので順序厳守
+    this.health = new Health(this) // 後の Summary が Health を見るので順序厳守
+    this.statusEffects = new StatusEffects()
+    this.statusBuff = new StatusBuff(dmgBuff, evBuff)
     this.summary = new Summary(this)
   }
 

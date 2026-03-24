@@ -9,7 +9,6 @@ export class UnitSummary {
   public name: string
   public maxHP: number
   public health: Health
-  public condition: 'good' | 'bad' | 'worse' | 'worst'
   private logs: Log[]
 
   constructor(unit: Unit) {
@@ -17,12 +16,19 @@ export class UnitSummary {
     this.name = unit.name
     this.maxHP = unit.maxHP
     this.health = unit.health
-    this.condition = 'good'
     this.logs = []
   }
 
   get HP() {
-    return this.maxHP - this.health.injury
+    return Math.max(this.maxHP - this.health.injury, 0)
+  }
+
+  get condition() {
+    const ratio = this.HP / this.maxHP
+    if (ratio === 0) return 'unconscious'
+    else if (ratio < 1 / 3 || this.health.stunned) return 'stunned'
+    else if (ratio < 2 / 3) return 'injured'
+    else return 'normal'
   }
 
   set history(log: Log) {
