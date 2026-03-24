@@ -31,12 +31,17 @@ export class CombatState {
   }
 
   nextTurn(log: Log) {
-    this.turnIndex++
-    if (this.turnIndex === this.units.length) {
-      this.round++
-      this.turnIndex %= this.units.length
+    // 生存者のターンまでスキップ
+    let isAlive = false
+    while (!isAlive) {
+      this.turnIndex++
+      if (this.turnIndex === this.units.length) {
+        this.round++
+        this.turnIndex %= this.units.length
+      }
+      this.actor = this.units[this.turnIndex]
+      isAlive = !this.actor.health.unconscious
     }
-    this.actor = this.units[this.turnIndex]
     this.formationStore.update(this.actor, this.units)
     this.actionStore.update(this.actor, this)
     this.summaryStore.update(this.actor, this, log) // 行動履歴を渡す
