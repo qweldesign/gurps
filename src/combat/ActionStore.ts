@@ -101,6 +101,8 @@ export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
+  | { type: 'knockedDown', judge: Judge }
+  | { type: 'fatal', judge: Judge }
 
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
@@ -333,6 +335,20 @@ export class CombatActionStore {
     }
   }
 
+  private judgeKnockedDown(target: Unit): ActionResult {
+    return {
+      type: 'knockedDown',
+      judge: this.judge(target.defense.pre)
+    }
+  }
+
+  private judgeFatal(target: Unit): ActionResult {
+    return {
+      type: 'fatal',
+      judge: this.judge(target.defense.pre)
+    }
+  }
+
   // 「攻撃」実行
   private attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
     // 判定結果の配列
@@ -356,9 +372,27 @@ export class CombatActionStore {
     results.push(dmgResult)
     if (!dmgResult.judge.success) return results // ダメージが通らなかった時はここで処理を止める
 
-    //
-    // ダメージ効果の実装 (未着手)
-    //
+    // ダメージ効果
+    const dmg = dmgResult.judge.roll
+    target.health.injury += dmg
+
+    // 朦朧状態・転倒判定
+    if (target.health.stunned) {
+      const knockedDownResult = this.judgeKnockedDown(target)
+      results.push(knockedDownResult)
+      if (!knockedDownResult.judge.success) {
+        target.posture = 'prone' // 姿勢変更
+      }
+    }
+
+    // 気絶・死亡判定
+    if (target.health.unconscious) {
+      const fatalResult = this.judgeFatal(target)
+      results.push(fatalResult)
+      if (!fatalResult.judge.success) {
+        target.health.dead = true // 死亡
+      }
+    }
     
     return results
   }

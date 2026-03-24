@@ -55,10 +55,12 @@ export class CombatLog {
               const attackResult = result.judge as AttackResult
               success = attackResult.success
               break
+
             case 'defense':
               const defenseResult = result.judge as DefenseResult
               success = !defenseResult.success
               break
+
             case 'dmg':
               const dmgResult = result.judge as DmgResult
               success = dmgResult.success
@@ -106,6 +108,7 @@ export class CombatLog {
               messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
               messages.push(<>{`出目は ${attackResult.roll}、${this.getResultLabel(attackResult)}`}</>)
               break
+
             case 'defense': // 防御判定の結果ログ
               const defenseResult = result.judge as DefenseResult
               const defnseTypeLabel = defenseResult.defenseType === 'parry' ? '武器による受け流し'
@@ -113,11 +116,40 @@ export class CombatLog {
               messages.push(<>{`${target} は ${defnseTypeLabel} を試みた!`}</>)
               messages.push(<>{`出目は ${defenseResult.roll}、${this.getResultLabel(defenseResult)}`}</>)
               break
+
             case 'dmg': // ダメージ判定の結果ログ
               const dmgResult = result.judge as DmgResult
-              if (dmgResult.roll < 1) messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
-              else if (!dmgResult.critical) messages.push(<>{`${target} は ${dmgResult.roll} 点のダメージを受けた!!`}</>)
-              else if (dmgResult.critical) messages.push(<>{`${target} は ${dmgResult.roll} 点のダメージを受けた!!!`}</>)
+              if (dmgResult.roll < 1) {
+                messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
+              }
+              else if (!dmgResult.critical) {
+                messages.push(<>{`${target} は ${dmgResult.roll} 点のダメージを受けた!!`}</>)
+              }
+              else if (dmgResult.critical) {
+                messages.push(<>{`${target} は ${dmgResult.roll} 点のダメージを受けた!!!`}</>)
+              }
+              break
+
+            case 'knockedDown': // 転倒判定の結果ログ
+              const knockedDownResult = result.judge
+              if (knockedDownResult.success) {
+                // 朦朧状態
+                messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
+              } else {
+                // 朦朧状態 + 転倒
+                messages.push(<>{`${target} は 転倒した!!`}</>)
+              }
+              break
+
+            case 'fatal': // 転倒判定の結果ログ
+              const fatalResult = result.judge
+              if (fatalResult.success) {
+                // 気絶
+                messages.push(<>{`${target} は 気絶した...`}</>)
+              } else {
+                // 死亡
+                messages.push(<>{`${target} は 死亡した...`}</>)
+              }
               break
           }
         })
