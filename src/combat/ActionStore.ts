@@ -430,7 +430,7 @@ export class CombatActionStore {
     target.health.injury += dmg
 
     // 朦朧状態・転倒判定
-    if (target.health.stunned) {
+    if (dmg >= target.maxHP / 2) { // ← 既に朦朧状態の場合もあるので, Health から状態だけを取得しない
       const knockedDownResult = this.judgeKnockedDown(target)
       results.push(knockedDownResult)
       if (!knockedDownResult.judge.success) {
