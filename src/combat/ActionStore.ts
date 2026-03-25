@@ -6,13 +6,14 @@ import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
 // コマンド名の定義
-export const ACTIONS = ['attack', 'move', 'wait'] as const
+export const ACTIONS = ['attack', 'move', 'recovery', 'wait'] as const
 
 export type ActionType = typeof ACTIONS[number]
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   attack: '攻撃',
   move: '移動',
+  recovery: '回復',
   wait: '待機'
 } as const
 
@@ -69,6 +70,7 @@ export const POSITION_LABELS: Record<Position, string> = {
 export type ActionRequest =
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
+  | { type: 'recovery', options: {}, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
 // ロール定義
@@ -103,6 +105,7 @@ export type ActionResult =
   | { type: 'dmg', judge: DmgResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
+  | { type: 'recovery', judge: Judge }
 
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
@@ -115,6 +118,9 @@ type ActionDefinition = {
     options: { position: readonly Position[] }
     canExecute: (position: Position) => boolean
     execute: (position: Position) => ActionResult[]
+  }
+  recovery: {
+    execute: () => ActionResult[]
   }
   wait: {
     canExecute: () => boolean
@@ -154,10 +160,20 @@ export class CombatActionStore {
         canExecute: (position) => this.canMove(position),
         execute: (position) => this.move(position)
       },
+      recovery: {
+        execute: () => this.recovery()
+      },
       wait: {
         canExecute: () => true,
         execute: () => []
       }
+    }
+
+    // 朦朧状態の場合は回復判定
+    if (actor.health.stunned) {
+      // ActionRequest を作成し, execute
+      const request = { type: 'recovery', options: {}, targets: [] } as ActionRequest
+      this.execute(request)
     }
   }
 
@@ -253,6 +269,10 @@ export class CombatActionStore {
         if (!this.actions.move.canExecute(action.options.position)) results = []
         results = this.actions.move.execute(action.options.position)
         break
+      
+      case 'recovery':
+        results = this.actions.recovery.execute()
+        break
         
       default: // case 'wait':
         if (!this.actions.wait.canExecute()) results = []
@@ -263,9 +283,16 @@ export class CombatActionStore {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
+    // 行動終了分岐
+    let nextTurn = true
+    if (action.type === 'recovery' && results[0].judge.success) {
+      this.unlocked = true
+      nextTurn = false
+    }
+
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    this.resolve()
+    if (nextTurn) this.resolve()
   }
 
   // ロール結果 (Roll型) を返す (ダメージ判定)
@@ -368,6 +395,13 @@ export class CombatActionStore {
     }
   }
 
+  private judgeRecovery(): ActionResult {
+    return {
+      type: 'recovery',
+      judge: this.judge(this.actor.defense.pre)
+    }
+  }
+
   // 「攻撃」実行
   private attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
     // 判定結果の配列
@@ -420,5 +454,12 @@ export class CombatActionStore {
   private move(position: Position): ActionResult[] {
     this.actor.position = position
     return []
+  }
+
+  // 朦朧状態からの「回復」実行
+  private recovery(): ActionResult[] {
+    const result = this.judgeRecovery()
+    if (result.judge.success) this.actor.health.stunned = false
+    return [result]
   }
 }

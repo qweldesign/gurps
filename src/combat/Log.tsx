@@ -153,6 +153,19 @@ export class CombatLog {
         })
         return messages
 
+      case 'recovery':
+        results.forEach(result => {
+          const recoveryResult = result.judge
+          if (recoveryResult.success) {
+            // 回復
+            messages.push(<>{`${actor} は 朦朧状態から回復した!`}</>)
+          } else {
+            // 朦朧状態の継続
+            messages.push(<>{`${actor} は 朦朧としていて何も行動できない...`}</>)
+          }
+        })
+        return messages
+
       default: // case 'move': case 'wait':
         return messages
     }
