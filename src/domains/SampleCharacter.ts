@@ -7,8 +7,6 @@ import { Character } from './Character'
 const DEFAULT_POINTS = 10
 const MULTIPLIER_NUM = [1, 2, 4] as const // Point倍率
 
-export type Multiplier = typeof MULTIPLIER_NUM[number]
-
 // 基本能力値: CP10点をなるべく使い切って派生で技能分を削る
 const ABILITY_TABLE: Point[][] = [
   [  1,   4,   1,   4], //  0: DX/HT
@@ -115,6 +113,8 @@ const NPC_LIST: string[] = [
   'ブルック', 'ペイジ', 'マヤ', 'マリア', 'ミア',
   'ミッシェル', 'メリッサ', 'リア', 'リリー', 'レイチェル'
 ]
+
+export type Multiplier = typeof MULTIPLIER_NUM[number]
 
 export class SampleCharacter extends Character {
   public tactic: number // 技能修得や装備選択、自動行動時のロジックタイプ
