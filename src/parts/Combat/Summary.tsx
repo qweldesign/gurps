@@ -8,10 +8,10 @@ function Summary({ store }: { store: Store }) {
           <div>名前</div><div>HP</div><div>状態</div><div>行動</div>
         </div>
         {store.summaries.map((summary, i) => (
-          <div className={`summary__row ${summary.unit === store.actor ? 'is-current' : ''}`} key={i}>
+          <div className={`summary__row ${summary.self === store.actor ? 'is-current' : ''}`} key={i}>
             <div>{summary.name}</div>
             <div>{summary.HP} / {summary.maxHP}</div>
-            <div>{summary.condition}</div>
+            <div className={`is-${summary.condition}`}>{summary.condition}</div>
             <div>{summary.history?.label ?? ''}</div>
           </div>
         ))}

@@ -5,17 +5,17 @@ import { CombatUnit as Unit } from '../Unit'
 import { UnitHealth as Health } from './Health'
 
 export class UnitSummary {
-  public unit: Unit
+  public self: Unit
   public name: string
   public maxHP: number
   public health: Health
   private logs: Log[]
 
-  constructor(unit: Unit) {
-    this.unit = unit
-    this.name = unit.name
-    this.maxHP = unit.maxHP
-    this.health = unit.health
+  constructor(self: Unit) {
+    this.self = self
+    this.name = self.name
+    this.maxHP = self.maxHP
+    this.health = self.health
     this.logs = []
   }
 

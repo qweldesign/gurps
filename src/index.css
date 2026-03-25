@@ -204,6 +204,18 @@
   .formation__cell.is-current {
     @apply bg-emerald-400/50
   }
+
+  .formation__cell.is-injured {
+    @apply text-yellow-400;
+  }
+
+  .formation__cell.is-stunned {
+    @apply text-orange-400;
+  }
+
+  .formation__cell.is-unconscious {
+    @apply text-red-400;
+  }
   
   .actions {
     @apply flex flex-wrap justify-center gap-3 py-3;
@@ -255,6 +267,18 @@
 
   .summary__row:first-child {
     @apply border-b border-white;
+  }
+
+  .summary__row:has(.is-injured) {
+    @apply text-yellow-400;
+  }
+
+  .summary__row:has(.is-stunned) {
+    @apply text-orange-400;
+  }
+
+  .summary__row:has(.is-unconscious) {
+    @apply text-red-400;
   }
 
   .timeline {
