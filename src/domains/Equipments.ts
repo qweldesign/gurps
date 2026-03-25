@@ -1,49 +1,4 @@
 // Equipments.ts
-  
-export type Weapon = {
-  id: number
-  name: string
-  secondName?: string
-  weaponType: number // 0: 格闘, 1: 通常, 2: 鎖状, 3: 両手, 4: 竿状, 5: 射撃, 6: 盾
-  baseDmg: number
-  dmgType: number
-  skillType: string
-  ready: number
-  ev: number
-  usage?: string
-  gold: number
-}
-
-export type Armor = {
-  id: number
-  name: string
-  parts: (string | null)[]
-  dr: string
-  sdr: number
-  tdr: number
-  wt: number
-  replace?: string | null
-  gold: number
-}
-
-type BaseDmg = {
-  id: number
-  name: string
-  dice: number
-  mod: number
-}
-
-export type Dmg = BaseDmg & {
-  type: number
-}
-
-const ATTACK_KEYS = ['main', 'sub', 'missile', 'shield']
-
-export type AttackKey = typeof ATTACK_KEYS[number]
-
-const DEFENSE_KEYS = ['body', 'head', 'arm', 'leg']
-
-export type DefanseKey = typeof DEFENSE_KEYS[number]
 
 export const WEAPON_LIST: Weapon[] = [
   { id: 0, name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 0, skillType: '格闘', ready: 0, ev: 0, gold: 0},
@@ -108,6 +63,36 @@ export const DMG_STEP: BaseDmg[] = [
   { id: 17, name: '4d+1', dice: 4, mod: 1 }
 ] as const
 
+export const ATTACK_KEYS = ['main', 'sub', 'missile', 'shield'] as const
+
+export const DEFENSE_KEYS = ['body', 'head', 'arm', 'leg'] as const
+  
+export type Weapon = {
+  id: number
+  name: string
+  secondName?: string
+  weaponType: number // 0: 格闘, 1: 通常, 2: 鎖状, 3: 両手, 4: 竿状, 5: 射撃, 6: 盾
+  baseDmg: number
+  dmgType: number // 0: 叩, 1: 切, 2: 刺
+  skillType: string
+  ready: number
+  ev: number
+  usage?: string
+  gold: number
+}
+
+export type Armor = {
+  id: number
+  name: string
+  parts: (string | null)[]
+  dr: string
+  sdr: number
+  tdr: number
+  wt: number
+  replace?: string | null
+  gold: number
+}
+
 export type WeaponName = typeof WEAPON_LIST[number]['name']
 
 export type ArmorName = typeof ARMOR_LIST[number]['name']
@@ -128,8 +113,23 @@ export type EquipmentSet = {
   leg?: LegArmorName
 }
 
+type BaseDmg = {
+  id: number
+  name: string
+  dice: number
+  mod: number
+}
+
+export type Dmg = BaseDmg & {
+  type: number
+}
+
+export type AttackKey = typeof ATTACK_KEYS[number]
+
+export type DefanseKey = typeof DEFENSE_KEYS[number]
+
 // ダメージ型の有効/無効で, それぞれダメージを算出して返す
-export function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg {
+function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg {
   const baseDmg = typeOption && weapon.dmgType == 2 // (刺)
     ? weapon.baseDmg - Math.max((Math.floor((weapon.baseDmg - 1) / 3) + 1), 2)
     : typeOption && weapon.dmgType == 1 // (切)
@@ -140,7 +140,7 @@ export function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg
 }
 
 // ダメージ型の有効/無効で, それぞれダメージの文字列を結合して返す
-export function getDmgName(weapon: Weapon, typeOption: boolean, mod:number = 0): string {
+function getDmgName(weapon: Weapon, typeOption: boolean, mod:number = 0): string {
   const dmg = getDmg(weapon, typeOption, mod)
   const dmgType = dmg.type === 2 ? ' (刺)' : dmg.type === 1 ? ' (切)' : ' (叩)'
   return typeOption ? `${dmg.name}${dmgType}` : `${dmg.name}`

@@ -4,16 +4,6 @@ const POINT_STEP = [
   0, 0.5, 1, 2, 4, 8, 16, 24, 32
 ] as const
 
-export type Point = typeof POINT_STEP[number]
-
-export type Parameter = {
-  id: number
-  name: string
-  base: string | 10
-  point?: Point
-  level?: number
-}
-
 export const PARAMETER_LIST: Parameter[] = [
   { id: 0, name: '筋力', base: 10 },
   { id: 1, name: '敏捷力', base: 10 },
@@ -52,6 +42,16 @@ export const PARAMETER_LIST: Parameter[] = [
   { id: 34, name: '鍛錬', base: '生命力' },
   { id: 35, name: '歌唱', base: '生命力' }
 ] as const
+
+export type Point = typeof POINT_STEP[number]
+
+export type Parameter = {
+  id: number
+  name: string
+  base: string | 10
+  point?: Point
+  level?: number
+}
 
 export type ParameterName = typeof PARAMETER_LIST[number]['name']
 

@@ -1,7 +1,7 @@
 // Character.ts
 
 import { type Point, type ParameterName, type Parameter, Parameters } from './Parameters'
-import { type Weapon, type Armor, type Dmg, type AttackKey, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments, type DefanseKey } from './Equipments'
+import { ATTACK_KEYS, DEFENSE_KEYS, type Weapon, type Armor, type Dmg, type AttackKey, type WeaponName, type ArmorName, type HeadArmorName, type ArmArmorName, type LegArmorName, type EquipmentSet, Equipments } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
 import { type CombatAttackModels, type CombatDefenseModels, type CombatUnitModel } from '../combat/Unit'
 
@@ -117,6 +117,31 @@ export class Character {
     }
   }
 
+  // 最大HPを取得
+  get maxHP() {
+    return this.getParamLevel('鍛錬') * 2
+  }
+
+  // ダメージ修正を取得
+  get dmgModifier() {
+    return Math.floor(this.getParamLevel('怪力') / 2) - 5
+  }
+
+  //「よけ」を取得
+  get DEV() {
+    return Math.floor(this.getParamLevel('運動', true) / 2) + 5
+  }
+
+  // 身体抵抗値を取得
+  get PRE() {
+    return this.getParamLevel('生命力')
+  }
+
+  // 精神抵抗値を取得
+  get MRE() {
+    return this.getParamLevel('修養')
+  }
+
   // 「武術」保有判定
   get isWarrior(): boolean {
     return this.parameters.isWarrior
@@ -226,26 +251,6 @@ export class Character {
     }
   }
 
-  get maxHP() {
-    return this.getParamLevel('鍛錬') * 2
-  }
-
-  get dmgModifier() {
-    return Math.floor(this.getParamLevel('怪力') / 2) - 5
-  }
-
-  get DEV() {
-    return Math.floor(this.getParamLevel('運動', true) / 2) + 5
-  }
-  
-  get PRE() {
-    return this.getParamLevel('生命力')
-  }
-  
-  get MRE() {
-    return this.getParamLevel('修養')
-  }
-
   // 胴防具を取得
   get body(): Armor {
     return this.equipments.body
@@ -285,15 +290,14 @@ export class Character {
 
   // 武器の戦闘モデル用データ変換
   toCombatAttackModel(): CombatAttackModels {
-    const main = this.mainUsage
-    const sub = this.subUsage
-    const missile = this.missile
-    const shield = this.shield
-    return Object.entries({
-      main, sub, missile, shield
-    }).reduce<CombatAttackModels>((acc, arr: [AttackKey, Weapon]) => {
-      const key = arr[0]
-      const item = arr[1]
+    const map = {
+      main: this.mainUsage,
+      sub: this.subUsage,
+      missile: this.missile,
+      shield: this.shield
+    }
+    return ATTACK_KEYS.reduce<CombatAttackModels>((acc, key) => {
+      const item = map[key]
       acc[key] = {
         name: item.name,
         dmgName: this.getDmgName(key),
@@ -309,29 +313,27 @@ export class Character {
         isShield: item.weaponType === 6 && key === 'shield' ? true : false
       }
       return acc
-    }, {})
+    }, {} as CombatAttackModels)
   }
 
   // 防具の戦闘モデル用データ変換
   toCombatDefenseModel(): CombatDefenseModels {
     const { body, head, arm, leg } = this
-    return Object.entries({
-      body, head, arm, leg
-    }).reduce<CombatDefenseModels>((acc, arr: [DefanseKey, Armor]) => {
-      const key = arr[0]
-      const armor = arr[1]
+    const map = { body, head, arm, leg }
+    return DEFENSE_KEYS.reduce<CombatDefenseModels>((acc, key) => {
+      const item = map[key]
       acc[key] = {
-        name: key === 'head' ? armor.parts[0]!
-          : key === 'arm' ? armor.parts[1]!
-          : key === 'leg' ? armor.parts[2]!
-          : armor.name,
-        dr: armor.dr,
-        sdr: armor.sdr,
-        tdr: armor.tdr,
-        wt: armor.wt
+        name: key === 'head' ? item.parts[0]!
+          : key === 'arm' ? item.parts[1]!
+          : key === 'leg' ? item.parts[2]!
+          : item.name,
+        dr: item.dr,
+        sdr: item.sdr,
+        tdr: item.tdr,
+        wt: item.wt
       }
       return acc
-    }, {})
+    }, {} as CombatDefenseModels)
   }
 
   // 戦闘モデル用データ変換
