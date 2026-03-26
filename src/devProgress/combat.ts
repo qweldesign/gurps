@@ -6,16 +6,16 @@ export const COMBAT_DEV_PROGRESS: Tasks[] = [
   {
     name: 'ドメイン', // ドメイン: 10(28)
     tasks: [
-      { name: 'コアクラス', weight: 3, progress: 2 }, // Core: 全ての情報を集約
-      { name: 'ログクラス', weight: 3, progress: 2 }, // Log: ログを管理
+      { name: 'コアクラス', weight: 3, progress: 3 }, // Core: 全ての情報を集約
+      { name: 'ログクラス', weight: 3, progress: 3 }, // Log: ログを管理
       { name: 'ユニットクラス', weight: 3, progress: 2 }, // Unit: ユニットの情報を集約 (キャラクタークラスの拡張)
       { name: '行動クラス', weight: 3, progress: 2 }, // Action: コマンドを管理
-      { name: '概要クラス', weight: 3, progress: 1 }, // Summary: ユニットの概要
-      { name: '負傷クラス', weight: 3, progress: 0 }, // Health: ユニットの負傷など 
-      { name: '攻撃クラス', weight: 3, progress: 1 }, // Attack: ユニットの武器, 準備, 狙い, 集中など
-      { name: '防御クラス', weight: 3, progress: 1 }, // Defense: ユニットの防具, 能動防御など
-      { name: '効果クラス', weight: 3, progress: 0 }, // Effect: ユニットの特殊効果など
-      { name: '変化クラス', weight: 1, progress: 0 } // Buff: ユニットのパラメータ変化など
+      { name: '概要クラス', weight: 3, progress: 2 }, // Summary: ユニットの概要
+      { name: '負傷クラス', weight: 3, progress: 2 }, // Health: ユニットの負傷など 
+      { name: '攻撃クラス', weight: 3, progress: 2 }, // Attack: ユニットの武器, 準備, 狙い, 集中など
+      { name: '防御クラス', weight: 3, progress: 2 }, // Defense: ユニットの防具, 能動防御など
+      { name: '効果クラス', weight: 3, progress: 3 }, // Effect: ユニットの特殊効果など
+      { name: '変化クラス', weight: 1, progress: 1 } // Buff: ユニットのパラメータ変化など
     ]
   },
   {
@@ -23,10 +23,10 @@ export const COMBAT_DEV_PROGRESS: Tasks[] = [
     tasks: [
       { name: 'レイアウト設計', weight: 1, progress: 1 },
       { name: 'フォーメーション', weight: 2, progress: 2 },
-      { name: 'コマンド', weight: 3, progress: 2 },
+      { name: 'コマンド', weight: 3, progress: 3 },
       { name: 'ターゲット', weight: 1, progress: 1 },
-      { name: 'サマリー', weight: 2, progress: 1 },
-      { name: 'ログ', weight: 3, progress: 2 }
+      { name: 'サマリー', weight: 2, progress: 2 },
+      { name: 'ログ', weight: 3, progress: 3 }
     ]
   },
   {
@@ -34,10 +34,10 @@ export const COMBAT_DEV_PROGRESS: Tasks[] = [
     tasks: [ 
       { name: '移動', weight: 1, progress: 1 },
       { name: '判定', weight: 1, progress: 1 },
-      { name: '攻撃', weight: 2, progress: 1 },
-      { name: '防御', weight: 2, progress: 1 },
-      { name: 'ダメージ', weight: 2, progress: 1 },
-      { name: 'ダメージ効果', weight: 3, progress: 0 },
+      { name: '攻撃', weight: 2, progress: 2 },
+      { name: '防御', weight: 2, progress: 2 },
+      { name: 'ダメージ', weight: 2, progress: 2 },
+      { name: 'ダメージ効果', weight: 3, progress: 3 },
       { name: '準備', weight: 1, progress: 0 },
       { name: '狙い', weight: 3, progress: 0 },
       { name: '全力防御', weight: 1, progress: 0 },
@@ -46,10 +46,10 @@ export const COMBAT_DEV_PROGRESS: Tasks[] = [
       { name: '射撃', weight: 1, progress: 0 },
       { name: '集中', weight: 1, progress: 0 },
       { name: '法術', weight: 2, progress: 0 },
-      { name: '特殊攻撃', weight: 3, progress: 0 },
-      { name: '全力攻撃', weight: 3, progress: 0 },
-      { name: '部位狙い', weight: 3, progress: 0 },
-      { name: 'クリティカル', weight: 3, progress: 0 },
+      { name: '特殊攻撃', weight: 3, progress: 2 },
+      { name: '全力攻撃', weight: 3, progress: 1 },
+      { name: '部位狙い', weight: 3, progress: 1 },
+      { name: 'クリティカル', weight: 3, progress: 1 },
       { name: 'ファンブル', weight: 3, progress: 0 },
       { name: '自動行動', weight: 3, progress: 0 }
     ]
