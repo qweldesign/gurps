@@ -11,7 +11,7 @@ function Summary({ store }: { store: Store }) {
           <div className={`summary__row ${summary.self === store.actor ? 'is-current' : ''}`} key={i}>
             <div>{summary.name}</div>
             <div>{summary.HP} / {summary.maxHP}</div>
-            <div className={`is-${summary.condition}`}>{summary.condition}</div>
+            <div className={`is-${summary.condition}`}>{summary.conditionLabel}</div>
             <div>{summary.history?.label ?? ''}</div>
           </div>
         ))}

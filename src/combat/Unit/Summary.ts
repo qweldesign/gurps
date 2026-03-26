@@ -31,6 +31,10 @@ export class UnitSummary {
     else return 'normal'
   }
 
+  get conditionLabel() {
+    return this.health.label ?? ''
+  }
+
   set history(log: Log) {
     this.logs.unshift(log)
   }
