@@ -46,14 +46,14 @@ export class UnitAttack {
 
   // 攻撃モデルの目標値を取得
   get target(): number {
-    return this.model.level
+    return Math.max(this.model.level, 4)
   }
 
   // 攻撃モデルの目標値を, 諸条件 (部位狙い・全力攻撃オプション) に合わせて取得
   getTarget(aim: Aim = 'body', fullPower: FullPower = 'none') {
     const aimMod = AIM_OPTIONS[aim].mod
     const fullPowerMod = fullPower === 'level' ? 4 : 0
-    return this.target + aimMod + fullPowerMod
+    return Math.max(this.target + aimMod + fullPowerMod, 4)
   }
 
   // 攻撃モデルのダメージ期待値を, ダメージ抵抗に合わせて取得

@@ -357,38 +357,41 @@ export class CombatActionStore {
 
   // 防御の判定結果を返す
   private judgeDefanse(target: Unit): ActionResult {
-   if (target.defense.canBlock) {
-      return this.judgeBlock(target)
+    const feint = this.actor.attack.feint
+    let score = 0
+    if (feint && feint.target === target) score = feint.score 
+    if (target.defense.canBlock) {
+      return this.judgeBlock(target, score)
     } else if (target.defense.canParry) {
-      return this.judgeParry(target)
+      return this.judgeParry(target, score)
     } else {
-      return this.judgeDodge(target)
+      return this.judgeDodge(target, score)
     }
   }
 
   // parryCount をインクリメントし,「受け」の判定結果を返す
-  private judgeParry(target: Unit): ActionResult {
+  private judgeParry(target: Unit, score: number): ActionResult {
     target.defense.parryCount++
     return {
       type: 'defense',
-      judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget) } as DefenseResult
+      judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget - score) } as DefenseResult
     }
   }
 
   // blockCount をインクリメントし,「止め」の判定結果を返す
-  private judgeBlock(target: Unit): ActionResult {
+  private judgeBlock(target: Unit, score: number): ActionResult {
     target.defense.blockCount++
     return {
       type: 'defense',
-      judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget) } as DefenseResult
+      judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget - score) } as DefenseResult
     }
   }
 
   // 「よけ」の判定結果を返す
-  private judgeDodge(target: Unit): ActionResult {
+  private judgeDodge(target: Unit, score: number): ActionResult {
     return {
       type: 'defense',
-      judge: { defenseType: 'dodge', ...this.judge(target.defense.dodgeTarget) } as DefenseResult
+      judge: { defenseType: 'dodge', ...this.judge(target.defense.dodgeTarget - score) } as DefenseResult
     }
   }
 

@@ -78,7 +78,7 @@ function Action({ store }: { store: Store }) {
           <div>{store.actor.attack.model.name}: {store.actor.attack.model.dmgName}</div>
           <div>{(actionTargets[0]?.defense.getModel(AIM_OPTIONS[actionOptions.aim ?? 'body'].group))?.name}: {(actionTargets[0]?.defense.getModel(AIM_OPTIONS[actionOptions.aim ?? 'body'].group))?.dr}</div>
           <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower!)}</div>
-          <div>防御目標値: {actionTargets[0]?.defense.target}</div>
+          <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {actionTargets[0]?.defense.getTarget(store.actor.attack.feint)}</div>
           <div>効果: </div>
           <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', actionTargets[0]?.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType))} 点</div>
         </div>
@@ -95,6 +95,8 @@ function Action({ store }: { store: Store }) {
           <div>{actionTargets[0]?.name}</div>
           <div>攻撃目標値: {store.actor.attack.getTarget('body', 'none')}</div>
           <div>防御目標値: {actionTargets[0]?.defense.target}</div>
+          <div>効果: </div>
+          <div>牽制 (防御目標値の低下)</div>
         </div>
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
@@ -148,6 +150,7 @@ function Action({ store }: { store: Store }) {
           <>
             {store.target.melee.map(target => (
               <button
+                className={store.actor.attack.feint?.target === target ? 'is-targeted' : ''}
                 key={target.combatId}
                 onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }} // ターゲットをセットし, 攻撃確認パレットへ進む
               >{target.name}</button>

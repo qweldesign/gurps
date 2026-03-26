@@ -237,6 +237,10 @@
     @apply w-48;
   }
 
+  .actions .is-targeted {
+    @apply text-yellow-400;
+  }
+
   .actions.confirm {
     @apply py-2;
   }

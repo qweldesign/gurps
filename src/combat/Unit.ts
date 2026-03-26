@@ -87,7 +87,7 @@ export class CombatUnit {
     this.side = combatId < 4 ? 'player' : 'enemy'
     this.position = 'back'
     this.posture = 'standing'
-    this.defense = new Defense(attacks, defenses, ev, pre, mre)
+    this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
     this.attack = new Attack(attacks, this.defense.changeAttackKey)
     this.health = new Health(this, dmgBuff, evBuff) // 後の Summary が Health を見るので順序厳守
     this.summary = new Summary(this)

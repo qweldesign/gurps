@@ -63,6 +63,7 @@ export class CombatState {
     await this.actionStore.promise.then(() => {
       // 行動者のステータス更新
       if (this.actor) {
+        this.actor.attack.nextTurn()
         this.actor.defense.nextTurn()
         this.actor.health.nextTurn()
       }

@@ -1,9 +1,11 @@
 // Defense.ts
 
 import { type AttackKey, type DefanseKey } from '../../domains/Equipments'
-import { type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels } from '../Unit'
+import { type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, CombatUnit as Unit } from '../Unit'
+import { type Feint } from './Attack'
 
 export class UnitDefense {
+  private self: Unit
   private models: DefenseModels
   public parryTarget: number //「受け」目標値
   public blockTarget: number //「止め」目標値
@@ -17,7 +19,8 @@ export class UnitDefense {
   public pre: number // 身体抵抗値
   public mre: number // 精神抵抗値
 
-  constructor(attacks: AttackModels, defenses: DefenseModels, ev: number, pre: number, mre: number) {
+  constructor(self: Unit, attacks: AttackModels, defenses: DefenseModels, ev: number, pre: number, mre: number) {
+    this.self = self
     this.models = defenses
     this.parryTarget = ev + attacks.main.ev
     this.blockTarget = ev + attacks.shield.ev
@@ -63,13 +66,22 @@ export class UnitDefense {
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
   get target(): number {
+    let target
     if (this.canBlock) {
-      return this.blockTarget
+      target = this.blockTarget
     } else if (this.canParry) {
-      return this.parryTarget
+      target = this.parryTarget
     } else {
-      return this.dodgeTarget
+      target = this.dodgeTarget
     }
+    return Math.max(target, 4)
+  }
+
+  // 牽制のターゲットの場合にペナルティを引いた目標値を返す
+  getTarget(feint: Feint | null) {
+    let target = this.target
+    if (feint && feint.target === this.self) target -= feint.score
+    return Math.max(target, 4)
   }
 
   // 胴防御モデルを取得
