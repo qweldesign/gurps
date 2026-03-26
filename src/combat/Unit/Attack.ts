@@ -13,12 +13,14 @@ export type Feint = {
 export class UnitAttack {
   private models: AttackModels
   private _key: AttackKey
+  public ready: number
   public feint: Feint | null
   private changeKeyCallback: (attacks: AttackModels, key: AttackKey) => void
 
   constructor(attacks: AttackModels, callback: (attacks: AttackModels, key: AttackKey) => void) {
     this.models = attacks
     this._key = 'main'
+    this.ready = 0
     this.feint = null
     this.changeKeyCallback = callback
   }
@@ -36,6 +38,7 @@ export class UnitAttack {
   // 攻撃キーの変更 (装備変更)
   set key(key: AttackKey) {
     this._key = key
+    this.ready = this.models[key].ready // 準備が必要
     this.changeKeyCallback(this.models, key)
   }
 

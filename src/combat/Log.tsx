@@ -39,7 +39,7 @@ export class CombatLog {
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
       case 'recovery':
         return resultLabel
-      default: // case 'wait':
+      default: // case 'ready': case 'wait':
         return ACTION_LABELS[request.type]
     }
   }
@@ -87,7 +87,7 @@ export class CombatLog {
         })
         return success ? '回復' : '朦朧状態'
 
-      default: // case 'move': case 'wait':
+      default: // case 'ready': case 'move': case 'wait':
         return ''
     }
   }
@@ -98,6 +98,10 @@ export class CombatLog {
     const type = request.type
     const messages = this.createResultMessages(type, request, results)
     switch (type) {
+      case 'ready':
+        messages.unshift(<>{`${actor} は ${this.actor.attack.model.name} を構えた`}</>)
+        break
+
       case 'move':
         messages.unshift(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
@@ -141,6 +145,10 @@ export class CombatLog {
               const attackResult = result.judge as AttackResult
               messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
               messages.push(<>{`出目は ${attackResult.roll}, ${this.getResultLabel(attackResult)}`}</>)
+              if (!attackResult.success && !attackResult.ready) {
+                // 攻撃失敗時のみ非準備状態への変化をログに表示
+                messages.push(<>{`${actor} の ${this.actor.attack.model.name} は非準備状態になった`}</>)
+              }
               break
 
             case 'defense': // 防御判定の結果ログ
@@ -149,6 +157,10 @@ export class CombatLog {
                 : defenseResult.defenseType === 'block' ? '盾による受け止め': '回避'
               messages.push(<>{`${target} は ${defnseTypeLabel} を試みた!`}</>)
               messages.push(<>{`出目は ${defenseResult.roll}, ${this.getResultLabel(defenseResult)}`}</>)
+              if (defenseResult.success && !defenseResult.ready) {
+                // 受け成功時のみ非準備状態への変化をログに表示
+                messages.push(<>{`${target} の ${request.targets[0]?.attack.model.name} は非準備状態になった`}</>)
+              }
               break
 
             case 'dmg': // ダメージ判定の結果ログ

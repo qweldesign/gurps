@@ -6,9 +6,10 @@ import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['attack', 'feint', 'move', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'move', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
+  ready: '準備',
   attack: '攻撃',
   feint: '牽制',
   move: '移動',
@@ -67,6 +68,7 @@ export type Aim = typeof AIM_KEYS[number]
 
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
+  | { type: 'ready', options: {}, targets: [] }
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'feint', options: {}, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
@@ -100,10 +102,12 @@ export type Score = Roll & {
 export type AttackResult = Judge & {
   aim: Aim
   fullPower: FullPower
+  ready: boolean // 非準備状態に変化したら false を代入
 }
 
 export type DefenseResult = Judge & {
   defenseType: DefenseType
+  ready: boolean // 非準備状態に変化したら false を代入
 }
 
 export type DmgResult = Judge
@@ -114,6 +118,10 @@ export type FeintResult = Score & {
 
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
+  ready: {
+    canExecute: () => boolean
+    execute: () => ActionResult[]
+  }
   attack: {
     options: { aim: readonly Aim[], fullPower: readonly FullPower[] }
     canExecute: () => boolean
@@ -159,6 +167,10 @@ export class CombatActionStore {
     })
 
     this.actions = {
+      ready: {
+        canExecute: () => this.canReady(),
+        execute: () => this.ready()
+      },
       attack: {
         options: { aim: AIM_KEYS, fullPower: FULL_POWER_KEYS },
         canExecute: () => this.canAttack(),
@@ -193,6 +205,7 @@ export class CombatActionStore {
   // availability を結果として生成
   get availability() {
     return {
+      ready: this.actions.ready.canExecute(),
       attack: this.actions.attack.canExecute(),
       feint: this.actions.attack.canExecute(),
       move: this.actions.move.options.position.reduce((acc, position) => {
@@ -203,10 +216,16 @@ export class CombatActionStore {
     }
   }
 
+  // 「準備」実行可否取得
+  // 武器が非準備状態であることが条件
+  private canReady(): boolean {
+    return this.actor.attack.ready > 0
+  }
+
   // 「攻撃」実行可否取得
-  // 自身が前方に配置されていることが条件 (暫定)
+  // 武器が準備状態, かつ自身が前方に配置されていることが条件 (暫定)
   private canAttack(): boolean {
-    return this.actor.position !== 'back'
+    return this.actor.attack.ready === 0 && this.actor.position !== 'back'
   }
 
   // 「移動」実行可否取得
@@ -274,6 +293,11 @@ export class CombatActionStore {
     // コマンド実行
     let results: ActionResult[]
     switch (action.type) {
+      case 'ready':
+        if (!this.actions.ready.canExecute()) results = []
+        results = this.actions.ready.execute()
+        break
+
       case 'attack':
         if (!this.actions.attack.canExecute()) results = []
         results = this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
@@ -344,14 +368,16 @@ export class CombatActionStore {
     }, 0) + mod
   }
   
-  // 攻撃の判定結果を返す
+  // 武器の準備状態を更新し, 攻撃の判定結果を返す
   private judgeAttack(aim: Aim, fullPower: FullPower): ActionResult {
+    this.actor.attack.ready = this.actor.attack.model.ready // 武器の準備状態を更新
+    const ready = this.actor.attack.ready === 0
     let target = this.actor.attack.target
     target += AIM_OPTIONS[aim].mod
     target += fullPower === 'level' ? 4 : 0
     return {
       type: 'attack',
-      judge: { aim, fullPower, ...this.judge(target) } as AttackResult
+      judge: { aim, fullPower, ready, ...this.judge(target) } as AttackResult
     }
   }
 
@@ -370,29 +396,33 @@ export class CombatActionStore {
     }
   }
 
-  // parryCount をインクリメントし,「受け」の判定結果を返す
+  // 武器の準備状態を更新, parryCount をインクリメントし,「受け」の判定結果を返す
   private judgeParry(target: Unit, mod: number): ActionResult {
-    target.defense.parryCount++
+    target.attack.ready = target.attack.model.ready // 武器の準備状態を更新
+    const ready = target.attack.ready === 0
+    target.defense.parryCount++ // parryCount をインクリメント
     return {
       type: 'defense',
-      judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget + mod) } as DefenseResult
+      judge: { defenseType: 'parry', ready, ...this.judge(target.defense.parryTarget + mod) } as DefenseResult
     }
   }
 
   // blockCount をインクリメントし,「止め」の判定結果を返す
   private judgeBlock(target: Unit, mod: number): ActionResult {
-    target.defense.blockCount++
+    target.defense.blockCount++ //  blockCount をインクリメント
+    const ready = true
     return {
       type: 'defense',
-      judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget + mod) } as DefenseResult
+      judge: { defenseType: 'block', ready, ...this.judge(target.defense.blockTarget + mod) } as DefenseResult
     }
   }
 
   // 「よけ」の判定結果を返す
   private judgeDodge(target: Unit, mod: number): ActionResult {
+    const ready = true
     return {
       type: 'defense',
-      judge: { defenseType: 'dodge', ...this.judge(target.defense.dodgeTarget + mod) } as DefenseResult
+      judge: { defenseType: 'dodge', ready, ...this.judge(target.defense.dodgeTarget + mod) } as DefenseResult
     }
   }
 
@@ -442,6 +472,12 @@ export class CombatActionStore {
       type: 'recovery',
       judge: this.judge(this.actor.defense.pre)
     }
+  }
+
+  // 「準備」実行
+  private ready(): ActionResult[] {
+    this.actor.attack.ready--
+    return []
   }
 
   // 「攻撃」実行

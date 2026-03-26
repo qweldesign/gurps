@@ -56,7 +56,7 @@ export class UnitDefense {
 
   //「受け」可能な状態か否かを返す
   get canParry(): boolean {
-    return this._canParry && this.parryCount < (this.isFullDefense ? 2 : 1)
+    return this._canParry && this.parryCount < (this.isFullDefense ? 2 : 1) && this.self.attack.ready === 0
   }
 
   //「止め」可能な状態か否かを返す
