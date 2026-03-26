@@ -88,6 +88,11 @@ export type Judge = Roll & {
   critical: boolean // クリティカル/ファンブル
 }
 
+export type Score = Roll & {
+  success: boolean
+  score: number // 成功度
+}
+
 export type AttackResult = Judge & {
   aim: Aim
   fullPower: FullPower
@@ -303,6 +308,13 @@ export class CombatActionStore {
     return { roll, success, critical }
   }
 
+  private score(target: number): Score {
+    const roll = this.getRoll()
+    const success = roll < target
+    const score = target - roll
+    return { roll, success, score}
+  }
+
   // ダイスを振った出目を取得
   private getRoll(count: number = 3, mod: number = 0, sides: number = 6): number {
     return Array.from<number>({ length: count }).reduce(sum => {
@@ -406,24 +418,27 @@ export class CombatActionStore {
     
     // 攻撃判定
     const attackResult = this.judgeAttack(aim, fullPower)
+    const attackJudge = attackResult.judge as AttackResult
     results.push(attackResult)
-    if (!attackResult.judge.success) return results // 攻撃失敗時はここで処理を止める
+    if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
     // 防御判定
     // 攻撃判定がクリティカルであれば, 防御判定はスキップ
-    if (!attackResult.judge.critical) {
+    if (!attackJudge.critical) {
       const defenseResult = this.judgeDefanse(target)
+      const defenseJudge = defenseResult.judge as DefenseResult
       results.push(defenseResult)
-      if (defenseResult.judge.success) return results // 防御成功時はここで処理を止める
+      if (defenseJudge.success) return results // 防御成功時はここで処理を止める
     }
 
     // ダメージ判定
     const dmgResult = this.rollDmg(aim, fullPower, target)
+    const dmgJudge = dmgResult.judge as DmgResult
     results.push(dmgResult)
-    if (!dmgResult.judge.success) return results // ダメージが通らなかった時はここで処理を止める
+    if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 
     // ダメージ効果
-    const dmg = dmgResult.judge.roll
+    const dmg = dmgJudge.roll
     target.health.injury += dmg
 
     // 朦朧状態・転倒判定
