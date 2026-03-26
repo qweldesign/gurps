@@ -6,8 +6,6 @@ import { type Side, type Position } from './FormationStore'
 import { UnitHealth as Health } from './Unit/Health'
 import { UnitAttack as Attack } from './Unit/Attack'
 import { UnitDefense as Defense } from './Unit/Defense'
-import { UnitStatusEffects as StatusEffects } from './Unit/StatusEffects'
-import { UnitStatusBuff as StatusBuff } from './Unit/StatusBuff'
 import { UnitSummary as Summary } from './Unit/Summary'
 
 const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
@@ -77,8 +75,6 @@ export class CombatUnit {
   public attack: Attack
   public defense: Defense
   public health: Health
-  public statusEffects: StatusEffects
-  public statusBuff: StatusBuff
   public summary: Summary
 
   constructor(model: CombatUnitModel, order: number) {
@@ -93,9 +89,7 @@ export class CombatUnit {
     this.posture = 'standing'
     this.defense = new Defense(attacks, defenses, ev, pre, mre)
     this.attack = new Attack(attacks, this.defense.changeAttackKey)
-    this.health = new Health(this) // 後の Summary が Health を見るので順序厳守
-    this.statusEffects = new StatusEffects()
-    this.statusBuff = new StatusBuff(dmgBuff, evBuff)
+    this.health = new Health(this, dmgBuff, evBuff) // 後の Summary が Health を見るので順序厳守
     this.summary = new Summary(this)
   }
 
