@@ -1,7 +1,7 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
 
 let count = 0
@@ -33,6 +33,7 @@ export class CombatLog {
     const resultLabel = this.createResultLabel(type, results)
     switch (type) {
       case 'attack':
+      case 'feint':
         return `${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
@@ -45,6 +46,7 @@ export class CombatLog {
 
   private createResultLabel(type: ActionType, results: ActionResult[]): string {
     let success = false
+    let score = 0
     switch (type) {
       case 'attack':
         // 攻撃(成功) → 防御(失敗) → ダメージ(貫通) の場合のみ「成功」を返す
@@ -68,6 +70,15 @@ export class CombatLog {
         })
         return success ? '成功' : '失敗'
       
+      case 'feint':
+        // 成功時は score (成功度) を表示
+        results.forEach(result => {
+          const feintResult = result.judge as FeintResult
+          success = feintResult.success
+          score = feintResult.score
+        })
+        return success ? `成功(${score})` : '失敗'
+
       case 'recovery':
         // 回復判定の結果で分岐
         results.forEach(result => {
@@ -95,7 +106,7 @@ export class CombatLog {
         messages.unshift(<>{`${actor} は 待機している`}</>)
         break
       
-      default: // case 'attack':
+      default: // case 'attack': case 'feint':
         break
     }
     messages.push(<>&nbsp;</>)
@@ -107,10 +118,25 @@ export class CombatLog {
     let target: string | undefined
     const messages: ReactNode[] = []
     switch (type) {
-      case 'attack': // 攻撃の結果ログを作成
+      case 'attack': case'feint':// 攻撃の結果ログを作成
         target = request.targets[0]?.name
         results.forEach(result => {
           switch (result.type) {
+            case 'feint':
+              const feintResult = result.judge as FeintResult
+              const feintSuccess = feintResult.success
+              const feintScore = feintResult.score
+              messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた`}</>)
+              if (feintSuccess) {
+                // 成功
+                messages.push(<>{`出目は ${feintResult.roll}, 牽制は成功した!`}</>)
+                messages.push(<>{`次のターン, ${target} は防御判定に -${feintScore} の修正が課せられる!`}</>)
+              } else {
+                // 失敗
+                messages.push(<>{`出目は ${feintResult.roll}, 牽制は失敗した...`}</>)
+              }
+              break
+
             case 'attack': // 攻撃判定の結果ログ
               const attackResult = result.judge as AttackResult
               messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)

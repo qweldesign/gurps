@@ -2,17 +2,35 @@
 
 import { type AttackKey } from '../../domains/Equipments'
 import { type Aim, AIM_OPTIONS, type FullPower } from '../ActionStore'
-import { type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels } from '../Unit'
+import { type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels, CombatUnit as Unit } from '../Unit'
+
+export type Feint = {
+  currentTurn: boolean
+  target: Unit
+  score: number
+}
 
 export class UnitAttack {
   private models: AttackModels
   private _key: AttackKey
+  public feint: Feint | null
   private changeKeyCallback: (attacks: AttackModels, key: AttackKey) => void
 
   constructor(attacks: AttackModels, callback: (attacks: AttackModels, key: AttackKey) => void) {
     this.models = attacks
     this._key = 'main'
+    this.feint = null
     this.changeKeyCallback = callback
+  }
+
+  nextTurn() {
+    if (this.feint && this.feint.currentTurn) {
+      // このターンの牽制を前ターンの牽制としてマークしておく
+      this.feint.currentTurn = false
+    } else if (this.feint) {
+      // 前ターンの牽制をリセット
+      this.feint = null
+    }
   }
 
   // 攻撃キーの変更 (装備変更)

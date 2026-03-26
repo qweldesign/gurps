@@ -4,11 +4,13 @@ import { type DefanseKey } from '../domains/Equipments'
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
+import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['attack', 'move', 'recovery', 'wait'] as const
+export const ACTIONS = ['attack', 'feint', 'move', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   attack: '攻撃',
+  feint: '牽制',
   move: '移動',
   recovery: '回復',
   wait: '待機'
@@ -20,7 +22,7 @@ export const FULL_POWER_OPTIONS: Record<FullPower, { label: string }> = {
   none: { label: '通常攻撃' },
   dmg: { label: 'ダメージ安定' },
   level: { label: '技能値+4' },
-  feint: { label: 'フェイント即攻撃' },
+  feint: { label: '牽制即攻撃' },
   double: { label: '2回攻撃' }
 } as const
 
@@ -66,6 +68,7 @@ export type Aim = typeof AIM_KEYS[number]
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
+  | { type: 'feint', options: {}, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'recovery', options: {}, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
@@ -75,6 +78,7 @@ export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
+  | { type: 'feint', judge: FeintResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
   | { type: 'recovery', judge: Judge }
@@ -104,12 +108,20 @@ export type DefenseResult = Judge & {
 
 export type DmgResult = Judge
 
+export type FeintResult = Score & {
+  target: Unit
+}
+
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
   attack: {
     options: { aim: readonly Aim[], fullPower: readonly FullPower[] }
     canExecute: () => boolean
     execute: (aim: Aim, fullPower: FullPower, target: Unit) => ActionResult[]
+  }
+  feint: {
+    canExecute: () => boolean
+    execute: (target: Unit) => ActionResult[]
   }
   move: {
     options: { position: readonly Position[] }
@@ -152,6 +164,10 @@ export class CombatActionStore {
         canExecute: () => this.canAttack(),
         execute: (aim, fullPower, target) => this.attack(aim, fullPower, target)
       },
+      feint: {
+        canExecute: () => this.canAttack(),
+        execute: (target) => this.feint(target)
+      },
       move: {
         options: { position: POSITION_VALUES },
         canExecute: (position) => this.canMove(position),
@@ -178,6 +194,7 @@ export class CombatActionStore {
   get availability() {
     return {
       attack: this.actions.attack.canExecute(),
+      feint: this.actions.attack.canExecute(),
       move: this.actions.move.options.position.reduce((acc, position) => {
         acc[position] = this.actions.move.canExecute(position)
         return acc
@@ -260,6 +277,11 @@ export class CombatActionStore {
       case 'attack':
         if (!this.actions.attack.canExecute()) results = []
         results = this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
+        break
+
+      case 'feint':
+        if (!this.actions.attack.canExecute()) results = []
+        results = this.actions.feint.execute(action.targets[0])
         break
 
       case 'move':
@@ -387,6 +409,13 @@ export class CombatActionStore {
     }
   }
 
+  private judgeFeint(target: Unit): ActionResult {
+    return {
+      type: 'feint',
+      judge: { target, ...this.score(this.actor.attack.target) } as FeintResult
+    }
+  }
+
   // 転倒判定
   private judgeKnockedDown(target: Unit): ActionResult {
     return {
@@ -460,6 +489,16 @@ export class CombatActionStore {
     }
     
     return results
+  }
+  
+  // 「牽制」実行
+  private feint(target: Unit): ActionResult[] {
+    const result = this.judgeFeint(target)
+    const judge = result.judge as FeintResult
+    const score = judge.score
+    // 牽制結果を次ターンに保持
+    if (score > 0) this.actor.attack.feint = { currentTurn: true, target, score } as Feint
+    return [result]
   }
 
   // 「移動」実行
