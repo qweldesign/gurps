@@ -5,11 +5,11 @@ import { CombatUnit as Unit } from './Unit'
 export const SIDE_VALUES = ['player', 'enemy'] as const
 export const POSITION_VALUES = ['back', 'left', 'center', 'right'] as const
 
-export type Side = typeof SIDE_VALUES[number]
-export type Position = typeof POSITION_VALUES[number]
-
 export const BACK_VALUES = { player: [0, 1, 2, 3], enemy: [4, 5, 6, 7] } as const
 export const FRONT_VALUES: Position[] = ['left', 'center', 'right'] as const
+
+export type Side = typeof SIDE_VALUES[number]
+export type Position = typeof POSITION_VALUES[number]
 
 type BackFormation = Record<number, Unit | null>
 type FrontFormation = Record<Position, Unit | null>
@@ -42,6 +42,14 @@ export class CombatFormationStore {
     })
   }
 
+  get player(): Formation {
+    return this.getFormation('player')
+  }
+
+  get enemy(): Formation {
+    return this.getFormation('enemy')
+  }
+
   // Store[Side][Position] でユニットへ静的アクセスできる
   private getFormation(side: Side): { back: BackFormation, front: FrontFormation } {
     const back = BACK_VALUES[side].reduce<BackFormation>((acc, value) => {
@@ -57,13 +65,5 @@ export class CombatFormationStore {
     return {
       back, front
     }
-  }
-
-  get player(): Formation {
-    return this.getFormation('player')
-  }
-
-  get enemy(): Formation {
-    return this.getFormation('enemy')
   }
 }

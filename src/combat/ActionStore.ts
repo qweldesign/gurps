@@ -5,10 +5,7 @@ import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 
-// コマンド名の定義
 export const ACTIONS = ['attack', 'move', 'recovery', 'wait'] as const
-
-export type ActionType = typeof ACTIONS[number]
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   attack: '攻撃',
@@ -17,20 +14,7 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   wait: '待機'
 } as const
 
-// 防御名の定義
-export type DefenseType = 'parry' | 'block' | 'dodge'
-
-// コマンドオプションの定義
-export type ActionOptions = {
-  aim?: Aim
-  fullPower?: FullPower
-  position?: Position
-}
-
-// 攻撃オプションの定義
 export const FULL_POWER_KEYS = ['none', 'dmg', 'level', 'feint', 'double'] as const
-
-export type FullPower = typeof FULL_POWER_KEYS[number]
 
 export const FULL_POWER_OPTIONS: Record<FullPower, { label: string }> = {
   none: { label: '通常攻撃' },
@@ -40,10 +24,7 @@ export const FULL_POWER_OPTIONS: Record<FullPower, { label: string }> = {
   double: { label: '2回攻撃' }
 } as const
 
-// 「部位狙い」オプションの定義
 export const AIM_KEYS = ['head', 'ear', 'eye', 'body', 'neck', 'stomach', 'arm', 'hand', 'leg', 'foot'] as const
-
-export type Aim = typeof AIM_KEYS[number]
 
 export const AIM_OPTIONS: Record<Aim, { label: string, group: DefanseKey, mod: number }> = {
   head: { label: '頭', group: 'head', mod: -3 }, 
@@ -58,7 +39,6 @@ export const AIM_OPTIONS: Record<Aim, { label: string, group: DefanseKey, mod: n
   foot: { label: '足首', group: 'leg', mod: -4 }
  } as const
 
-//「移動」オプションの定義
 export const POSITION_LABELS: Record<Position, string> = {
   back: '後方',
   left: '左翼',
@@ -66,37 +46,29 @@ export const POSITION_LABELS: Record<Position, string> = {
   right: '右翼'
 } as const
 
+// コマンド名の定義
+export type ActionType = typeof ACTIONS[number]
+
+// 防御名の定義
+export type DefenseType = 'parry' | 'block' | 'dodge'
+
+// コマンドオプションの定義
+export type ActionOptions = {
+  fullPower?: FullPower
+  aim?: Aim
+  position?: Position
+}
+
+export type FullPower = typeof FULL_POWER_KEYS[number]
+
+export type Aim = typeof AIM_KEYS[number]
+
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'recovery', options: {}, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
-
-// ロール定義
-type Roll = {
-  roll: number // 出目
-}
-
-// 判定定義
-export type Judge = Roll & {
-  success: boolean // 成功/失敗
-  critical: boolean // クリティカル/ファンブル
-}
-
-// 攻撃判定結果
-export type AttackResult = Judge & {
-  aim: Aim
-  fullPower: FullPower
-}
-
-// 防御判定結果
-export type DefenseResult = Judge & {
-  defenseType: DefenseType
-}
-
-// ダメージ判定結果
-export type DmgResult = Judge
 
 // コマンド実行後の判定結果の定義
 export type ActionResult = 
@@ -106,6 +78,26 @@ export type ActionResult =
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
   | { type: 'recovery', judge: Judge }
+
+type Roll = {
+  roll: number // 出目
+}
+
+export type Judge = Roll & {
+  success: boolean // 成功/失敗
+  critical: boolean // クリティカル/ファンブル
+}
+
+export type AttackResult = Judge & {
+  aim: Aim
+  fullPower: FullPower
+}
+
+export type DefenseResult = Judge & {
+  defenseType: DefenseType
+}
+
+export type DmgResult = Judge
 
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
@@ -206,7 +198,7 @@ export class CombatActionStore {
     }
   }
   
-  // ターゲットを結果として生成 (暫定)
+  // ターゲットを結果として生成
   get target() {
     return {
       all: this.state.units,
@@ -252,7 +244,7 @@ export class CombatActionStore {
 
   // 実行
   // ActionRequest のプロパティ (type, options, targets) を引数に取って処理を進め, 
-  // ActionResult の配列を返す
+  // ActionResult の配列を Log に渡し, 再生して次のターンへ移る
   async execute (action: ActionRequest) {
     // コマンドパレットをロック (アンロックはコンストラクタで行われる)
     this.unlocked = false
@@ -383,6 +375,7 @@ export class CombatActionStore {
     }
   }
 
+  // 転倒判定
   private judgeKnockedDown(target: Unit): ActionResult {
     return {
       type: 'knockedDown',
@@ -390,6 +383,7 @@ export class CombatActionStore {
     }
   }
 
+  // 致死判定
   private judgeFatal(target: Unit): ActionResult {
     return {
       type: 'fatal',
@@ -397,6 +391,7 @@ export class CombatActionStore {
     }
   }
 
+  // 朦朧状態からの回復判定
   private judgeRecovery(): ActionResult {
     return {
       type: 'recovery',
