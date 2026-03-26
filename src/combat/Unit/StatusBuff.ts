@@ -19,7 +19,7 @@ export class UnitStatusBuff {
 
   // 各バフは10ターン持続
   // 毎ターンバフ変数をデクリメント
-  update() {
+  nextTurn() {
     this.levelBuff = Math.max(this.levelBuff - 1, 0)
     this.dmgBuff = Math.max(this.dmgBuff - 1, 0)
     this.evBuff = Math.max(this.evBuff - 1, 0)

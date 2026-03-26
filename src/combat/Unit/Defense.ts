@@ -32,6 +32,12 @@ export class UnitDefense {
     this.mre = mre
   }
 
+  nextTurn() {
+    this.parryCount = 0
+    this.blockCount = 0
+    this.isFullDefense = false
+  }
+
   // 攻撃キーの変更 (装備変更)
   changeAttackKey(attacks: AttackModels, key: AttackKey) {
     this.parryTarget = this.ev + attacks[key].ev

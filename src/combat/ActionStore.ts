@@ -340,16 +340,18 @@ export class CombatActionStore {
     }
   }
 
-  // 「受け」の判定結果を返す
+  // parryCount をインクリメントし,「受け」の判定結果を返す
   private judgeParry(target: Unit): ActionResult {
+    target.defense.parryCount++
     return {
       type: 'defense',
       judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget) } as DefenseResult
     }
   }
 
-  // 「止め」の判定結果を返す
+  // blockCount をインクリメントし,「止め」の判定結果を返す
   private judgeBlock(target: Unit): ActionResult {
+    target.defense.blockCount++
     return {
       type: 'defense',
       judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget) } as DefenseResult

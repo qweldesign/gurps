@@ -61,6 +61,12 @@ export class CombatState {
     this.actionStore = new ActionStore(this.actor, this)
     //　コマンド入力待機
     await this.actionStore.promise.then(() => {
+      // 行動者のステータス更新
+      if (this.actor) {
+        this.actor.defense.nextTurn()
+        this.actor.statusEffects.nextTurn()
+        this.actor.statusBuff.nextTurn()
+      }
       // 自身を呼び出し, また次のターンへ進む
       this.debug()
       this.nextTurn()

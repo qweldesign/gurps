@@ -20,7 +20,7 @@ export class UnitStatusEffects {
   }
 
   // 毎ターン変数をデクリメント
-  update() {
+  nextTurn() {
     this.silence = Math.max(this.silence - 1, 0)
     this.resistant = Math.max(this.resistant - 1, 0)
     this.poisoned = Math.max(this.poisoned - 1, 0)
