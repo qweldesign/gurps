@@ -10,8 +10,7 @@ let count = 0
 export class CombatLog {
   public id: number
   public actor: Unit
-  public startMessages: ReactNode[]
-  public resultMessages: ReactNode[]
+  public messages: ReactNode[][]
   public label?: string
 
   // インスタンス生成時は「XXXXの行動順」を表示する
@@ -19,14 +18,13 @@ export class CombatLog {
     this.id = count++
     this.actor = actor
     const firstMessage = (<span className="font-bold">{actor.name} の行動順</span>)
-    this.startMessages = [firstMessage]
-    this.resultMessages = []
+    this.messages = [[firstMessage]]
   }
 
   // Action コンポーネントで ActionRequet, ActionResult の配列を受け取り, ラベルと結果ログを生成する
   receiveResults(request: ActionRequest, results: ActionResult[]) {
     this.label = this.createLabel(request, results)
-    this.resultMessages = this.createMessages(request, results)
+    this.messages.push(this.createMessages(request, results))
   }
 
   // ラベル生成 (Summary履歴用)

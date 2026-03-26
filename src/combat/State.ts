@@ -11,26 +11,30 @@ export class CombatState {
   public round: number // 経過時間
   public turnIndex: number // 行動順
   public units: Unit[]
-  public actor: Unit
-  public formationStore: FormationStore
-  public actionStore: ActionStore
-  public summaryStore: SummaryStore
-  private logs: Log[]
+  public actor: Unit | null
+  public formationStore: FormationStore | null
+  public actionStore: ActionStore | null
+  public summaryStore: SummaryStore | null
+  public logs: Log[]
+  public playLog: () => Promise<void> // ActionStore から呼び出す
 
-  constructor(models: Model[]) {
-    this.round = 0
-    this.turnIndex = 0
+  constructor(models: Model[], playLog: () => Promise<void>) {
+    this.round = 1 // 1からカウント
+    this.turnIndex = -1 // 開幕前
     this.units = models.map((model, i) => {
       return new Unit(model, i)
     })
-    this.actor = this.units[this.turnIndex]
-    this.formationStore = new FormationStore(this.actor, this.units)
-    this.actionStore = new ActionStore(this.actor, this)
-    this.summaryStore = new SummaryStore(this.actor, this)
+    this.actor = null
+    this.formationStore = null
+    this.actionStore = null
+    this.summaryStore = null
     this.logs = []
+    this.playLog = playLog
+    // this.nextTurn() ← 初期化後に手動で呼び出す
   }
 
-  nextTurn(log: Log) {
+  // 次のターンへ進む
+  async nextTurn() {
     // 生存者のターンまでスキップ
     let isAlive = false
     while (!isAlive) {
@@ -42,10 +46,25 @@ export class CombatState {
       this.actor = this.units[this.turnIndex]
       isAlive = !this.actor.health.unconscious
     }
-    this.formationStore.update(this.actor, this.units)
-    this.actionStore.update(this.actor, this)
-    this.summaryStore.update(this.actor, this, log) // 行動履歴を渡す
-    this.logs.push(log) // こちらでも履歴を保持
+    if (!this.actor) return
+
+    // 前のログを Summary に渡し, Formation, Summary を再初期化
+    const log = this.logs[0]
+    this.formationStore = new FormationStore(this.actor, this.units)
+    this.summaryStore = new SummaryStore(this.actor, this, log)
+    // 新しいログを追加
+    const newLog = new Log(this.actor)
+    this.logs.unshift(newLog)
+    // ターン開始ログを表示
+    await this.playLog()
+    // コマンドパレット初期化
+    this.actionStore = new ActionStore(this.actor, this)
+    //　コマンド入力待機
+    await this.actionStore.promise.then(() => {
+      // 自身を呼び出し, また次のターンへ進む
+      this.debug()
+      this.nextTurn()
+    })
   }
 
   debug() {

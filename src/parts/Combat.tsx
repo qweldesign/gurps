@@ -4,10 +4,14 @@ import Action from './Combat/Action'
 import Summary from './Combat/Summary'
 import Timeline from './Combat/Timeline'
 import { CombatState as State } from '../combat/State'
-import { CombatLog as Log } from '../combat/Log'
 import { createSamples } from '../domains/SampleCharacter'
 import DevProgress from './DevProgress'
 import { COMBAT_DEV_PROGRESS } from '../devProgress/combat'
+
+type QueueItem = {
+  node: ReactNode
+  resolve?: () => void
+}
 
 function Combat() {
   // 仮の戦闘ユニットを用意
@@ -22,54 +26,55 @@ function Combat() {
 
   // ターン管理
   const stateRef = useRef<State | null>(null)
-  const [turnIndex, setTurnIndex] = useState(0)
-  
+
   // ログ管理
   const timelineRef = useRef<HTMLDivElement | null>(null)
-  const resolveQueue = useRef<(() => void)[]>([]) // ログ再生完了待ちを登録
-  const [log, setLog] = useState<Log | null>(null)
-  const [queue, setQueue] = useState<ReactNode[]>([]) // 未表示 (待機中)
+  const [queue, setQueue] = useState<QueueItem[]>([]) // 未表示 (待機中)
   const [messages, setMessages] = useState<ReactNode[]>([]) // 表示済み
 
-  // Action に渡すログ・ターン更新のための関数 
-  const nextTurn = async (log: Log): Promise<void> => {
-    // Promiseでログ再生完了を待つ
-    return new Promise<void>(resolve => {
-      // queueの配列末尾にログを積む
-      setQueue(prev => [...prev, ...log.resultMessages])
-      // resolveを登録
-      resolveQueue.current.push(resolve)
-    }).then(() => {
-      if (!stateRef.current) return
-      // ログ再生完了後にターン進行
-      stateRef.current.nextTurn(log)
-      setTurnIndex(stateRef.current.turnIndex)
-      // 新しいログを作成
-      const newLog = new Log(stateRef.current.actor)
-      setLog(newLog)
-      setQueue(prev => [...prev, ...newLog.startMessages])
+  // ログを積む関数
+  const enqueueLog = (nodes: ReactNode[]): Promise<void> => {
+    return new Promise(resolve => {
+      setQueue(prev => {
+        const items: QueueItem[] = nodes.map((node, i) => ({
+          node,
+          resolve: i === nodes.length - 1 ? resolve : undefined
+        }))
+        return [...prev, ...items]
+      })
     })
   }
 
-  // ログ再生 (queue → messages に流す)
+  // State 経由で ActionStore に渡すログ再生関数
+  const playLog = async (): Promise<void> => {
+    if (!stateRef.current) return
+    // ログの末尾を再生
+    const log = stateRef.current.logs[0]
+    const messages = log.messages[log.messages.length - 1]
+    await enqueueLog(messages)
+  }
+
+  // ログ再生
   useEffect(() => {
-    // 完了検知
-    if (queue.length === 0) {
-      const resolve = resolveQueue.current.shift()
-      resolve?.()
-      return
-    }
-    // ログ再生
-    // 上方向にスクロール
-    if (messages.length >= 10){
+    // queueに新しいメッセージが無ければ, 処理をスキップ
+    if (queue.length === 0) return
+
+    // スクロールアニメーションクラスを付与
+    if (messages.length >= 10) {
       timelineRef.current?.classList.add('is-scrolling')
     }
+
+    // ログを再生 (queue → messages に流す)
     const timer = setTimeout(() => {
-      // queueの配列先頭をmessagesの配列末尾に移動 → 再生
       const [next, ...rest] = queue
-      setMessages(prev => [...prev, next].slice(-10)) // 末尾10件のみ表示
+      setMessages(prev => [...prev, next.node].slice(-10)) // 末尾10件のみ表示
       setQueue(rest)
-      if (messages.length >= 10){
+      // 最後の要素で resolve
+      if (next.resolve) {
+        next.resolve()
+      }
+      // スクロールアニメーションクラスを奪取
+      if (messages.length >= 10) {
         timelineRef.current?.classList.remove('is-scrolling')
       }
     }, 300)
@@ -77,19 +82,11 @@ function Combat() {
     return () => clearTimeout(timer)
   }, [queue])
 
-  // ターン毎にデバッグ
-  useEffect(() => {
-    if (!stateRef.current) return
-    stateRef.current.debug()
-  }, [turnIndex])
-
   // 開幕
   useEffect(() => {
     if (!stateRef.current) {
-      stateRef.current = new State(initModels())
-      const newLog = new Log(stateRef.current.actor)
-      setLog(newLog)
-      setQueue(prev => [...prev, ...newLog.startMessages])
+      stateRef.current = new State(initModels(), playLog)
+      stateRef.current.nextTurn()
     }
   }, [])
 
@@ -98,21 +95,27 @@ function Combat() {
       <div className="p-6">
         <p>In development...</p>
       </div>
-      {( stateRef.current && log &&
+      {stateRef.current && (
         <div className="px-6">
           <div className="table-wrapper">
             <div className="row justify-center min-w-lg lg:min-w-5xl">
               <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
                 <h3 className="m-0 border-0 text-sm">Formation</h3>
-                <Formation store={stateRef.current.formationStore} />
+                {stateRef.current.formationStore && (
+                  <Formation store={stateRef.current.formationStore} />
+                )}
               </div>
               <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
                 <h3 className="m-0 border-0 text-sm">Summary</h3>
-                <Summary store={stateRef.current.summaryStore} />
+                {stateRef.current.summaryStore && (
+                  <Summary store={stateRef.current.summaryStore} />
+                )}
               </div>
               <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
                 <h3 className="m-0 border-0 text-sm">Action</h3>
-                <Action store={stateRef.current.actionStore} log={log} nextTurn={nextTurn} />
+                {stateRef.current.actionStore && (
+                  <Action store={stateRef.current.actionStore} />
+                )}
               </div>
               <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
                 <h3 className="m-0 border-0 text-sm">Log</h3>

@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react'
 import { type Position } from '../../combat/FormationStore'
 import { type ActionType, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
-import { CombatLog as Log } from '../../combat/Log'
 import { CombatUnit as Unit } from '../../combat/Unit'
 
 type ActionPalette = 'main' | 'confirmAttack' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'all'
 
-function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (log: Log) => Promise<void> }) {
+function Action({ store }: { store: Store }) {
   // 状態管理
-  const [actionPalette, setActionPalette] = useState<ActionPalette>('main')
+  const [actionPalette, setActionPalette] = useState<ActionPalette>('hidden')
   const [targetPalette, setTargetPalette] = useState<TargetPalette>('all')
   const [actionType, setActionType] = useState<ActionType>('wait')
   const [actionOptions, setActionOptions] = useState<ActionOptions>({})
@@ -19,15 +18,9 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
 
   // execute
   const execute = async () => {
-    // パレットを非表示
-    setActionPalette('hidden')
     // ActionRequest を作成し, execute
     const request = { type: actionType, options: actionOptions, targets: actionTargets } as ActionRequest
-    const results = store.execute(request)
-    // ログを更新し, 親コンポーネントに返す
-    log.receiveResults(request, results)
-    await nextTurn(log) // ログの再生完了を待つ
-    reset()
+    await store.execute(request)
   }
 
   // execute後, 変数を初期状態に戻す
@@ -38,6 +31,15 @@ function Action({ store, log, nextTurn }: { store: Store, log: Log, nextTurn: (l
     setActionTargets([])
     setIsExecuted(false)
   }
+
+  useEffect(() => {
+    // ロック状態の切り替わりを検知し, パレットの表示状態を更新
+    if (store.unlocked) {
+      reset()
+    } else {
+      setActionPalette('hidden')
+    }
+  }, [store.unlocked])
 
   useEffect(() => {
     // isExecuted が true に変わるのを検知して実行

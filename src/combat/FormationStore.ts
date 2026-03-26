@@ -25,13 +25,6 @@ export class CombatFormationStore {
     this.actor = actor
     this.back = new Map<number, Unit | null>()
     this.front = new Map<string, Unit | null>()
-    // ユニット配置
-    this.update(actor, units)
-  }
-
-  // ターン毎に更新
-  update(actor: Unit, units: Unit[]) {
-    this.actor = actor
     // Front 初期化
     SIDE_VALUES.forEach(side => {
       POSITION_VALUES.slice(1).forEach(position => {

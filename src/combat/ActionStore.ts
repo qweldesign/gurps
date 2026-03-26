@@ -127,12 +127,22 @@ export class CombatActionStore {
   public actor: Unit
   private state: State
   public round: number
+  public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
+  public promise: Promise<void>
+  private resolve!: () => void
   private readonly actions: ActionDefinition
 
   constructor(actor: Unit, state: State) {
     this.actor = actor
     this.state = state
     this.round = state.round
+    this.unlocked = !this.actor.health.stunned // // コマンドパレットをアンロック
+
+    // ターン終了を Promise で State に伝え, 次のターンへ進む
+    this.promise = new Promise<void>(resolve => {
+      this.resolve = resolve
+    })
+
     this.actions = {
       attack: {
         options: { aim: AIM_KEYS, fullPower: FULL_POWER_KEYS },
@@ -151,13 +161,6 @@ export class CombatActionStore {
     }
   }
 
-  // ターン毎に更新
-  update(actor: Unit, state: State) {
-    this.actor = actor
-    this.state = state
-    this.round = state.round
-  }
-
   // availability を結果として生成
   get availability() {
     return {
@@ -172,13 +175,14 @@ export class CombatActionStore {
 
   // 「攻撃」実行可否取得
   // 自身が前方に配置されていることが条件 (暫定)
-  private canAttack() {
+  private canAttack(): boolean {
     return this.actor.position !== 'back'
   }
 
   // 「移動」実行可否取得
   // 後退は自身が後方に配置されていないこと, 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
-  private canMove(position: Position) {
+  private canMove(position: Position): boolean {
+    if (!this.state.formationStore) return false
     if (position === 'back') {
       return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
     } else {
@@ -233,20 +237,35 @@ export class CombatActionStore {
   // 実行
   // ActionRequest のプロパティ (type, options, targets) を引数に取って処理を進め, 
   // ActionResult の配列を返す
-  execute(action: ActionRequest): ActionResult[] {
+  async execute (action: ActionRequest) {
+    // コマンドパレットをロック (アンロックはコンストラクタで行われる)
+    this.unlocked = false
+
+    // コマンド実行
+    let results: ActionResult[]
     switch (action.type) {
       case 'attack':
-        if (!this.actions.attack.canExecute()) return []
-        return this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
+        if (!this.actions.attack.canExecute()) results = []
+        results = this.actions.attack.execute(action.options.aim, action.options.fullPower, action.targets[0])
+        break
 
       case 'move':
-        if (!this.actions.move.canExecute(action.options.position)) return []
-        return this.actions.move.execute(action.options.position)
+        if (!this.actions.move.canExecute(action.options.position)) results = []
+        results = this.actions.move.execute(action.options.position)
+        break
         
       default: // case 'wait':
-        if (!this.actions.wait.canExecute()) return []
-        return this.actions.wait.execute()
+        if (!this.actions.wait.canExecute()) results = []
+        results = this.actions.wait.execute()
     }
+
+    // ログを更新
+    const log = this.state.logs[0]
+    log.receiveResults(action, results)
+
+    // 行動終了
+    await this.state.playLog() // ログの再生完了を待つ
+    this.resolve()
   }
 
   // ロール結果 (Roll型) を返す (ダメージ判定)
