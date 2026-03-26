@@ -1,7 +1,7 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { type ActionType, ACTION_LABELS, POSITION_LABELS, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type ActionResult } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
 
 let count = 0
@@ -88,11 +88,11 @@ export class CombatLog {
     const messages = this.createResultMessages(type, request, results)
     switch (type) {
       case 'move':
-        messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
+        messages.unshift(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
 
       case 'wait':
-        messages.push(<>{`${actor} は 待機している`}</>)
+        messages.unshift(<>{`${actor} は 待機している`}</>)
         break
       
       default: // case 'attack':
@@ -104,16 +104,17 @@ export class CombatLog {
 
   private createResultMessages(type: ActionType, request: ActionRequest, results: ActionResult[]): ReactNode[] {
     const actor = this.actor.name
+    let target: string | undefined
     const messages: ReactNode[] = []
     switch (type) {
       case 'attack': // 攻撃の結果ログを作成
-        const target = request.targets[0]?.name
+        target = request.targets[0]?.name
         results.forEach(result => {
           switch (result.type) {
             case 'attack': // 攻撃判定の結果ログ
               const attackResult = result.judge as AttackResult
               messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
-              messages.push(<>{`出目は ${attackResult.roll}、${this.getResultLabel(attackResult)}`}</>)
+              messages.push(<>{`出目は ${attackResult.roll}, ${this.getResultLabel(attackResult)}`}</>)
               break
 
             case 'defense': // 防御判定の結果ログ
@@ -121,7 +122,7 @@ export class CombatLog {
               const defnseTypeLabel = defenseResult.defenseType === 'parry' ? '武器による受け流し'
                 : defenseResult.defenseType === 'block' ? '盾による受け止め': '回避'
               messages.push(<>{`${target} は ${defnseTypeLabel} を試みた!`}</>)
-              messages.push(<>{`出目は ${defenseResult.roll}、${this.getResultLabel(defenseResult)}`}</>)
+              messages.push(<>{`出目は ${defenseResult.roll}, ${this.getResultLabel(defenseResult)}`}</>)
               break
 
             case 'dmg': // ダメージ判定の結果ログ
