@@ -36,16 +36,17 @@ export class CombatLog {
         return `${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
-
+      case 'recovery':
+        return resultLabel
       default: // case 'wait':
         return ACTION_LABELS[request.type]
     }
   }
 
   private createResultLabel(type: ActionType, results: ActionResult[]): string {
+    let success = false
     switch (type) {
       case 'attack':
-        let success = false
         // 攻撃(成功) → 防御(失敗) → ダメージ(貫通) の場合のみ「成功」を返す
         results.forEach(result => {
           switch (result.type) {
@@ -66,6 +67,14 @@ export class CombatLog {
           }
         })
         return success ? '成功' : '失敗'
+      
+      case 'recovery':
+        // 回復判定の結果で分岐
+        results.forEach(result => {
+          const recoveryResult = result.judge as Judge
+          success = recoveryResult.success
+        })
+        return success ? '回復' : '朦朧状態'
 
       default: // case 'move': case 'wait':
         return ''
