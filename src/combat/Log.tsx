@@ -42,7 +42,7 @@ export class CombatLog {
         return `${ACTION_LABELS[request.type]}:${POSTURE_MODS[request.options.posture].label}`
       case 'recovery':
         return resultLabel
-      default: // case 'ready': case 'defense': case 'wait':
+      default:
         return ACTION_LABELS[request.type]
     }
   }
@@ -90,7 +90,7 @@ export class CombatLog {
         })
         return success ? '回復' : '朦朧状態'
 
-      default: // case 'ready': case 'defense': case 'move': case 'changePosture': case 'wait':
+      default:
         return ''
     }
   }
@@ -113,15 +113,16 @@ export class CombatLog {
         messages.unshift(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
 
+      case 'changeWeapon':
+        messages.unshift(<>{`${actor} は武器を ${this.actor.attack.model.name} に持ち替えた`}</>)
+        break
+
       case 'changePosture':
         messages.unshift(<>{`${actor} は ${POSTURE_MODS[request.options.posture].label} の姿勢に変更した`}</>)
         break
 
       case 'wait':
         messages.unshift(<>{`${actor} は 待機している`}</>)
-        break
-      
-      default: // case 'attack': case 'feint':
         break
     }
     messages.push(<>&nbsp;</>)
@@ -252,7 +253,7 @@ export class CombatLog {
         })
         return messages
 
-      default: // case 'defense': case 'move': case 'changePosture': case 'wait':
+      default:
         return messages
     }
   }

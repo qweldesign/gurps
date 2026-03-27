@@ -40,13 +40,26 @@ export class UnitAttack {
   // 攻撃キーの変更 (装備変更)
   set key(key: AttackKey) {
     this._key = key
-    this.ready = this.models[key].ready // 準備が必要
+    // 鉾槍(振り)のみ例外対応
+    if (this.models[key].name !== '鉾槍(振り)') {
+      this.ready = this.models[key].ready // 装備変更したら準備が必要
+    }
     this.changeKeyCallback(this.models, key)
+  }
+
+  // 攻撃キーの取得
+  get key() {
+    return this._key
   }
 
   // 攻撃モデルを取得
   get model(): AttackModel {
     return this.models[this._key]
+  }
+
+  // キーを指定して攻撃モデルを取得
+  getModel(attackKey: AttackKey): AttackModel {
+    return this.models[attackKey]
   }
 
   // 攻撃モデルの目標値を取得

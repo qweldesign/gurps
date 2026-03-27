@@ -1,12 +1,12 @@
 // ActionStore.ts
 
-import { type DefanseKey } from '../domains/Equipments'
+import { ATTACK_KEYS, type AttackKey, type DefanseKey } from '../domains/Equipments'
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { POSTURE_KEYS, POSTURE_MODS, type Posture, CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'changePosture', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   ready: '準備',
@@ -14,6 +14,7 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   feint: '牽制',
   defense: '全力防御',
   move: '移動',
+  changeWeapon: '装備変更',
   changePosture: '姿勢変更',
   recovery: '回復',
   wait: '待機'
@@ -62,6 +63,7 @@ export type ActionOptions = {
   fullPower?: FullPower
   aim?: Aim
   position?: Position
+  attackKey?: AttackKey
   posture?: Posture
 }
 
@@ -76,6 +78,7 @@ export type ActionRequest =
   | { type: 'feint', options: {}, targets: [Unit] }
   | { type: 'defense', options: {}, targets: [] }
   | { type: 'move', options: { position: Position }, targets: [] }
+  | { type: 'changeWeapon', options: { attackKey: AttackKey }, targets: [] }
   | { type: 'changePosture', options: { posture: Posture }, targets: [] }
   | { type: 'recovery', options: {}, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
@@ -156,6 +159,11 @@ type ActionDefinition = {
     canExecute: (position: Position) => boolean
     execute: (position: Position) => ActionResult[]
   }
+  changeWeapon: {
+    options: { attackKey: readonly AttackKey[] }
+    canExecute: () => boolean
+    execute: (attackKey: AttackKey) => ActionResult[]
+  }
   changePosture: {
     options: { posture: readonly Posture[] }
     canExecute: (posture: Posture) => boolean
@@ -175,6 +183,7 @@ export class CombatActionStore {
   public actor: Unit
   private state: State
   public round: number
+  public hasChangedWeapon: boolean // 「装備変更」を実行したかどうか
   public hasChangedPosture: boolean // 「姿勢変更」を実行したかどうか
   public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
   public promise: Promise<void>
@@ -185,6 +194,7 @@ export class CombatActionStore {
     this.actor = actor
     this.state = state
     this.round = state.round
+    this.hasChangedWeapon = false
     this.hasChangedPosture = false
     this.unlocked = !this.actor.health.stunned // // コマンドパレットをアンロック
 
@@ -222,6 +232,11 @@ export class CombatActionStore {
         canExecute: (position) => this.canMove(position),
         execute: (position) => this.move(position)
       },
+      changeWeapon: {
+        options: { attackKey: ATTACK_KEYS },
+        canExecute: () => this.canChangeWeapon(),
+        execute: (attackKey) => this.changeWeapon(attackKey)
+      },
       changePosture: {
         options: { posture: POSTURE_KEYS },
         canExecute: (posture) => this.canChangePosture(posture),
@@ -257,6 +272,7 @@ export class CombatActionStore {
         acc[position] = this.actions.move.canExecute(position)
         return acc
       }, {} as Record<Position, boolean>),
+      changeWeapon: this.actions.changeWeapon.canExecute(),
       changePosture: this.actions.changePosture.options.posture.reduce((acc, posture) => {
         acc[posture] = this.actions.changePosture.canExecute(posture)
         return acc
@@ -306,6 +322,14 @@ export class CombatActionStore {
     } else {
       return this.state.formationStore[this.actor.side].front[position] === null ? true : false
     }
+  }
+
+  // 「装備変更」実行可否取得
+  private canChangeWeapon(): boolean {
+    // 他に武器を持っていない場合は非表示
+    const isSingle = ['sub', 'spare'].every(key => this.actor.attack.getModel(key as AttackKey).name === '装備無し')
+    // このターンに既に装備変更をしていた場合は不可
+    return !isSingle && !this.hasChangedWeapon
   }
 
   // 「姿勢変更」実行可否取得
@@ -409,6 +433,11 @@ export class CombatActionStore {
         results = this.actions.move.execute(action.options.position)
         break
 
+      case 'changeWeapon':
+        if (!this.actions.changeWeapon.canExecute()) results = []
+        results = this.actions.changeWeapon.execute(action.options.attackKey)
+        break
+
       case 'changePosture':
         if (!this.actions.changePosture.canExecute(action.options.posture)) results = []
         results = this.actions.changePosture.execute(action.options.posture)
@@ -427,12 +456,14 @@ export class CombatActionStore {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 行動終了分岐
+    // 行動が継続できる場合
     let nextTurn = true
-    if (prevPosture !== 'prone' && action.type === 'changePosture') {
+    if (action.type === 'changeWeapon' // 装備変更
+      || (prevPosture !== 'prone' && action.type === 'changePosture') // 這い以外の姿勢からの姿勢変更
+    ) {
       nextTurn = false
     }
-    if (action.type === 'recovery') {
+    if (action.type === 'recovery') { // 朦朧状態からの回復判定に成功
       const recoveryResult = results[0].judge as Judge
       if (recoveryResult.success) {
         nextTurn = false
@@ -788,6 +819,13 @@ export class CombatActionStore {
   // 「移動」実行
   private move(position: Position): ActionResult[] {
     this.actor.position = position
+    return []
+  }
+
+  // 「装備変更」実行
+  private changeWeapon(attackKey: AttackKey): ActionResult[] {
+    this.actor.attack.key = attackKey
+    this.hasChangedWeapon = true // 1ターンに1度まで
     return []
   }
 
