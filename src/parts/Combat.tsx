@@ -17,7 +17,7 @@ function Combat() {
   // 仮の戦闘ユニットを用意
   const initModels = () => {
     const r1 = Math.floor(Math.random() * 16)
-    const r2 = Math.floor(Math.random() * 15)
+    const r2 = Math.ceil(Math.random() * 15)
     const pcs = createSamples(10, 1, 4, r1)
     const npcs = createSamples(10, 1, 4, (r1 + r2) % 16, 4)
     const units = pcs.concat(npcs)
