@@ -358,40 +358,41 @@ export class CombatActionStore {
   // 防御の判定結果を返す
   private judgeDefanse(target: Unit): ActionResult {
     const feint = this.actor.attack.feint
-    let score = 0
-    if (feint && feint.target === target) score = feint.score 
+    let mod = 0
+    if (target.health.stunned) mod -= 4 // 朦朧状態による修正
+    if (feint && feint.target === target) mod -= feint.score // 牽制のターゲットの場合の修正
     if (target.defense.canBlock) {
-      return this.judgeBlock(target, score)
+      return this.judgeBlock(target, mod)
     } else if (target.defense.canParry) {
-      return this.judgeParry(target, score)
+      return this.judgeParry(target, mod)
     } else {
-      return this.judgeDodge(target, score)
+      return this.judgeDodge(target, mod)
     }
   }
 
   // parryCount をインクリメントし,「受け」の判定結果を返す
-  private judgeParry(target: Unit, score: number): ActionResult {
+  private judgeParry(target: Unit, mod: number): ActionResult {
     target.defense.parryCount++
     return {
       type: 'defense',
-      judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget - score) } as DefenseResult
+      judge: { defenseType: 'parry', ...this.judge(target.defense.parryTarget + mod) } as DefenseResult
     }
   }
 
   // blockCount をインクリメントし,「止め」の判定結果を返す
-  private judgeBlock(target: Unit, score: number): ActionResult {
+  private judgeBlock(target: Unit, mod: number): ActionResult {
     target.defense.blockCount++
     return {
       type: 'defense',
-      judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget - score) } as DefenseResult
+      judge: { defenseType: 'block', ...this.judge(target.defense.blockTarget + mod) } as DefenseResult
     }
   }
 
   // 「よけ」の判定結果を返す
-  private judgeDodge(target: Unit, score: number): ActionResult {
+  private judgeDodge(target: Unit, mod: number): ActionResult {
     return {
       type: 'defense',
-      judge: { defenseType: 'dodge', ...this.judge(target.defense.dodgeTarget - score) } as DefenseResult
+      judge: { defenseType: 'dodge', ...this.judge(target.defense.dodgeTarget + mod) } as DefenseResult
     }
   }
 

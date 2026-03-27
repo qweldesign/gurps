@@ -77,10 +77,11 @@ export class UnitDefense {
     return Math.max(target, 4)
   }
 
-  // 牽制のターゲットの場合にペナルティを引いた目標値を返す
+  // 朦朧状態, 牽制のターゲットの場合に, ペナルティを引いた目標値を返す
   getTarget(feint: Feint | null) {
     let target = this.target
-    if (feint && feint.target === this.self) target -= feint.score
+    if (this.self.health.stunned) target -= 4 // 朦朧状態による修正
+    if (feint && feint.target === this.self) target -= feint.score // 牽制のターゲットの場合の修正
     return Math.max(target, 4)
   }
 
