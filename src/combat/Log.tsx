@@ -39,7 +39,7 @@ export class CombatLog {
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
       case 'recovery':
         return resultLabel
-      default: // case 'ready': case 'wait':
+      default: // case 'ready': case 'defense': case 'wait':
         return ACTION_LABELS[request.type]
     }
   }
@@ -87,7 +87,7 @@ export class CombatLog {
         })
         return success ? '回復' : '朦朧状態'
 
-      default: // case 'ready': case 'move': case 'wait':
+      default: // case 'ready': case 'defense': case 'move': case 'wait':
         return ''
     }
   }
@@ -100,6 +100,10 @@ export class CombatLog {
     switch (type) {
       case 'ready':
         messages.unshift(<>{`${actor} は ${this.actor.attack.model.name} を構えた`}</>)
+        break
+
+      case 'defense':
+        messages.unshift(<>{`${actor} は 防御に専念!`}</>)
         break
 
       case 'move':
@@ -214,7 +218,7 @@ export class CombatLog {
         })
         return messages
 
-      default: // case 'move': case 'wait':
+      default: // case 'defense': case 'move': case 'wait':
         return messages
     }
   }

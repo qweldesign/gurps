@@ -6,12 +6,13 @@ import { POSITION_VALUES, type Position } from './FormationStore'
 import { CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['ready', 'attack', 'feint', 'move', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   ready: '準備',
   attack: '攻撃',
   feint: '牽制',
+  defense: '全力防御',
   move: '移動',
   recovery: '回復',
   wait: '待機'
@@ -71,6 +72,7 @@ export type ActionRequest =
   | { type: 'ready', options: {}, targets: [] }
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'feint', options: {}, targets: [Unit] }
+  | { type: 'defense', options: {}, targets: [] }
   | { type: 'move', options: { position: Position }, targets: [] }
   | { type: 'recovery', options: {}, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
@@ -131,6 +133,10 @@ type ActionDefinition = {
     canExecute: () => boolean
     execute: (target: Unit) => ActionResult[]
   }
+  defense: {
+    canExecute: () => boolean
+    execute: () => ActionResult[]
+  }
   move: {
     options: { position: readonly Position[] }
     canExecute: (position: Position) => boolean
@@ -180,6 +186,10 @@ export class CombatActionStore {
         canExecute: () => this.canAttack(),
         execute: (target) => this.feint(target)
       },
+      defense: {
+        canExecute: () => this.canDefense(),
+        execute: () => this.defense()
+      },
       move: {
         options: { position: POSITION_VALUES },
         canExecute: (position) => this.canMove(position),
@@ -208,6 +218,7 @@ export class CombatActionStore {
       ready: this.actions.ready.canExecute(),
       attack: this.actions.attack.canExecute(),
       feint: this.actions.attack.canExecute(),
+      defense: this.actions.defense.canExecute(),
       move: this.actions.move.options.position.reduce((acc, position) => {
         acc[position] = this.actions.move.canExecute(position)
         return acc
@@ -223,17 +234,24 @@ export class CombatActionStore {
   }
 
   // 「攻撃」実行可否取得
-  // 武器が準備状態, かつ自身が前方に配置されていることが条件 (暫定)
+  // 武器が準備状態, かつ自身が前方に配置されている, かつ狂戦士状態ではないことが条件 (暫定)
   private canAttack(): boolean {
-    return this.actor.attack.ready === 0 && this.actor.position !== 'back'
+    return this.actor.attack.ready === 0 && this.actor.position !== 'back' && !this.actor.health.getEffects('berserk')
+  }
+
+  // 「全力防御」実行可否取得
+  // 狂戦士状態ではないことが条件
+  private canDefense(): boolean {
+    return !this.actor.health.getEffects('berserk')
   }
 
   // 「移動」実行可否取得
-  // 後退は自身が後方に配置されていないこと, 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
+  // 後退は自身が後方に配置されていないこと, かつ狂戦士状態ではないこと
+  // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
   private canMove(position: Position): boolean {
     if (!this.state.formationStore) return false
     if (position === 'back') {
-      return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null ? true : false
+      return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null && !this.actor.health.getEffects('berserk') ? true : false
     } else {
       return this.state.formationStore[this.actor.side].front[position] === null ? true : false
     }
@@ -306,6 +324,11 @@ export class CombatActionStore {
       case 'feint':
         if (!this.actions.attack.canExecute()) results = []
         results = this.actions.feint.execute(action.targets[0])
+        break
+
+      case 'defense':
+        if (!this.actions.defense.canExecute()) results = []
+        results = this.actions.defense.execute()
         break
 
       case 'move':
@@ -382,18 +405,36 @@ export class CombatActionStore {
   }
 
   // 防御の判定結果を返す
-  private judgeDefanse(target: Unit): ActionResult {
+  private judgeDefanse(target: Unit): ActionResult[] {
+    // 修正の算出
     const feint = this.actor.attack.feint
     let mod = 0
     if (target.health.stunned) mod -= 4 // 朦朧状態による修正
     if (feint && feint.target === target) mod -= feint.score // 牽制のターゲットの場合の修正
+
+    // 全力防御オプション
+    let defenseCount = 0
+    const maxDefenseCount = target.defense.isFullDefense ? 2 : 1
+    const results = []
+    
+    // 分岐
     if (target.defense.canBlock) {
-      return this.judgeBlock(target, mod)
-    } else if (target.defense.canParry) {
-      return this.judgeParry(target, mod)
-    } else {
-      return this.judgeDodge(target, mod)
+      const blockResult = this.judgeBlock(target, mod)
+      results.push(blockResult)
+      defenseCount++
+      if (blockResult.judge.success) return results
     }
+    if (target.defense.canParry && defenseCount < maxDefenseCount) {
+      const parryResult = this.judgeParry(target, mod)
+      results.push(parryResult)
+      defenseCount++
+      if (parryResult.judge.success) return results
+    }
+    if (defenseCount < maxDefenseCount){
+      const dodgeResult = this.judgeDodge(target, mod)
+      results.push(dodgeResult)
+    }
+    return results
   }
 
   // 武器の準備状態を更新, parryCount をインクリメントし,「受け」の判定結果を返す
@@ -483,7 +524,7 @@ export class CombatActionStore {
   // 「攻撃」実行
   private attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
     // 判定結果の配列
-    const results = []
+    const results: ActionResult[] = []
     
     // 攻撃判定
     const attackResult = this.judgeAttack(aim, fullPower)
@@ -494,10 +535,15 @@ export class CombatActionStore {
     // 防御判定
     // 攻撃判定がクリティカルであれば, 防御判定はスキップ
     if (!attackJudge.critical) {
-      const defenseResult = this.judgeDefanse(target)
-      const defenseJudge = defenseResult.judge as DefenseResult
-      results.push(defenseResult)
-      if (defenseJudge.success) return results // 防御成功時はここで処理を止める
+      const defenseResults = this.judgeDefanse(target)
+      let success = false // 防御成功フラグ
+      // defenseResults は配列で返される (ターゲットが全力防御の場合の対応)
+      defenseResults.forEach(defenseResult => {
+        const defenseJudge = defenseResult.judge as DefenseResult
+        results.push(defenseResult)
+        if (defenseJudge.success) success = true
+      })
+      if (success) return results // 防御成功時はここで処理を止める
     }
 
     // ダメージ判定
@@ -539,6 +585,13 @@ export class CombatActionStore {
     // 牽制結果を次ターンに保持
     if (score > 0) this.actor.attack.feint = { currentTurn: true, target, score } as Feint
     return [result]
+  }
+
+  // 「全力防御」実行
+  private defense(): ActionResult[] {
+    // 全力防御フラグを true にする
+    this.actor.defense.isFullDefenseTurn = true
+    return []
   }
 
   // 「移動」実行

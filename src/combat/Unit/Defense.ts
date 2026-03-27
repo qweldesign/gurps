@@ -14,7 +14,8 @@ export class UnitDefense {
   private _canBlock: boolean //「止め」可能な盾の所有
   public parryCount: number //「受け」試行回数
   public blockCount: number //「止め」試行回数
-  public isFullDefense: boolean //「全力防御」選択中
+  public isFullDefenseTurn: boolean //「全力防御」選択ターン
+  public isFullDefense: boolean //「全力防御」可否
   public ev: number //「よけ」基本値
   public pre: number // 身体抵抗値
   public mre: number // 精神抵抗値
@@ -29,6 +30,7 @@ export class UnitDefense {
     this._canBlock = attacks.shield.ev > 0
     this.parryCount = 0
     this.blockCount = 0
+    this.isFullDefenseTurn = false
     this.isFullDefense = false
     this.ev = ev
     this.pre = pre
@@ -38,7 +40,9 @@ export class UnitDefense {
   nextTurn() {
     this.parryCount = 0
     this.blockCount = 0
-    this.isFullDefense = false
+    // このターンに全力防御を選択したなら, 全力防御を true に変更
+    this.isFullDefense =  this.isFullDefenseTurn
+    this.isFullDefenseTurn = false
   }
 
   // 攻撃キーの変更 (装備変更)
