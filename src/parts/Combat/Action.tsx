@@ -14,7 +14,7 @@ function Action({ store }: { store: Store }) {
   const [targetPalette, setTargetPalette] = useState<TargetPalette>('all')
   const [actionType, setActionType] = useState<ActionType>('wait')
   const [actionOptions, setActionOptions] = useState<ActionOptions>({})
-  const [actionTargets, setActionTargets] = useState<Unit[]>([])
+  const [actionTargets, setActionTargets] = useState<Unit[]>([store.actor])
   const [isExecuted, setIsExecuted] = useState<boolean>(false)
 
   // execute
@@ -29,7 +29,7 @@ function Action({ store }: { store: Store }) {
     setActionPalette('main')
     setActionType('wait')
     setActionOptions({})
-    setActionTargets([])
+    setActionTargets([store.actor])
     setIsExecuted(false)
   }
 
@@ -102,8 +102,8 @@ function Action({ store }: { store: Store }) {
           <div>{actionTargets[0]?.name}</div>
           <div>{store.actor.attack.model.name}: {store.actor.attack.model.dmgName}</div>
           <div>{(actionTargets[0]?.defense.getModel(AIM_OPTIONS[actionOptions.aim ?? 'body'].group))?.name}: {(actionTargets[0]?.defense.getModel(AIM_OPTIONS[actionOptions.aim ?? 'body'].group))?.dr}</div>
-          <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower!)}</div>
-          <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {actionTargets[0]?.defense.getTarget(store.actor.attack.feint)}</div>
+          <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower, actionTargets[0])}</div>
+          <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {actionTargets[0]?.defense.getTarget(store.actor, actionOptions.aim!)}</div>
           <div>効果: </div>
           <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', actionTargets[0]?.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType))} 点</div>
         </div>
@@ -111,14 +111,14 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
         <button
-          onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+          onClick={() => { setActionPalette('target'); setActionTargets([store.actor]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
         >戻る</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmFeint'}>
         <div className="confirm__grid">
           <div>{store.actor.name}</div>
           <div>{actionTargets[0]?.name}</div>
-          <div>攻撃目標値: {store.actor.attack.getTarget('body', 'none')}</div>
+          <div>攻撃目標値: {store.actor.attack.getTarget('body', 'none', actionTargets[0])}</div>
           <div>防御目標値: {actionTargets[0]?.defense.target}</div>
           <div>効果: </div>
           <div>牽制 (防御目標値の低下)</div>
@@ -127,7 +127,7 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
         <button
-          onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+          onClick={() => { setActionPalette('target'); setActionTargets([store.actor]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
         >戻る</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmDefense'}>

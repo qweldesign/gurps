@@ -1,8 +1,8 @@
 // Defense.ts
 
 import { type AttackKey, type DefanseKey } from '../../domains/Equipments'
+import { type Aim } from '../ActionStore'
 import { POSTURE_MODS, type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, CombatUnit as Unit } from '../Unit'
-import { type Feint } from './Attack'
 
 export class UnitDefense {
   private self: Unit
@@ -105,7 +105,7 @@ export class UnitDefense {
   }
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
-  // 牽制のターゲットの場合による修正までは含めない
+  // 牽制のターゲットの場合, 射撃の場合による修正までは含めない
   // 尚, 転倒 (這い) による修正と朦朧状態による修正は重複しない
   get target(): number {
     let target
@@ -119,11 +119,52 @@ export class UnitDefense {
     return Math.max(target, 4)
   }
 
-  // 朦朧状態, 牽制のターゲットの場合に, ペナルティを引いた目標値を返す
-  getTarget(feint: Feint | null) {
-    let target = this.target
-    if (this.self.health.stunned) target -= 4 // 朦朧状態による修正
+  // 牽制のターゲットの場合, 射撃の場合に, ペナルティを引いた目標値を返す
+  // 「受け」
+  getParryTarget(actor: Unit) {
+    let target = this.parryTarget
+    const feint = actor.attack.feint
     if (feint && feint.target === this.self) target -= feint.score // 牽制のターゲットの場合の修正
+    target += actor.attack.model.isMissile ? -4 : 0 // 射撃による修正
+    return Math.max(target, 4)
+  }
+  
+  // 「止め」
+  getBlockTarget(actor: Unit) {
+    let target = this.blockTarget
+    const feint = actor.attack.feint
+    if (feint && feint.target === this.self) target -= feint.score // 牽制のターゲットの場合の修正
+    target += actor.attack.model.isMissile ? -2 : 0 // 射撃による修正
+    return Math.max(target, 4)
+  }
+  
+  // 「よけ」
+  getDodgeTarget(actor: Unit) {
+    let target = this.dodgeTarget
+    const feint = actor.attack.feint
+    if (feint && feint.target === this.self) target -= feint.score // 牽制のターゲットの場合の修正
+    return Math.max(target, 4)
+  }
+
+  getCanBlock(aim: Aim) {
+    const shieldSize = this.self.attack.getModel('shield').ev
+    return this.canBlock && ((
+      aim !== 'leg' && aim !== 'foot') // 脚・足首狙い以外なら盾の大きさは問わない
+      || (aim === 'leg' && shieldSize > 2) // 脚狙いなら中盾以上
+      || (aim === 'foot' && shieldSize > 3) // 足首狙いなら大盾
+    )
+  }
+
+  // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
+  getTarget(actor: Unit, aim: Aim) {
+    let target
+    if (this.getCanBlock(aim)) {
+      target = this.getBlockTarget(actor)
+    } else if (this.canParry) {
+      target = this.getParryTarget(actor)
+    } else {
+      target = this.getDodgeTarget(actor)
+    }
     return Math.max(target, 4)
   }
 

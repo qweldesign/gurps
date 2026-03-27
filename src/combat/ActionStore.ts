@@ -3,7 +3,7 @@
 import { ATTACK_KEYS, type AttackKey, type DefanseKey } from '../domains/Equipments'
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
-import { POSTURE_KEYS, POSTURE_MODS, type Posture, CombatUnit as Unit } from './Unit'
+import { POSTURE_KEYS, type Posture, CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
 export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
@@ -73,15 +73,15 @@ export type Aim = typeof AIM_KEYS[number]
 
 // コマンド名とオプションの組み合わせ定義
 export type ActionRequest =
-  | { type: 'ready', options: {}, targets: [] }
+  | { type: 'ready', options: {}, targets: [Unit] }
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'feint', options: {}, targets: [Unit] }
-  | { type: 'defense', options: {}, targets: [] }
-  | { type: 'move', options: { position: Position }, targets: [] }
-  | { type: 'changeWeapon', options: { attackKey: AttackKey }, targets: [] }
-  | { type: 'changePosture', options: { posture: Posture }, targets: [] }
-  | { type: 'recovery', options: {}, targets: [] }
-  | { type: 'wait', options: {}, targets: [] }
+  | { type: 'defense', options: {}, targets: [Unit] }
+  | { type: 'move', options: { position: Position }, targets: [Unit] }
+  | { type: 'changeWeapon', options: { attackKey: AttackKey }, targets: [Unit] }
+  | { type: 'changePosture', options: { posture: Posture }, targets: [Unit] }
+  | { type: 'recovery', options: {}, targets: [Unit] }
+  | { type: 'wait', options: {}, targets: [Unit] }
 
 // コマンド実行後の判定結果の定義
 export type ActionResult = 
@@ -254,7 +254,7 @@ export class CombatActionStore {
     // 朦朧状態の場合は回復判定
     if (actor.health.stunned) {
       // ActionRequest を作成し, execute
-      const request = { type: 'recovery', options: {}, targets: [] } as ActionRequest
+      const request = { type: 'recovery', options: {}, targets: [actor] } as ActionRequest
       this.execute(request)
     }
   }
@@ -511,84 +511,73 @@ export class CombatActionStore {
   
   // 武器の準備状態を更新し, 攻撃の判定結果を返す
   // 姿勢・バフによる修正は込み
-  private judgeAttack(aim: Aim, fullPower: FullPower, missileMod: number): ActionResult {
+  private judgeAttack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult {
     this.actor.attack.ready = this.actor.attack.model.ready // 武器の準備状態を更新
     // 武器の非準備状態への変化 (trueなら変化無し)
     const ready = this.actor.attack.ready === 0
-    // 目標値算出
-    let target = this.actor.attack.target
-    target += AIM_OPTIONS[aim].mod
-    target += fullPower === 'level' ? 4 : 0
-    // 射撃の場合, ターゲットの姿勢による修正を受ける
-    target += missileMod
     return {
       type: 'attack',
-      judge: { aim, fullPower, ready, ...this.judge(target) } as AttackResult
+      judge: { aim, fullPower, ready, ...this.judge(this.actor.attack.getTarget(aim, fullPower, target)) } as AttackResult
     }
   }
 
   // 防御の判定結果を返す
-  // 姿勢・朦朧状態・バフによる修正は込み
-  private judgeDefanse(target: Unit): ActionResult[] {
-    // 修正の算出
-    const feint = this.actor.attack.feint
-    let mod = 0
-    if (feint && feint.target === target) mod -= feint.score  // 牽制のターゲットの場合による修正
-
-    // 全力防御オプション
+  // 姿勢・朦朧状態・バフ・フェイント・射撃の場合の姿勢・距離による修正は込み
+  private judgeDefanse(target: Unit, aim: Aim): ActionResult[] {
+   // 全力防御オプション
     let defenseCount = 0
     const maxDefenseCount = target.defense.isFullDefense ? 2 : 1
     const results = []
     
     // 分岐
-    if (target.defense.canBlock) {
-      const blockResult = this.judgeBlock(target, mod)
+    if (target.defense.getCanBlock(aim)) {
+      const blockResult = this.judgeBlock(target)
       const blockJudge = blockResult.judge as DefenseResult
       results.push(blockResult)
       defenseCount++
       if (blockJudge.success) return results
     }
     if (target.defense.canParry && defenseCount < maxDefenseCount) {
-      const parryResult = this.judgeParry(target, mod)
+      const parryResult = this.judgeParry(target)
       const parryJudge = parryResult.judge as DefenseResult
       results.push(parryResult)
       defenseCount++
       if (parryJudge.success) return results
     }
     if (target.defense.canDodge && defenseCount < maxDefenseCount){
-      const dodgeResult = this.judgeDodge(target, mod)
+      const dodgeResult = this.judgeDodge(target)
       results.push(dodgeResult)
     }
     return results
   }
 
   // 武器の準備状態を更新, parryCount をインクリメントし,「受け」の判定結果を返す
-  private judgeParry(target: Unit, mod: number): ActionResult {
+  private judgeParry(target: Unit): ActionResult {
     target.attack.ready = target.attack.model.ready // 武器の準備状態を更新
     const ready = target.attack.ready === 0
     target.defense.parryCount++ // parryCount をインクリメント
     return {
       type: 'defense',
-      judge: { defenseType: 'parry', ready, ...this.judge(target.defense.parryTarget + mod) } as DefenseResult
+      judge: { defenseType: 'parry', ready, ...this.judge(target.defense.getParryTarget(this.actor)) } as DefenseResult
     }
   }
 
   // blockCount をインクリメントし,「止め」の判定結果を返す
-  private judgeBlock(target: Unit, mod: number): ActionResult {
+  private judgeBlock(target: Unit): ActionResult {
     target.defense.blockCount++ //  blockCount をインクリメント
     const ready = true
     return {
       type: 'defense',
-      judge: { defenseType: 'block', ready, ...this.judge(target.defense.blockTarget + mod) } as DefenseResult
+      judge: { defenseType: 'block', ready, ...this.judge(target.defense.getBlockTarget(this.actor)) } as DefenseResult
     }
   }
 
   // 「よけ」の判定結果を返す
-  private judgeDodge(target: Unit, mod: number): ActionResult {
+  private judgeDodge(target: Unit): ActionResult {
     const ready = true
     return {
       type: 'defense',
-      judge: { defenseType: 'dodge', ready, ...this.judge(target.defense.dodgeTarget + mod) } as DefenseResult
+      judge: { defenseType: 'dodge', ready, ...this.judge(target.defense.getDodgeTarget(this.actor)) } as DefenseResult
     }
   }
 
@@ -695,8 +684,7 @@ export class CombatActionStore {
     const results: ActionResult[] = []
     
     // 攻撃判定
-    const missileMod = this.actor.attack.model.isMissile ? POSTURE_MODS[target.posture].missileMod : 0
-    const attackResult = this.judgeAttack(aim, fullPower, missileMod)
+    const attackResult = this.judgeAttack(aim, fullPower, target)
     const attackJudge = attackResult.judge as AttackResult
     results.push(attackResult)
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
@@ -704,7 +692,7 @@ export class CombatActionStore {
     // 防御判定
     // 攻撃判定がクリティカルか, ターゲットが全力攻撃選択時は, 防御判定をスキップ
     if (!attackJudge.critical || target.defense.isFullAttack) {
-      const defenseResults = this.judgeDefanse(target)
+      const defenseResults = this.judgeDefanse(target, aim)
       let success = false // 防御成功フラグ
       // defenseResults は配列で返される (ターゲットが全力防御の場合の対応)
       defenseResults.forEach(defenseResult => {
