@@ -3,15 +3,14 @@
 import { type DefanseKey } from '../domains/Equipments'
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
-import { CombatUnit as Unit } from './Unit'
+import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['ready', 'attack', 'fullPowerAttack', 'feint', 'defense', 'move', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   ready: '準備',
   attack: '攻撃',
-  fullPowerAttack: '全力攻撃',
   feint: '牽制',
   defense: '全力防御',
   move: '移動',
@@ -138,6 +137,9 @@ type ActionDefinition = {
   fullPowerAttack: {
     canExcute: () => boolean
   }
+  legAttack: {
+    canExcute: () => boolean
+  }
   feint: {
     canExecute: () => boolean
     execute: (target: Unit) => ActionResult[]
@@ -194,6 +196,9 @@ export class CombatActionStore {
       fullPowerAttack: {
         canExcute: () => this.canFullPowerAttack()
       },
+      legAttack: {
+        canExcute: () => this.canLegAttack()
+      },
       feint: {
         canExecute: () => this.canAttack(),
         execute: (target) => this.feint(target)
@@ -230,6 +235,7 @@ export class CombatActionStore {
       ready: this.actions.ready.canExecute(),
       attack: this.actions.attack.canExecute(),
       fullPowerAttack: this.actions.fullPowerAttack.canExcute(),
+      legAttack: this.actions.legAttack.canExcute(),
       feint: this.actions.attack.canExecute(),
       defense: this.actions.defense.canExecute(),
       move: this.actions.move.options.position.reduce((acc, position) => {
@@ -256,6 +262,12 @@ export class CombatActionStore {
   // 自身が前方に配置されていることが条件
   private canFullPowerAttack(): boolean {
     return this.actor.position !== 'back'
+  }
+
+  // 脚 (足首) 狙い攻撃実行可否取得
+  // 屈みの姿勢, または竿状武器・射撃武器を構えていることが条件
+  private canLegAttack(): boolean {
+    return this.actor.posture === 'crouching' || this.actor.attack.model.isPole || this.actor.attack.model.isMissile
   }
 
   // 「全力防御」実行可否取得
@@ -414,12 +426,17 @@ export class CombatActionStore {
   }
   
   // 武器の準備状態を更新し, 攻撃の判定結果を返す
-  private judgeAttack(aim: Aim, fullPower: FullPower): ActionResult {
+  // 姿勢・バフによる修正は込み
+  private judgeAttack(aim: Aim, fullPower: FullPower, missileMod: number): ActionResult {
     this.actor.attack.ready = this.actor.attack.model.ready // 武器の準備状態を更新
+    // 武器の非準備状態への変化 (trueなら変化無し)
     const ready = this.actor.attack.ready === 0
+    // 目標値算出
     let target = this.actor.attack.target
     target += AIM_OPTIONS[aim].mod
     target += fullPower === 'level' ? 4 : 0
+    // 射撃の場合, ターゲットの姿勢による修正を受ける
+    target += missileMod
     return {
       type: 'attack',
       judge: { aim, fullPower, ready, ...this.judge(target) } as AttackResult
@@ -427,12 +444,12 @@ export class CombatActionStore {
   }
 
   // 防御の判定結果を返す
+  // 姿勢・朦朧状態・バフによる修正は込み
   private judgeDefanse(target: Unit): ActionResult[] {
     // 修正の算出
     const feint = this.actor.attack.feint
     let mod = 0
-    if (target.health.stunned) mod -= 4 // 朦朧状態による修正
-    if (feint && feint.target === target) mod -= feint.score // 牽制のターゲットの場合の修正
+    if (feint && feint.target === target) mod -= feint.score  // 牽制のターゲットの場合による修正
 
     // 全力防御オプション
     let defenseCount = 0
@@ -594,7 +611,8 @@ export class CombatActionStore {
     const results: ActionResult[] = []
     
     // 攻撃判定
-    const attackResult = this.judgeAttack(aim, fullPower)
+    const missileMod = this.actor.attack.model.isMissile ? POSTURE_MODS[target.posture].missileMod : 0
+    const attackResult = this.judgeAttack(aim, fullPower, missileMod)
     const attackJudge = attackResult.judge as AttackResult
     results.push(attackResult)
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める

@@ -8,12 +8,22 @@ import { UnitAttack as Attack } from './Unit/Attack'
 import { UnitDefense as Defense } from './Unit/Defense'
 import { UnitSummary as Summary } from './Unit/Summary'
 
-const combatIds = [0, 1, 2, 3, 4, 5, 6, 7]
+const combatIds: number[] = [0, 1, 2, 3, 4, 5, 6, 7] as const
 
+const POSTURE_KEYS: string[] = ['standing', 'crouching', 'kneeling', 'prone'] as const
+
+export const POSTURE_MODS: Record<Posture, { attackMod: number, defenseMod: number, missileMod: number }> = {
+  'standing': { attackMod: 0, defenseMod: 0, missileMod: 0 }, // 直立
+  'crouching': { attackMod: -2, defenseMod: 0, missileMod: -2 }, // 屈み
+  'kneeling': { attackMod: -2, defenseMod: -2, missileMod: -4 }, // 膝着
+  'prone': { attackMod: -4, defenseMod: -4, missileMod: -8 } // 這い
+ } as const
+
+// 戦闘ユニットID
 export type CombatId = typeof combatIds[number]
 
 // 姿勢の定義
-export type Posture = 'standing' | 'crouching' | 'kneeling' | 'prone'
+export type Posture = typeof POSTURE_KEYS[number]
 
 // 攻撃手段の定義
 export type CombatAttackModel = {
@@ -88,8 +98,8 @@ export class CombatUnit {
     this.position = 'back'
     this.posture = 'standing'
     this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
-    this.attack = new Attack(attacks, this.defense.changeAttackKey)
-    this.health = new Health(this, dmgBuff, evBuff) // 後の Summary が Health を見るので順序厳守
+    this.attack = new Attack(this, attacks, this.defense.changeAttackKey)
+    this.health = new Health(this, dmgBuff, evBuff)
     this.summary = new Summary(this)
   }
 

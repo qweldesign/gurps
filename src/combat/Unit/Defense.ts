@@ -1,15 +1,15 @@
 // Defense.ts
 
 import { type AttackKey, type DefanseKey } from '../../domains/Equipments'
-import { type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, CombatUnit as Unit } from '../Unit'
+import { POSTURE_MODS, type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, CombatUnit as Unit } from '../Unit'
 import { type Feint } from './Attack'
 
 export class UnitDefense {
   private self: Unit
   private models: DefenseModels
-  public parryTarget: number //「受け」目標値
-  public blockTarget: number //「止め」目標値
-  public dodgeTarget: number //「よけ」目標値
+  public _parryTarget: number //「受け」目標値
+  public _blockTarget: number //「止め」目標値
+  public _dodgeTarget: number //「よけ」目標値
   private _canParry: boolean //「受け」可能な武器の所有
   private _canBlock: boolean //「止め」可能な盾の所有
   public parryCount: number //「受け」試行回数
@@ -25,9 +25,9 @@ export class UnitDefense {
   constructor(self: Unit, attacks: AttackModels, defenses: DefenseModels, ev: number, pre: number, mre: number) {
     this.self = self
     this.models = defenses
-    this.parryTarget = ev + attacks.main.ev
-    this.blockTarget = ev + attacks.shield.ev
-    this.dodgeTarget = ev - defenses.body.wt
+    this._parryTarget = ev + attacks.main.ev
+    this._blockTarget = ev + attacks.shield.ev
+    this._dodgeTarget = ev - defenses.body.wt
     this._canParry = attacks.main.ev > 0
     this._canBlock = attacks.shield.ev > 0
     this.parryCount = 0
@@ -54,7 +54,7 @@ export class UnitDefense {
 
   // 攻撃キーの変更 (装備変更)
   changeAttackKey(attacks: AttackModels, key: AttackKey) {
-    this.parryTarget = this.ev + attacks[key].ev
+    this._parryTarget = this.ev + attacks[key].ev
     this._canParry = attacks[key].ev > 0
 
     // 盾を攻撃に用いる場合,「止め」不能になる
@@ -63,6 +63,30 @@ export class UnitDefense {
     } else {
       this._canBlock = attacks.shield.ev > 0
     }
+  }
+
+  get parryTarget() {
+    let target = this._parryTarget
+    target += (this.self.posture === 'prone' || this.self.health.stunned) ? -4 : 0 // 転倒または朦朧状態による修正
+    target += this.self.posture !== 'prone' ? POSTURE_MODS[this.self.posture].defenseMod : 0 // 姿勢による修正
+    target += this.self.health.buff.ev // バフ
+    return target
+  }
+
+  get blockTarget() {
+    let target = this._blockTarget
+    target += (this.self.posture === 'prone' || this.self.health.stunned) ? -4 : 0 // 転倒または朦朧状態による修正
+    target += this.self.posture !== 'prone' ? POSTURE_MODS[this.self.posture].defenseMod : 0 // 姿勢による修正
+    target += this.self.health.buff.ev // バフ
+    return target
+  }
+
+  get dodgeTarget() {
+    let target = this._dodgeTarget
+    target += (this.self.posture === 'prone' || this.self.health.stunned) ? -4 : 0 // 転倒または朦朧状態による修正
+    target += this.self.posture !== 'prone' ? POSTURE_MODS[this.self.posture].defenseMod : 0 // 姿勢による修正
+    target += this.self.health.buff.ev // バフ
+    return target
   }
 
   //「受け」可能な状態か否かを返す
@@ -81,6 +105,8 @@ export class UnitDefense {
   }
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
+  // 牽制のターゲットの場合による修正までは含めない
+  // 尚, 転倒 (這い) による修正と朦朧状態による修正は重複しない
   get target(): number {
     let target
     if (this.canBlock) {

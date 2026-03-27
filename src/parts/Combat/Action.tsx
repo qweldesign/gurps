@@ -160,7 +160,7 @@ function Action({ store }: { store: Store }) {
       <div className="actions option" data-disable={actionPalette !== 'aim'}>
         {AIM_KEYS.map(key => (
           <button
-            className="is-small"
+            className={`is-small ${((key !== 'leg' && key !== 'foot') || store.availability.legAttack) ? '' : 'hidden' }`}
             key={key}
             onClick={() => { setActionPalette('target'); setActionOptions({ ...actionOptions, aim: key }); }} // 部位狙いをセットし, ターゲットパレットへ進む
           >{`${AIM_OPTIONS[key].label} (${AIM_OPTIONS[key].mod})`}</button>

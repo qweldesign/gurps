@@ -2,7 +2,7 @@
 
 import { type AttackKey } from '../../domains/Equipments'
 import { type Aim, AIM_OPTIONS, type FullPower } from '../ActionStore'
-import { type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels, CombatUnit as Unit } from '../Unit'
+import { POSTURE_MODS, type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels, CombatUnit as Unit } from '../Unit'
 
 export type Feint = {
   currentTurn: boolean
@@ -11,13 +11,15 @@ export type Feint = {
 }
 
 export class UnitAttack {
+  private self: Unit
   private models: AttackModels
   private _key: AttackKey
   public ready: number
   public feint: Feint | null
   private changeKeyCallback: (attacks: AttackModels, key: AttackKey) => void
 
-  constructor(attacks: AttackModels, callback: (attacks: AttackModels, key: AttackKey) => void) {
+  constructor(self: Unit, attacks: AttackModels, callback: (attacks: AttackModels, key: AttackKey) => void) {
+    this.self = self
     this.models = attacks
     this._key = 'main'
     this.ready = 0
@@ -48,8 +50,12 @@ export class UnitAttack {
   }
 
   // 攻撃モデルの目標値を取得
+  // 射撃のターゲットの姿勢による修正までは含めない
   get target(): number {
-    return Math.max(this.model.level, 4)
+    let target = this.model.level
+    target += POSTURE_MODS[this.self.posture].attackMod // 姿勢による修正
+    target += this.self.health.buff.level // バフ
+    return Math.max(target, 4)
   }
 
   // 攻撃モデルの目標値を, 諸条件 (部位狙い・全力攻撃オプション) に合わせて取得
