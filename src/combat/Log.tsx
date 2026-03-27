@@ -33,6 +33,7 @@ export class CombatLog {
     const resultLabel = this.createResultLabel(type, results)
     switch (type) {
       case 'attack':
+        return `${request.options.fullPower !== 'none' ? '全力' : ''}${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'feint':
         return `${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'move':

@@ -14,6 +14,8 @@ export class UnitDefense {
   private _canBlock: boolean //「止め」可能な盾の所有
   public parryCount: number //「受け」試行回数
   public blockCount: number //「止め」試行回数
+  public isFullAttackTurn: boolean //「全力攻撃」選択ターン
+  public isFullAttack: boolean //「全力攻撃」可否
   public isFullDefenseTurn: boolean //「全力防御」選択ターン
   public isFullDefense: boolean //「全力防御」可否
   public ev: number //「よけ」基本値
@@ -30,6 +32,8 @@ export class UnitDefense {
     this._canBlock = attacks.shield.ev > 0
     this.parryCount = 0
     this.blockCount = 0
+    this.isFullAttackTurn = false
+    this.isFullAttack = false
     this.isFullDefenseTurn = false
     this.isFullDefense = false
     this.ev = ev
@@ -40,6 +44,9 @@ export class UnitDefense {
   nextTurn() {
     this.parryCount = 0
     this.blockCount = 0
+    // このターンに全力攻撃を選択したなら, 全力攻撃を true に変更
+    this.isFullAttack = this.isFullAttackTurn
+    this.isFullAttackTurn = false
     // このターンに全力防御を選択したなら, 全力防御を true に変更
     this.isFullDefense =  this.isFullDefenseTurn
     this.isFullDefenseTurn = false
@@ -60,12 +67,17 @@ export class UnitDefense {
 
   //「受け」可能な状態か否かを返す
   get canParry(): boolean {
-    return this._canParry && this.parryCount < (this.isFullDefense ? 2 : 1) && this.self.attack.ready === 0
+    return !this.isFullAttack && this._canParry && this.parryCount < (this.isFullDefense ? 2 : 1) && this.self.attack.ready === 0
   }
 
   //「止め」可能な状態か否かを返す
   get canBlock(): boolean {
-    return this._canBlock && this.blockCount < (this.isFullDefense ? 2 : 1)
+    return !this.isFullAttack && this._canBlock && this.blockCount < (this.isFullDefense ? 2 : 1)
+  }
+
+  //「よけ」可能な状態か否かを返す
+  get canDodge(): boolean {
+    return !this.isFullAttack
   }
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得

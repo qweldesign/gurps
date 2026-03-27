@@ -63,7 +63,7 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setTargetPalette('feint'); setActionType('feint'); }} // ターゲットパレットへ進む
         >牽制</button>
         <button
-          disabled={!store.availability.attack}
+          disabled={!store.availability.fullPowerAttack}
           onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionType('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
         >特殊攻撃</button>
         <button
@@ -134,17 +134,25 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'attackOption'}>
-        {FULL_POWER_KEYS.map(key => key !== 'none' && (
+        {!store.availability.ready && FULL_POWER_KEYS.map(key => key !== 'none' && (
           <button
             className="is-large"
             key={key}
             onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: key }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
           >{FULL_POWER_OPTIONS[key].label}</button>
         ))}
-        <button
-          className="is-large"
-          onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
-        >部位狙い</button>
+        {!store.availability.ready && (
+          <button
+            className="is-large"
+            onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >部位狙い</button>
+        )}
+        {store.availability.ready && (
+          <button
+            className="is-large"
+            onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >準備即攻撃</button>
+        )}
         <button
           onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
