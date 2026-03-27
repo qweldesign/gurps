@@ -12,8 +12,8 @@ export const COMBAT_DEV_PROGRESS: Tasks[] = [
       { name: '行動クラス', weight: 3, progress: 2 }, // Action: コマンドを管理
       { name: '概要クラス', weight: 3, progress: 2 }, // Summary: ユニットの概要
       { name: '負傷クラス', weight: 3, progress: 2 }, // Health: ユニットの負傷など 
-      { name: '攻撃クラス', weight: 3, progress: 2 }, // Attack: ユニットの武器, 準備, 狙い, 集中など
-      { name: '防御クラス', weight: 3, progress: 2 }, // Defense: ユニットの防具, 能動防御など
+      { name: '攻撃クラス', weight: 3, progress: 3 }, // Attack: ユニットの武器, 準備, 狙い, 集中など
+      { name: '防御クラス', weight: 3, progress: 3 }, // Defense: ユニットの防具, 能動防御など
       { name: '効果クラス', weight: 3, progress: 3 }, // Effect: ユニットの特殊効果など
       { name: '変化クラス', weight: 1, progress: 1 } // Buff: ユニットのパラメータ変化など
     ]
@@ -41,9 +41,9 @@ export const COMBAT_DEV_PROGRESS: Tasks[] = [
       { name: '準備', weight: 1, progress: 1 },
       { name: '牽制', weight: 3, progress: 3 },
       { name: '全力防御', weight: 1, progress: 1 },
-      { name: '姿勢変更', weight: 1, progress: 0 },
-      { name: '装備変更', weight: 1, progress: 0 },
-      { name: '射撃', weight: 1, progress: 0 },
+      { name: '姿勢変更', weight: 1, progress: 1 },
+      { name: '装備変更', weight: 1, progress: 1 },
+      { name: '射撃', weight: 1, progress: 1 },
       { name: '集中', weight: 1, progress: 0 },
       { name: '法術', weight: 2, progress: 0 },
       { name: '特殊攻撃', weight: 3, progress: 3 },
