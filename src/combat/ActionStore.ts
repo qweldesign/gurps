@@ -488,7 +488,7 @@ export class CombatActionStore {
     const dmgType = attack.dmgType
     let count = attack.dmgDice
     count -= fullPower === 'dmg' ? 1 : 0 // 全力攻撃オプション「ダメージ安定」
-    let mod = attack.dmgMod = (dmgType ? defense.sdr : defense.tdr)
+    let mod = attack.dmgMod - (dmgType ? defense.sdr : defense.tdr)
     mod += fullPower === 'dmg' ? 6 : 0 // 全力攻撃オプション「ダメージ安定」
     const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
     const roll = this.roll(count, mod, rate).roll
