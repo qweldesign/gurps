@@ -75,15 +75,11 @@ const EQUIPMENTS_TABLE: [WeaponName, ArmorName][][][] = [
     [['長槍', '革服'], ['長槍', '革鎧']]
   ],
   [ // 弓使い
-    [['ダガー', '服'], ['レイピア', '革服'], ['レイピア', '革鎧']]
+    [['長弓', '服'], ['長弓', '革服'], ['長弓', '革鎧']]
   ],
   [ // 術士
     [['杖', '革服'], ['杖', '革鎧']]
   ],
-]
-
-const MISSILE_TABLE: WeaponName[] = [
-  '短弓', '弩', '長弓'
 ]
 
 // 名前 (PC用)
@@ -330,12 +326,18 @@ export class SampleCharacter extends Character {
     const t = Math.min((totalPoints >= 24 ? 3 : totalPoints >= 16 ? 2 : totalPoints >= 12 ? 1 : 0), len2 - 1)
     const weaponName = table2[t][0]
     const armorName = table2[t][1]
-    const missileName = MISSILE_TABLE[this.tactic % 3]
     const skill = this.isWarrior ? '武術' : this.isFencer ? '剣術' : ''
     this.setWeapon(weaponName, true, skill)
     this.setBody(armorName)
-    if ((Math.floor(this.tactic / 3) === 1 && totalPoints >= 16) || this.tactic === 5) {
-      this.missile = missileName // 条件に応じて射撃武器をセット
+    // 条件に応じて予備武器をセット
+    if (this.tactic === 3 && totalPoints >= 16) { // 剣士
+      this.spare = '短弓'
+    } else if (this.tactic === 4 && totalPoints >= 16) { // 盗賊
+      this.spare = '弩'
+    } else if (this.tactic === 5 && totalPoints >= 16) { // 弓使い
+      this.spare = 'レイピア'
+    } else if (this.tactic === 5) {
+      this.spare = 'ダガー'
     }
   }
 }

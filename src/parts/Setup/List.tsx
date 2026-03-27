@@ -76,7 +76,7 @@ function List({ units }: { units: Character[] }) {
               <td>{`${unit.getParamLevel('知力')} (${unit.getParam('知力')}CP)`}</td>
               <td>{`${unit.getParamLevel('生命力')} (${unit.getParam('生命力')}CP)`}</td>
               <td>{`${unit.mainSkill.name}: ${unit.mainSkill.level}`}</td>
-              <td>{`${unit.weapon.id !== 0 ? unit.weapon.name : unit.missile!.name} / ${unit.body.name}`}</td>
+              <td>{`${unit.weapon.name} / ${unit.body.name}`}</td>
               <td>{`${unit.currentTotal} / ${unit.points}`}</td>
             </tr>
           ))}

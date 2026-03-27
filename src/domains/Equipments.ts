@@ -63,7 +63,7 @@ export const DMG_STEP: BaseDmg[] = [
   { id: 17, name: '4d+1', dice: 4, mod: 1 }
 ] as const
 
-export const ATTACK_KEYS = ['main', 'sub', 'missile', 'shield'] as const
+export const ATTACK_KEYS = ['main', 'sub', 'spare', 'shield'] as const
 
 export const DEFENSE_KEYS = ['body', 'head', 'arm', 'leg'] as const
   
@@ -105,7 +105,7 @@ export type LegArmorName = typeof ARMOR_LIST[number]['parts'][2]
 
 export type EquipmentSet = {
   weapon?: WeaponName
-  missile?: WeaponName
+  spare?: WeaponName
   shield?: WeaponName
   body?: ArmorName
   head?: HeadArmorName
@@ -151,7 +151,7 @@ export class Equipments {
   private _weapon: Weapon
   private _mainUsage: Weapon
   private _subUsage: Weapon
-  private _missile: Weapon
+  private _spare: Weapon
   private _shield: Weapon
   private _body: Armor
   private _head: Armor
@@ -164,8 +164,8 @@ export class Equipments {
     this._mainUsage = this.setMainUsage(this._weapon)
     this._subUsage = this.setSubUsage(this._weapon)
 
-    const missileName = set?.missile ?? WEAPON_LIST[0].name
-    this._missile = WEAPON_LIST.find(item => item.name === missileName)!
+    const spareName = set?.spare ?? WEAPON_LIST[0].name
+    this._spare = WEAPON_LIST.find(item => item.name === spareName)!
 
     const shieldName = set?.shield ?? WEAPON_LIST[0].name
     this._shield = WEAPON_LIST.find(item => item.name === shieldName)!
@@ -229,9 +229,9 @@ export class Equipments {
     return WEAPON_LIST[0]
   }
 
-  // 射撃武器をセット
-  set missile(weaponName: WeaponName) {
-    this._missile = WEAPON_LIST.find(item => item.name === weaponName)!
+  // 予備武器をセット
+  set spare(weaponName: WeaponName) {
+    this._spare = WEAPON_LIST.find(item => item.name === weaponName)!
   }
 
   // 盾をセット
@@ -292,9 +292,9 @@ export class Equipments {
     return this._subUsage
   }
 
-  // 射撃武器を取得
-  get missile(): Weapon {
-    return this._missile
+  // 予備武器を取得
+  get spare(): Weapon {
+    return this._spare
   }
 
   // 盾を取得
@@ -326,7 +326,7 @@ export class Equipments {
   getDmg(key: AttackKey = 'main', typeOption:boolean = true, mod: number = 0): Dmg {
     const weapon = (key === 'main' ? this.mainUsage
       : key === 'sub' ? this.subUsage
-      : key === 'missile' ? this.missile : this.shield)
+      : key === 'spare' ? this.spare : this.shield)
     return getDmg(weapon, typeOption, mod)
   }
 
@@ -334,7 +334,7 @@ export class Equipments {
   getDmgName(key: AttackKey = 'main', typeOption:boolean = true, mod: number = 0): string {
     const weapon = (key === 'main' ? this.mainUsage
       : key === 'sub' ? this.subUsage
-      : key === 'missile' ? this.missile : this.shield)
+      : key === 'spare' ? this.spare : this.shield)
     return getDmgName(weapon, typeOption, mod)
   }
 
@@ -342,7 +342,7 @@ export class Equipments {
   get gold(): number {
     let total = 0
     total += this._weapon.gold
-    total += this._missile?.gold ?? 0
+    total += this._spare?.gold ?? 0
     total += this._shield?.gold ?? 0
     total += (this._body?.gold ?? 0) * 0.5
     total += (this._head?.gold ?? 0) * 0.25
@@ -355,7 +355,7 @@ export class Equipments {
   toModel(): EquipmentSet {
     return {
       weapon: this.weapon.name,
-      missile: this.missile.name,
+      spare: this.spare.name,
       shield: this.shield.name,
       body: this.body.name,
       head: this.head.parts[0],
