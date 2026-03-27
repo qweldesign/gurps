@@ -3,7 +3,7 @@ import { type ParamsState, type Action } from '../Edit'
 
 function EquipmentsSetting({ isFirstCreation, state, dispatch, calcGold }: { isFirstCreation: boolean, state: ParamsState, dispatch: Dispatch<Action>, calcGold: (state: ParamsState, isMax: boolean) => number }) {
   // CHANGE_EQUIP
-  const onChangeEquip = (slot: 'weapon' | 'missile' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string) => {
+  const onChangeEquip = (slot: 'weapon' | 'spare' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string) => {
     // 発火
     dispatch({ type: 'CHANGE_EQUIP', payload: { slot, name } }) 
   }
@@ -22,8 +22,8 @@ function EquipmentsSetting({ isFirstCreation, state, dispatch, calcGold }: { isF
         <select className="w-72 m-6 px-3 text-left" value={state.equips.weapon.name} onChange={(e) => onChangeEquip('weapon', e.target.value)}>
           <option value="装備無し">装備無し</option>
           {state.weaponList.filter(item => (
-            // 格闘, 射撃, 盾を除く
-            item.weaponType !== 0 && item.weaponType !== 5 && item.weaponType !== 6
+            // 格闘, 盾を除く
+            item.weaponType !== 0 && item.weaponType !== 6
           )).map((item, i) => (
             <option key={i} value={item.name}>{`${item.name} | 性能:${item.baseDmg / 2} (${item.gold}金)`}</option>
           ))}
@@ -33,18 +33,18 @@ function EquipmentsSetting({ isFirstCreation, state, dispatch, calcGold }: { isF
         </div>
       </div>
       <div>
-        <label className="inline-block w-24 sm:text-right">射撃武器: </label>
-        <select className="w-72 m-6 px-3 text-left" value={state.equips.missile.name} onChange={(e) => onChangeEquip('missile', e.target.value)}>
+        <label className="inline-block w-24 sm:text-right">予備武器: </label>
+        <select className="w-72 m-6 px-3 text-left" value={state.equips.spare.name} onChange={(e) => onChangeEquip('spare', e.target.value)}>
           <option value="装備無し">装備無し</option>
           {state.weaponList.filter(item => (
-            // 射撃武器のみを取り出す
-            item.weaponType === 5
+            // 予備武器のみを取り出す
+            item.skillType === '剣術'
           )).map((item, i) => (
             <option key={i} value={item.name}>{`${item.name} | 性能:${item.baseDmg / 2} (${item.gold}金)`}</option>
           ))}
         </select>
-        <div className={state.saleEquips.missile.name === '装備無し' ? 'hidden' : 'inline-block'}>
-          <span>{`${state.saleEquips.missile.name} を売却 (${Math.floor(state.saleEquips.missile.gold / 2)}金)`}</span>
+        <div className={state.saleEquips.spare.name === '装備無し' ? 'hidden' : 'inline-block'}>
+          <span>{`${state.saleEquips.spare.name} を売却 (${Math.floor(state.saleEquips.spare.gold / 2)}金)`}</span>
         </div>
       </div>
       <div>

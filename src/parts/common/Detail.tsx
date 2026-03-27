@@ -65,12 +65,12 @@ function Detail({ unit }: { unit: Character }) {
                 <div>{`P-EV: ${unit.subUsage.ev}`}</div>
               </>
             )}
-            {unit.missile.id !== 0 && (
+            {unit.spare.id !== 0 && (
               <>
-                <div>{unit.missile.name}</div>
-                <div>{`Dmg: ${unit.getDmgName('missile')}`}</div>
-                <div>{`Lv: ${unit.getLevel('missile')}`}</div>
-                <div>{`B-EV: ${unit.missile.ev}`}</div>
+                <div>{unit.spare.name}</div>
+                <div>{`Dmg: ${unit.getDmgName('spare')}`}</div>
+                <div>{`Lv: ${unit.getLevel('spare')}`}</div>
+                <div>{`B-EV: ${unit.spare.ev}`}</div>
               </>
             )}
             {unit.shield.id !== 0 && (

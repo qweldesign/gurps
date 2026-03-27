@@ -48,7 +48,7 @@ export type Action =
   | { type: 'SET_OPTIONS', payload: { value: string } }
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterName, size: number } }
   | { type: 'RESET_EQUIPS', payload: { prevModel: Model } }
-  | { type: 'CHANGE_EQUIP', payload: { slot: 'weapon' | 'missile' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string } }
+  | { type: 'CHANGE_EQUIP', payload: { slot: 'weapon' | 'spare' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string } }
   | { type: 'SET_NAME', payload: { name: string } }
   | { type: 'SET_GENDER', payload: { gender: string } }
   | { type: 'AUTO_NAME', payload: { gender: string } }
@@ -115,8 +115,8 @@ function Edit() {
         if (prevEquips.weapon.name !== equips.weapon.name) {
           saleEquips.weapon = prevEquips.weapon.name
         }
-        if (prevEquips.missile.name !== equips.missile.name) {
-          saleEquips.missile = prevEquips.missile.name
+        if (prevEquips.spare.name !== equips.spare.name) {
+          saleEquips.spare = prevEquips.spare.name
         }
         if (prevEquips.shield.name !== equips.shield.name) {
           saleEquips.shield = prevEquips.shield.name
@@ -228,10 +228,10 @@ function Edit() {
               name: action.payload.name
             })
           
-          case 'missile':
+          case 'spare':
             return changeEquip({
-              getter: () => state.prevEquips.missile.name,
-              setter: (eq, name) => eq.missile = name,
+              getter: () => state.prevEquips.spare.name,
+              setter: (eq, name) => eq.spare = name,
               isSame: (a, b) => a === b,
               name: action.payload.name
             })

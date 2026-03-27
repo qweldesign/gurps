@@ -167,9 +167,9 @@ export class Character {
     return this.equipments.setWeapon(weaponName, autoSet, skill)
   }
 
-  // 射撃武器をセット
-  set missile(weaponName: WeaponName) {
-    this.equipments.missile = weaponName
+  // 予備武器をセット
+  set spare(weaponName: WeaponName) {
+    this.equipments.spare = weaponName
   }
 
   // 盾をセット
@@ -217,9 +217,9 @@ export class Character {
     return this.equipments.subUsage
   }
 
-  // 射撃武器を取得
-  get missile(): Weapon {
-    return this.equipments.missile
+  // 予備武器を取得
+  get spare(): Weapon {
+    return this.equipments.spare
   }
 
   // 盾を取得
@@ -241,7 +241,7 @@ export class Character {
   getLevel(key: AttackKey = 'main'): number {
     const weapon = key === 'main' ? this.mainUsage
       : key === 'sub' ? this.subUsage
-      : key === 'missile' ? this.missile : this.shield
+      : key === 'spare' ? this.spare : this.shield
     const skill = weapon.skillType
     if (skill === '剣術') {
       // 「武術」で「剣術」技能の武器を扱う場合は技能値の高い方を返す
@@ -293,7 +293,7 @@ export class Character {
     const map = {
       main: this.mainUsage,
       sub: this.subUsage,
-      missile: this.missile,
+      spare: this.spare,
       shield: this.shield
     }
     return ATTACK_KEYS.reduce<CombatAttackModels>((acc, key) => {
@@ -309,7 +309,7 @@ export class Character {
         ready: item.ready,
         isChain: item.weaponType === 2 ? true : false, // 鎖状
         isPole: item.weaponType === 4 ? true : false, // 竿状
-        isMissile: item.weaponType === 5 && key === 'missile' ? true : false,
+        isMissile: item.weaponType === 5 ? true : false,
         isShield: item.weaponType === 6 && key === 'shield' ? true : false
       }
       return acc
