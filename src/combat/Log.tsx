@@ -1,7 +1,7 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type ActionResult } from './ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type InjuryOnLimbResult, type FeintResult, type ActionResult } from './ActionStore'
 import { CombatUnit as Unit } from './Unit'
 
 let count = 0
@@ -181,8 +181,21 @@ export class CombatLog {
               }
               break
 
+            case 'injuryOnLimb': // 顔・四肢の故障ログ
+              const injuryOnLimbResult = result.judge as InjuryOnLimbResult
+              if (injuryOnLimbResult.limb === 'ear') {
+                messages.push(<>{`${target} は 耳を故障した!!`}</>)
+              } else if (injuryOnLimbResult.limb === 'eye') {
+                messages.push(<>{`${target} は 目を故障した!!`}</>)
+              } else if (injuryOnLimbResult.limb === 'arm' || injuryOnLimbResult.limb === 'hand') {
+                messages.push(<>{`${target} は 腕を故障した!!`}</>)
+              } else if (injuryOnLimbResult.limb === 'leg' || injuryOnLimbResult.limb === 'foot') {
+                messages.push(<>{`${target} は 脚を故障した!!`}</>)
+              }
+              break
+
             case 'knockedDown': // 転倒判定の結果ログ
-              const knockedDownResult = result.judge
+              const knockedDownResult = result.judge as Judge
               if (knockedDownResult.success) {
                 // 朦朧状態
                 messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
@@ -192,14 +205,28 @@ export class CombatLog {
               }
               break
 
-            case 'fatal': // 転倒判定の結果ログ
-              const fatalResult = result.judge
-              if (fatalResult.success) {
+            case 'fatal': // 致死判定の結果ログ
+              const deadResult = result.judge
+              if (deadResult.success) {
                 // 気絶
                 messages.push(<>{`${target} は 気絶した...`}</>)
               } else {
                 // 死亡
                 messages.push(<>{`${target} は 死亡した...`}</>)
+              }
+              break
+
+            case 'unconscious': // 気絶判定 (頭狙い) の結果ログ
+              const unconsciousResult = result.judge as Judge
+              if (!unconsciousResult.success) {
+                messages.push(<>{`${target} は 気絶した!!`}</>)
+              }
+              break
+
+            case 'dead': // 即死判定 (喉狙い) の結果ログ
+              const fatalResult = result.judge as Judge
+              if (!fatalResult.success) {
+                messages.push(<>{`${target} は 即死した!!!`}</>)
               }
               break
           }
@@ -208,7 +235,7 @@ export class CombatLog {
 
       case 'recovery':
         results.forEach(result => {
-          const recoveryResult = result.judge
+          const recoveryResult = result.judge as Judge
           if (recoveryResult.success) {
             // 回復
             messages.push(<>{`${actor} は 朦朧状態から回復した!`}</>)

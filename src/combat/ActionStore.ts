@@ -83,9 +83,12 @@ export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
+  | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'feint', judge: FeintResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
+  | { type: 'unconscious', judge: Judge }
+  | { type: 'dead', judge: Judge }
   | { type: 'recovery', judge: Judge }
 
 type Roll = {
@@ -114,6 +117,8 @@ export type DefenseResult = Judge & {
 }
 
 export type DmgResult = Judge
+
+export type InjuryOnLimbResult = { limb: Aim }
 
 export type FeintResult = Score & {
   target: Unit
@@ -365,9 +370,12 @@ export class CombatActionStore {
 
     // 行動終了分岐
     let nextTurn = true
-    if (action.type === 'recovery' && results[0].judge.success) {
-      this.unlocked = true
-      nextTurn = false
+    if (action.type === 'recovery') {
+      const recoveryResult = results[0].judge as Judge
+      if (recoveryResult.success) {
+        this.unlocked = true
+        nextTurn = false
+      }
     }
 
     // 行動終了
@@ -434,15 +442,17 @@ export class CombatActionStore {
     // 分岐
     if (target.defense.canBlock) {
       const blockResult = this.judgeBlock(target, mod)
+      const blockJudge = blockResult.judge as DefenseResult
       results.push(blockResult)
       defenseCount++
-      if (blockResult.judge.success) return results
+      if (blockJudge.success) return results
     }
     if (target.defense.canParry && defenseCount < maxDefenseCount) {
       const parryResult = this.judgeParry(target, mod)
+      const parryJudge = parryResult.judge as DefenseResult
       results.push(parryResult)
       defenseCount++
-      if (parryResult.judge.success) return results
+      if (parryJudge.success) return results
     }
     if (target.defense.canDodge && defenseCount < maxDefenseCount){
       const dodgeResult = this.judgeDodge(target, mod)
@@ -490,7 +500,9 @@ export class CombatActionStore {
     count -= fullPower === 'dmg' ? 1 : 0 // 全力攻撃オプション「ダメージ安定」
     let mod = attack.dmgMod - (dmgType ? defense.sdr : defense.tdr)
     mod += fullPower === 'dmg' ? 6 : 0 // 全力攻撃オプション「ダメージ安定」
-    const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
+    const rate = aim === 'neck' || aim === 'stomach'
+      ? (dmgType === 0 ? 1.5 : dmgType === 1 ? 2 : 3)
+      : (dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2)
     const roll = this.roll(count, mod, rate).roll
     return {
       type: 'dmg',
@@ -520,6 +532,25 @@ export class CombatActionStore {
       judge: this.judge(target.defense.pre)
     }
   }
+
+  // 気絶判定 (頭狙い)
+  private judgeUnconscious(target: Unit, dmgType: number): ActionResult {
+    const mod = dmgType === 0 ? -2 : 0 // 攻撃型が「叩」の場合の修正
+    return {
+      type: 'unconscious',
+      judge: this.judge(target.defense.pre + mod)
+    }
+  }
+
+  // 即死判定 (喉狙い)
+  private judgeDead(target: Unit, dmgType: number): ActionResult {
+    const mod = dmgType > 0 ? -2 : 0 // 攻撃型が「切」「刺」の場合の修正
+    return {
+      type: 'dead',
+      judge: this.judge(target.defense.pre + mod)
+    }
+  }
+  
 
   // 朦朧状態からの回復判定
   private judgeRecovery(): ActionResult {
@@ -585,28 +616,80 @@ export class CombatActionStore {
     // ダメージ判定
     const dmgResult = this.rollDmg(aim, fullPower, target)
     const dmgJudge = dmgResult.judge as DmgResult
+
+    // 部位狙いによる顔・四肢の故障判定と, 最大ダメージ制限
+    let injuryOnLimb = false
+    if (aim === 'ear' || aim === 'eye') {
+      if (dmgJudge.roll >= 2) injuryOnLimb = true
+      dmgJudge.roll = Math.min(dmgJudge.roll, 2)
+    }
+    if (aim === 'hand' || aim === 'foot') {
+      if (dmgJudge.roll >= target.maxHP / 3) injuryOnLimb = true
+      dmgJudge.roll = Math.min(dmgJudge.roll, Math.floor(target.maxHP / 3))
+    }
+    if (aim === 'arm' || aim === 'leg') {
+      if (dmgJudge.roll >= target.maxHP / 2) injuryOnLimb = true
+      dmgJudge.roll = Math.min(dmgJudge.roll, Math.floor(target.maxHP / 2))
+    }
     results.push(dmgResult)
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 
-    // ダメージ効果
+    // 負傷 (ダメージ効果)
     const dmg = dmgJudge.roll
     target.health.injury += dmg
 
-    // 朦朧状態・転倒判定
-    if (dmg >= target.maxHP / 2) { // ← 既に朦朧状態の場合もあるので, Health から状態だけを取得しない
-      const knockedDownResult = this.judgeKnockedDown(target)
-      results.push(knockedDownResult)
-      if (!knockedDownResult.judge.success) {
-        target.posture = 'prone' // 姿勢変更
-      }
+    // 顔・四肢を狙った攻撃
+    if ((aim === 'ear' || aim === 'eye' || aim === 'arm' || aim === 'leg' || aim === 'hand' || aim === 'foot') && injuryOnLimb) {
+      const injuryOnLimbResult = { type: 'injuryOnLimb', judge: { limb: aim } } as ActionResult
+      results.push(injuryOnLimbResult)
     }
 
-    // 気絶・死亡判定
-    if (target.health.unconscious) {
-      const fatalResult = this.judgeFatal(target)
-      results.push(fatalResult)
-      if (!fatalResult.judge.success) {
-        target.health.dead = true // 死亡
+    // それ以外を狙った攻撃
+    if (aim === 'head' || aim === 'body' || aim === 'neck' || aim === 'stomach') {
+
+      // 朦朧状態・転倒判定 (気絶に至ってない場合のみ)
+      if (!target.health.unconscious && (dmg >= target.maxHP / 2 // 通常
+        || ((aim === 'head' || aim === 'neck') && dmg >= target.maxHP / 3) // 頭・喉狙い
+      )) {
+        target.health.stunned = true
+        const knockedDownResult = this.judgeKnockedDown(target)
+        const knockedDownJudge = knockedDownResult.judge as Judge
+        results.push(knockedDownResult)
+        if (!knockedDownJudge.success) {
+          target.posture = 'prone' // 姿勢変更
+        }
+      }
+
+      // 気絶・致死判定
+      if (target.health.unconscious) {
+        const fatalResult = this.judgeFatal(target)
+        const fatalJudge = fatalResult.judge as Judge
+        results.push(fatalResult)
+        if (!fatalJudge.success) {
+          target.health.dead = true // 死亡
+        }
+        return results // ダメージで気絶した時はここで処理を止める
+      }
+
+      // 気絶判定 (頭狙い)
+      if (aim === 'head' && dmg >= target.maxHP / 2) {
+        const unconsciousResult = this.judgeUnconscious(target, this.actor.attack.model.dmgType)
+        const unconsciousJudge = unconsciousResult.judge as Judge
+        if (!unconsciousJudge.success) {
+          results.push(unconsciousResult)
+          target.health.unconscious = true
+        }
+      }
+
+      // 即死判定 (喉狙い)
+      if (aim === 'neck' && dmg >= target.maxHP / 2) {
+        const deadResult = this.judgeDead(target, this.actor.attack.model.dmgType)
+        const deadJudge = deadResult.judge as Judge
+        if (!deadJudge.success) {
+          results.push(deadResult)
+          target.health.unconscious = true
+          target.health.dead = true
+        }
       }
     }
     
@@ -640,7 +723,8 @@ export class CombatActionStore {
   // 朦朧状態からの「回復」実行
   private recovery(): ActionResult[] {
     const result = this.judgeRecovery()
-    if (result.judge.success) this.actor.health.stunned = false
+    const judge = result.judge as Judge
+    if (judge.success) this.actor.health.stunned = false
     return [result]
   }
 }
