@@ -34,7 +34,7 @@ export class CombatLog {
     switch (type) {
       case 'attack':
         return `${request.options.fullPower !== 'none' ? '全力' : ''}${ACTION_LABELS[request.type]}:${resultLabel}`
-      case 'feint':
+      case 'feint': case 'shoot': case 'snipe':
         return `${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
@@ -51,7 +51,7 @@ export class CombatLog {
     let success = false
     let score = 0
     switch (type) {
-      case 'attack':
+      case 'attack': case 'shoot':
         // 攻撃(成功) → 防御(失敗) → ダメージ(貫通) の場合のみ「成功」を返す
         results.forEach(result => {
           switch (result.type) {
@@ -73,7 +73,7 @@ export class CombatLog {
         })
         return success ? '成功' : '失敗'
       
-      case 'feint':
+      case 'feint': case 'snipe':
         // 成功時は score (成功度) を表示
         results.forEach(result => {
           const feintResult = result.judge as FeintResult
@@ -134,7 +134,7 @@ export class CombatLog {
     let target: string | undefined
     const messages: ReactNode[] = []
     switch (type) {
-      case 'attack': case'feint':// 攻撃の結果ログを作成
+      case 'attack': case'feint': case 'shoot': // 攻撃の結果ログを作成
         target = request.targets[0]?.name
         results.forEach(result => {
           switch (result.type) {
@@ -236,6 +236,24 @@ export class CombatLog {
                 messages.push(<>{`${target} は 即死した!!!`}</>)
               }
               break
+          }
+        })
+        return messages
+
+      case 'snipe':
+        target = request.targets[0]?.name
+        results.forEach(result => {
+          const feintResult = result.judge as FeintResult
+          const feintSuccess = feintResult.success
+          const feintScore = feintResult.score
+          messages.push(<>{`${actor} は ${target} に対して狙いを定めた`}</>)
+          if (feintSuccess) {
+            // 成功
+            messages.push(<>{`出目は ${feintResult.roll}, 狙いは成功した!`}</>)
+            messages.push(<>{`次のターン, ${target} は防御判定に -${feintScore} の修正が課せられる!`}</>)
+          } else {
+            // 失敗
+            messages.push(<>{`出目は ${feintResult.roll}, 狙いは失敗した...`}</>)
           }
         })
         return messages

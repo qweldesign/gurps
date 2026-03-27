@@ -6,12 +6,14 @@ import { POSITION_VALUES, type Position } from './FormationStore'
 import { POSTURE_KEYS, type Posture, CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   ready: '準備',
   attack: '攻撃',
   feint: '牽制',
+  shoot: '射撃',
+  snipe: '狙い',
   defense: '全力防御',
   move: '移動',
   changeWeapon: '装備変更',
@@ -76,6 +78,8 @@ export type ActionRequest =
   | { type: 'ready', options: {}, targets: [Unit] }
   | { type: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { type: 'feint', options: {}, targets: [Unit] }
+  | { type: 'shoot', options: { aim: Aim }, targets: [Unit] }
+  | { type: 'snipe', options: {}, targets: [Unit] }
   | { type: 'defense', options: {}, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [Unit] }
   | { type: 'changeWeapon', options: { attackKey: AttackKey }, targets: [Unit] }
@@ -147,6 +151,15 @@ type ActionDefinition = {
     canExcute: () => boolean
   }
   feint: {
+    canExecute: () => boolean
+    execute: (target: Unit) => ActionResult[]
+  }
+  shoot: {
+    options: { aim: readonly Aim[] }
+    canExecute: () => boolean
+    execute: (aim: Aim, target: Unit) => ActionResult[]
+  }
+  snipe: {
     canExecute: () => boolean
     execute: (target: Unit) => ActionResult[]
   }
@@ -223,6 +236,15 @@ export class CombatActionStore {
         canExecute: () => this.canAttack(),
         execute: (target) => this.feint(target)
       },
+      shoot: {
+        options: { aim: AIM_KEYS },
+        canExecute: () => this.canShoot(),
+        execute: (aim, target) => this.shoot(aim, target)
+      },
+      snipe: {
+        canExecute: () => this.canSnipe(),
+        execute: (target) => this.snipe(target)
+      },
       defense: {
         canExecute: () => this.canDefense(),
         execute: () => this.defense()
@@ -267,6 +289,8 @@ export class CombatActionStore {
       fullPowerAttack: this.actions.fullPowerAttack.canExcute(),
       legAttack: this.actions.legAttack.canExcute(),
       feint: this.actions.attack.canExecute(),
+      shoot: this.actions.shoot.canExecute(),
+      snipe: this.actions.shoot.canExecute(),
       defense: this.actions.defense.canExecute(),
       move: this.actions.move.options.position.reduce((acc, position) => {
         acc[position] = this.actions.move.canExecute(position)
@@ -288,21 +312,33 @@ export class CombatActionStore {
   }
 
   // 「攻撃」「牽制」実行可否取得
-  // 武器が準備状態, かつ自身が前方に配置されている, かつ狂戦士状態ではないことが条件
+  // 武器が準備状態, かつ射撃武器ではない, かつ自身が前方に配置されている, かつ狂戦士状態ではないことが条件
   private canAttack(): boolean {
-    return this.actor.attack.ready === 0 && this.actor.position !== 'back' && !this.actor.health.getEffects('berserk')
+    return this.actor.attack.ready === 0 && !this.actor.attack.model.isMissile && this.actor.position !== 'back' && !this.actor.health.getEffects('berserk')
   }
 
   // 「全力攻撃」実行可否取得
-  // 自身が前方に配置されていることが条件
+  // 射撃武器ではない, かつ自身が前方に配置されていることが条件
   private canFullPowerAttack(): boolean {
-    return this.actor.position !== 'back'
+    return !this.actor.attack.model.isMissile && this.actor.position !== 'back'
   }
 
   // 脚 (足首) 狙い攻撃実行可否取得
   // 屈みの姿勢, または竿状武器・射撃武器を構えていることが条件
   private canLegAttack(): boolean {
     return this.actor.posture !== 'standing' || this.actor.attack.model.isPole || this.actor.attack.model.isMissile
+  }
+
+  // 「射撃」実行可否取得
+  // 武器が準備状態, かつ射撃武器を構えていることが条件
+  private canShoot(): boolean {
+    return this.actor.attack.ready === 0 && this.actor.attack.model.isMissile
+  }
+
+  // 「狙い」実行可否取得
+  // 射撃の実行可否条件に加え, 狂戦士状態ではないことが条件
+  private canSnipe(): boolean {
+    return this.canShoot() && !this.actor.health.getEffects('berserk')
   }
 
   // 「全力防御」実行可否取得
@@ -423,6 +459,16 @@ export class CombatActionStore {
         results = this.actions.feint.execute(action.targets[0])
         break
 
+      case 'shoot':
+        if (!this.actions.shoot.canExecute()) results = []
+        results = this.actions.shoot.execute(action.options.aim, action.targets[0])
+        break
+      
+      case 'snipe':
+        if (!this.actions.snipe.canExecute()) results = []
+        results = this.actions.snipe.execute(action.targets[0])
+        break
+
       case 'defense':
         if (!this.actions.defense.canExecute()) results = []
         results = this.actions.defense.execute()
@@ -458,7 +504,8 @@ export class CombatActionStore {
 
     // 行動が継続できる場合
     let nextTurn = true
-    if (action.type === 'changeWeapon' // 装備変更
+    if ( action.type === 'shoot' // 射撃
+      || action.type === 'changeWeapon' // 装備変更
       || (prevPosture !== 'prone' && action.type === 'changePosture') // 這い以外の姿勢からの姿勢変更
     ) {
       nextTurn = false
@@ -603,7 +650,7 @@ export class CombatActionStore {
   private judgeFeint(target: Unit): ActionResult {
     return {
       type: 'feint',
-      judge: { target, ...this.score(this.actor.attack.target) } as FeintResult
+      judge: { target, ...this.score(this.actor.attack.getTarget('body', 'none', target)) } as FeintResult
     }
   }
 
@@ -795,6 +842,16 @@ export class CombatActionStore {
     // 牽制結果を次ターンに保持
     if (score > 0) this.actor.attack.feint = { currentTurn: !isImmediate, target, score } as Feint
     return [result]
+  }
+
+  // 「射撃」実行
+  private shoot(aim: Aim, target: Unit): ActionResult[] {
+    return this.attackRoutine(aim, 'none', target)
+  }
+
+  // 「狙い」実行
+  private snipe(target: Unit): ActionResult[] {
+    return this.feint(target)
   }
 
   // 「全力防御」実行

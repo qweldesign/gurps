@@ -6,7 +6,7 @@ import { POSTURE_MODS, type Posture, CombatUnit as Unit } from '../../combat/Uni
 
 type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'changeWeapon' | 'changePosture' | 'target' | 'hidden'
 
-type TargetPalette = 'attack' | 'feint' |'all'
+type TargetPalette = 'attack' | 'feint' | 'shoot' | 'snipe' | 'all'
 
 function Action({ store }: { store: Store }) {
   // 状態管理
@@ -68,6 +68,14 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionType('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
         >特殊攻撃</button>
         <button
+          disabled={!store.availability.shoot}
+          onClick={() => { setActionPalette('target'); setTargetPalette('shoot'); setActionType('shoot'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, ターゲットパレットへ進む
+        >射撃</button>
+        <button
+          disabled={!store.availability.snipe}
+          onClick={() => { setActionPalette('target'); setTargetPalette('snipe'); setActionType('snipe'); }} // ターゲットパレットへ進む
+        >狙い</button>
+        <button
           disabled={!store.availability.defense}
           onClick={() => { setActionPalette('confirmDefense'); setActionType('defense'); }} // 防御確認パレットへ進む
         >全力防御</button>
@@ -121,7 +129,7 @@ function Action({ store }: { store: Store }) {
           <div>攻撃目標値: {store.actor.attack.getTarget('body', 'none', actionTargets[0])}</div>
           <div>防御目標値: {actionTargets[0]?.defense.target}</div>
           <div>効果: </div>
-          <div>牽制 (防御目標値の低下)</div>
+          <div>{actionType === 'feint' ? '牽制' : '狙い'} (防御目標値の低下)</div>
         </div>
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
@@ -239,6 +247,33 @@ function Action({ store }: { store: Store }) {
         {targetPalette === 'feint' && (
           <>
             {store.target.melee.map(target => (
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmFeint'); setActionTargets([target]); }} // ターゲットをセットし, 牽制確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
+          </>
+        )}
+        {targetPalette === 'shoot' && (
+          <>
+            {store.target.enemies.map(target => (
+              <button
+                className={store.actor.attack.feint?.target === target ? 'is-targeted' : ''}
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }} // ターゲットをセットし, 攻撃確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
+          </>
+        )}
+        {targetPalette === 'snipe' && (
+          <>
+            {store.target.enemies.map(target => (
               <button
                 key={target.combatId}
                 onClick={() => { setActionPalette('confirmFeint'); setActionTargets([target]); }} // ターゲットをセットし, 牽制確認パレットへ進む
