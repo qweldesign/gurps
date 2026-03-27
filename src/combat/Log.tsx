@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type InjuryOnLimbResult, type FeintResult, type ActionResult } from './ActionStore'
-import { CombatUnit as Unit } from './Unit'
+import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 
 let count = 0
 
@@ -38,6 +38,8 @@ export class CombatLog {
         return `${ACTION_LABELS[request.type]}:${resultLabel}`
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
+      case 'changePosture':
+        return `${ACTION_LABELS[request.type]}:${POSTURE_MODS[request.options.posture].label}`
       case 'recovery':
         return resultLabel
       default: // case 'ready': case 'defense': case 'wait':
@@ -88,7 +90,7 @@ export class CombatLog {
         })
         return success ? '回復' : '朦朧状態'
 
-      default: // case 'ready': case 'defense': case 'move': case 'wait':
+      default: // case 'ready': case 'defense': case 'move': case 'changePosture': case 'wait':
         return ''
     }
   }
@@ -109,6 +111,10 @@ export class CombatLog {
 
       case 'move':
         messages.unshift(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
+        break
+
+      case 'changePosture':
+        messages.unshift(<>{`${actor} は ${POSTURE_MODS[request.options.posture].label} の姿勢に変更した`}</>)
         break
 
       case 'wait':
@@ -246,7 +252,7 @@ export class CombatLog {
         })
         return messages
 
-      default: // case 'defense': case 'move': case 'wait':
+      default: // case 'defense': case 'move': case 'changePosture': case 'wait':
         return messages
     }
   }

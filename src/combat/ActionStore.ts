@@ -3,10 +3,10 @@
 import { type DefanseKey } from '../domains/Equipments'
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
-import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
+import { POSTURE_KEYS, POSTURE_MODS, type Posture, CombatUnit as Unit } from './Unit'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'defense', 'move', 'changePosture', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   ready: '準備',
@@ -14,6 +14,7 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   feint: '牽制',
   defense: '全力防御',
   move: '移動',
+  changePosture: '姿勢変更',
   recovery: '回復',
   wait: '待機'
 } as const
@@ -61,6 +62,7 @@ export type ActionOptions = {
   fullPower?: FullPower
   aim?: Aim
   position?: Position
+  posture?: Posture
 }
 
 export type FullPower = typeof FULL_POWER_KEYS[number]
@@ -74,6 +76,7 @@ export type ActionRequest =
   | { type: 'feint', options: {}, targets: [Unit] }
   | { type: 'defense', options: {}, targets: [] }
   | { type: 'move', options: { position: Position }, targets: [] }
+  | { type: 'changePosture', options: { posture: Posture }, targets: [] }
   | { type: 'recovery', options: {}, targets: [] }
   | { type: 'wait', options: {}, targets: [] }
 
@@ -153,6 +156,11 @@ type ActionDefinition = {
     canExecute: (position: Position) => boolean
     execute: (position: Position) => ActionResult[]
   }
+  changePosture: {
+    options: { posture: readonly Posture[] }
+    canExecute: (posture: Posture) => boolean
+    execute: (posture: Posture) => ActionResult[]
+  }
   recovery: {
     execute: () => ActionResult[]
   }
@@ -167,6 +175,7 @@ export class CombatActionStore {
   public actor: Unit
   private state: State
   public round: number
+  public hasChangedPosture: boolean // 「姿勢変更」を実行したかどうか
   public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
   public promise: Promise<void>
   private resolve!: () => void
@@ -176,6 +185,7 @@ export class CombatActionStore {
     this.actor = actor
     this.state = state
     this.round = state.round
+    this.hasChangedPosture = false
     this.unlocked = !this.actor.health.stunned // // コマンドパレットをアンロック
 
     // ターン終了を Promise で State に伝え, 次のターンへ進む
@@ -212,6 +222,11 @@ export class CombatActionStore {
         canExecute: (position) => this.canMove(position),
         execute: (position) => this.move(position)
       },
+      changePosture: {
+        options: { posture: POSTURE_KEYS },
+        canExecute: (posture) => this.canChangePosture(posture),
+        execute: (posture) => this.changePosture(posture)
+      },
       recovery: {
         execute: () => this.recovery()
       },
@@ -242,6 +257,10 @@ export class CombatActionStore {
         acc[position] = this.actions.move.canExecute(position)
         return acc
       }, {} as Record<Position, boolean>),
+      changePosture: this.actions.changePosture.options.posture.reduce((acc, posture) => {
+        acc[posture] = this.actions.changePosture.canExecute(posture)
+        return acc
+      }, {} as Record<Posture, boolean>),
       wait: this.actions.wait.canExecute()
     }
   }
@@ -267,7 +286,7 @@ export class CombatActionStore {
   // 脚 (足首) 狙い攻撃実行可否取得
   // 屈みの姿勢, または竿状武器・射撃武器を構えていることが条件
   private canLegAttack(): boolean {
-    return this.actor.posture === 'crouching' || this.actor.attack.model.isPole || this.actor.attack.model.isMissile
+    return this.actor.posture !== 'standing' || this.actor.attack.model.isPole || this.actor.attack.model.isMissile
   }
 
   // 「全力防御」実行可否取得
@@ -277,14 +296,34 @@ export class CombatActionStore {
   }
 
   // 「移動」実行可否取得
-  // 後退は自身が後方に配置されていないこと, かつ狂戦士状態ではないこと
-  // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
+  // 後退は自身が後方に配置されていないこと, かつ姿勢が「膝着き」でないこと, かつ狂戦士状態ではないこと
+  // 前進はそこへ既にユニットが配置されていないこと, かつ姿勢が「膝着き」でないことが, それぞれ条件となる
   private canMove(position: Position): boolean {
     if (!this.state.formationStore) return false
+    if (this.actor.posture === 'kneeling') return false
     if (position === 'back') {
       return this.state.formationStore[this.actor.side].back[this.actor.combatId] === null && !this.actor.health.getEffects('berserk') ? true : false
     } else {
       return this.state.formationStore[this.actor.side].front[position] === null ? true : false
+    }
+  }
+
+  // 「姿勢変更」実行可否取得
+  // 直立 → 這い は不可能
+  // 這い → 膝着 のみ可能
+  // その他の現行の姿勢以外には, いつでも変更可能
+  private canChangePosture(posture: Posture): boolean {
+    // 現行の姿勢を取得
+    const current = this.actor.posture
+    // このターンに既に姿勢変更をしていた場合は不可
+    if (this.hasChangedPosture) return false
+    // 現行の姿勢によって姿勢の変更可否を返す
+    if (current === 'standing') {
+      return posture !== current && posture !== 'prone'
+    } else if (current === 'prone') {
+      return posture !== current && posture === 'kneeling'
+    } else {
+      return posture !== current
     }
   }
   
@@ -339,6 +378,9 @@ export class CombatActionStore {
     // コマンドパレットをロック (アンロックはコンストラクタで行われる)
     this.unlocked = false
 
+    // コマンド実行前の姿勢
+    const prevPosture = this.actor.posture
+
     // コマンド実行
     let results: ActionResult[]
     switch (action.type) {
@@ -366,6 +408,11 @@ export class CombatActionStore {
         if (!this.actions.move.canExecute(action.options.position)) results = []
         results = this.actions.move.execute(action.options.position)
         break
+
+      case 'changePosture':
+        if (!this.actions.changePosture.canExecute(action.options.posture)) results = []
+        results = this.actions.changePosture.execute(action.options.posture)
+        break
       
       case 'recovery':
         results = this.actions.recovery.execute()
@@ -382,17 +429,23 @@ export class CombatActionStore {
 
     // 行動終了分岐
     let nextTurn = true
+    if (prevPosture !== 'prone' && action.type === 'changePosture') {
+      nextTurn = false
+    }
     if (action.type === 'recovery') {
       const recoveryResult = results[0].judge as Judge
       if (recoveryResult.success) {
-        this.unlocked = true
         nextTurn = false
       }
     }
 
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    if (nextTurn) this.resolve()
+    if (!nextTurn) {
+      this.unlocked = true
+    } else {
+      this.resolve()
+    }
   }
 
   // ロール結果 (Roll型) を返す (ダメージ判定)
@@ -735,6 +788,13 @@ export class CombatActionStore {
   // 「移動」実行
   private move(position: Position): ActionResult[] {
     this.actor.position = position
+    return []
+  }
+
+  // 「姿勢変更」実行
+  private changePosture(posture: Posture): ActionResult[] {
+    this.actor.posture = posture
+    this.hasChangedPosture = true // 1ターンに1度まで
     return []
   }
 

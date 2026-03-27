@@ -10,13 +10,13 @@ import { UnitSummary as Summary } from './Unit/Summary'
 
 const combatIds: number[] = [0, 1, 2, 3, 4, 5, 6, 7] as const
 
-const POSTURE_KEYS: string[] = ['standing', 'crouching', 'kneeling', 'prone'] as const
+export const POSTURE_KEYS: string[] = ['standing', 'crouching', 'kneeling', 'prone'] as const
 
-export const POSTURE_MODS: Record<Posture, { attackMod: number, defenseMod: number, missileMod: number }> = {
-  'standing': { attackMod: 0, defenseMod: 0, missileMod: 0 }, // 直立
-  'crouching': { attackMod: -2, defenseMod: 0, missileMod: -2 }, // 屈み
-  'kneeling': { attackMod: -2, defenseMod: -2, missileMod: -4 }, // 膝着
-  'prone': { attackMod: -4, defenseMod: -4, missileMod: -8 } // 這い
+export const POSTURE_MODS: Record<Posture, { attackMod: number, defenseMod: number, missileMod: number, label: string }> = {
+  'standing': { attackMod: 0, defenseMod: 0, missileMod: 0, label: '直立' },
+  'crouching': { attackMod: -2, defenseMod: 0, missileMod: -2, label: '屈み' },
+  'kneeling': { attackMod: -2, defenseMod: -2, missileMod: -4, label: '膝着き' },
+  'prone': { attackMod: -4, defenseMod: -4, missileMod: -8, label: '這い' }
  } as const
 
 // 戦闘ユニットID
