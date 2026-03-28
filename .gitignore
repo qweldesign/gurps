@@ -1,3 +1,7 @@
+# Obsidian
+.obsidian/
+.trash/
+
 # Logs
 logs
 *.log
