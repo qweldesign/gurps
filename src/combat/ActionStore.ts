@@ -4,9 +4,10 @@ import { ATTACK_KEYS, type AttackKey, type DefanseKey } from '../domains/Equipme
 import { CombatState as State } from './State'
 import { POSITION_VALUES, type Position } from './FormationStore'
 import { POSTURE_KEYS, type Posture, CombatUnit as Unit } from './Unit'
+import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement } from './Spells'
 import { type Feint } from './Unit/Attack'
 
-export const ACTIONS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
+export const ACTIONS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'cast', 'spell', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   ready: '準備',
@@ -14,6 +15,8 @@ export const ACTION_LABELS: Record<ActionType, string> = {
   feint: '牽制',
   shoot: '射撃',
   snipe: '狙い',
+  cast: '集中',
+  spell: '法術',
   defense: '全力防御',
   move: '移動',
   changeWeapon: '装備変更',
@@ -64,6 +67,8 @@ export type DefenseType = 'parry' | 'block' | 'dodge'
 export type ActionOptions = {
   fullPower?: FullPower
   aim?: Aim
+  element?: SpellElement
+  spellId?: number
   position?: Position
   attackKey?: AttackKey
   posture?: Posture
@@ -80,6 +85,8 @@ export type ActionRequest =
   | { type: 'feint', options: {}, targets: [Unit] }
   | { type: 'shoot', options: { aim: Aim }, targets: [Unit] }
   | { type: 'snipe', options: {}, targets: [Unit] }
+  | { type: 'cast', options: { element: SpellElement }, targets: [Unit] }
+  | { type: 'spell', options: { element: SpellElement, spellId: number }, targets: [Unit] }
   | { type: 'defense', options: {}, targets: [Unit] }
   | { type: 'move', options: { position: Position }, targets: [Unit] }
   | { type: 'changeWeapon', options: { attackKey: AttackKey }, targets: [Unit] }
@@ -94,6 +101,8 @@ export type ActionResult =
   | { type: 'dmg', judge: DmgResult }
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'feint', judge: FeintResult }
+  | { type: 'cast', judge: Judge }
+  | { type: 'spell', judge: SpellResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
   | { type: 'unconscious', judge: Judge }
@@ -133,6 +142,10 @@ export type FeintResult = Score & {
   target: Unit
 }
 
+export type SpellResult = Judge & {
+  spell: string
+}
+
 // コマンド実行可否取得関数と実行関数の定義
 type ActionDefinition = {
   ready: {
@@ -162,6 +175,16 @@ type ActionDefinition = {
   snipe: {
     canExecute: () => boolean
     execute: (target: Unit) => ActionResult[]
+  }
+  cast: {
+    options: { element: readonly SpellElement[] }
+    canExecute: (element: SpellElement) => boolean
+    execute: (element: SpellElement) => ActionResult[]
+  }
+  spell: {
+    options: { element: readonly SpellElement[], spellId: number[] }
+    canExecute: (element: SpellElement) => boolean
+    execute: (element: SpellElement, spellId: number) => ActionResult[]
   }
   defense: {
     canExecute: () => boolean
@@ -245,6 +268,16 @@ export class CombatActionStore {
         canExecute: () => this.canSnipe(),
         execute: (target) => this.snipe(target)
       },
+      cast: {
+        options: { element: SPELL_ELEMENTS },
+        canExecute: (element) => this.canCast(element),
+        execute: (element) => this.cast(element)
+      },
+      spell: {
+        options: { element: SPELL_ELEMENTS, spellId: [0, 1, 2, 3, 4, 5]},
+        canExecute: (element) => this.canSpell(element),
+        execute: (element, spellId) => this.spell(element, spellId)
+      },
       defense: {
         canExecute: () => this.canDefense(),
         execute: () => this.defense()
@@ -291,6 +324,13 @@ export class CombatActionStore {
       feint: this.actions.attack.canExecute(),
       shoot: this.actions.shoot.canExecute(),
       snipe: this.actions.shoot.canExecute(),
+      cast: this.actions.cast.options.element.reduce((acc, element) => {
+        acc[element] = this.actions.cast.canExecute(element)
+        return acc
+      }, {} as Record<SpellElement, boolean>),
+      spell: this.actions.spell.options.element.some(element => {
+        return this.actions.spell.canExecute(element)
+      }),
       defense: this.actions.defense.canExecute(),
       move: this.actions.move.options.position.reduce((acc, position) => {
         acc[position] = this.actions.move.canExecute(position)
@@ -339,6 +379,18 @@ export class CombatActionStore {
   // 射撃の実行可否条件に加え, 狂戦士状態ではないことが条件
   private canSnipe(): boolean {
     return this.canShoot() && !this.actor.health.getEffects('berserk')
+  }
+
+  // 「集中」実行可否取得
+  // 術の技能値が11以上であることが条件
+  private canCast(element: SpellElement): boolean {
+    return this.actor.spells[element] > 10 
+  }
+
+  // 「法術」実行可否取得
+  // 術の詠唱時間が1以上であることが条件
+  private canSpell(element: SpellElement): boolean {
+    return this.actor.spellCast[element] > 0
   }
 
   // 「全力防御」実行可否取得
@@ -469,6 +521,15 @@ export class CombatActionStore {
         results = this.actions.snipe.execute(action.targets[0])
         break
 
+      case 'cast':
+        if (!this.actions.cast.canExecute(action.options.element)) results = []
+        results = this.actions.cast.execute(action.options.element)
+        break
+
+      case 'spell':
+        results = this.actions.spell.execute(action.options.element, action.options.spellId)
+        break
+
       case 'defense':
         if (!this.actions.defense.canExecute()) results = []
         results = this.actions.defense.execute()
@@ -505,6 +566,7 @@ export class CombatActionStore {
     // 行動が継続できる場合
     let nextTurn = true
     if ( action.type === 'shoot' // 射撃
+      || action.type === 'spell' // 法術
       || action.type === 'changeWeapon' // 装備変更
       || (prevPosture !== 'prone' && action.type === 'changePosture') // 這い以外の姿勢からの姿勢変更
     ) {
@@ -652,6 +714,27 @@ export class CombatActionStore {
       type: 'feint',
       judge: { target, ...this.score(this.actor.attack.getTarget('body', 'none', target)) } as FeintResult
     }
+  }
+
+  private judgeCast(element: SpellElement): ActionResult[] {
+    if (this.actor.health.getState('deafened') || this.actor.health.getEffects('silence')) {
+      // 聾または沈黙の場合は判定を要する
+      const target = this.actor.spells[element] - 6
+      return [{
+        type: 'cast',
+        judge: this.judge(target)
+      }]
+    } else {
+      return []
+    }
+  }
+
+  private judgeSpell(element: SpellElement, spellId: number): ActionResult[] {
+    const target = this.actor.spells[element]
+    const spell = SPELL_LIST[element][spellId].label
+    return [{
+      type: 'spell', judge: { spell, ...this.judge(target) }
+    }]
   }
 
   // 転倒判定
@@ -852,6 +935,23 @@ export class CombatActionStore {
   // 「狙い」実行
   private snipe(target: Unit): ActionResult[] {
     return this.feint(target)
+  }
+
+  // 「集中」実行
+  private cast(element: SpellElement): ActionResult[] {
+    // 詠唱時間をインクリメントする
+    this.actor.spellCast[element]++
+    // 他の系統の詠唱時間は 0 にする
+    SPELL_ELEMENTS.forEach(spellElement => {
+      if (spellElement !== element) this.actor.spellCast[spellElement] = 0
+    })
+    return this.judgeCast(element)
+  }
+
+  private spell(element: SpellElement, spellId: number): ActionResult[] {
+    // 詠唱時間を 0 に戻す
+    SPELL_ELEMENTS.forEach(spellElement => this.actor.spellCast[spellElement] = 0)
+    return this.judgeSpell(element, spellId)
   }
 
   // 「全力防御」実行

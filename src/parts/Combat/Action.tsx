@@ -3,8 +3,9 @@ import { ATTACK_KEYS, type AttackKey } from '../../domains/Equipments'
 import { type Position } from '../../combat/FormationStore'
 import { type ActionType, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../combat/ActionStore'
 import { POSTURE_MODS, type Posture, CombatUnit as Unit } from '../../combat/Unit'
+import { SPELL_ELEMENT_LABELS, SPELL_LIST, type SpellElement } from '../../combat/Spells'
 
-type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'changeWeapon' | 'changePosture' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmSpell' | 'confirmDefense' | 'attackOption' | 'aim' | 'elements' | 'spell' | 'move' | 'changeWeapon' | 'changePosture' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'shoot' | 'snipe' | 'all'
 
@@ -76,6 +77,14 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setTargetPalette('snipe'); setActionType('snipe'); }} // ターゲットパレットへ進む
         >狙い</button>
         <button
+          disabled={!store.availability.cast.wood && !store.availability.cast.fire && !store.availability.cast.earth && !store.availability.cast.metal && !store.availability.cast.water}
+          onClick={() => { setActionPalette('elements'); setActionType('cast'); }} // 五行選択パレットへ進む
+        >集中</button>
+        <button
+          disabled={!store.availability.spell}
+          onClick={() => { setActionPalette('spell'); setActionType('spell'); }} // 法術選択パレットへ進む
+        >法術</button>
+        <button
           disabled={!store.availability.defense}
           onClick={() => { setActionPalette('confirmDefense'); setActionType('defense'); }} // 防御確認パレットへ進む
         >全力防御</button>
@@ -138,6 +147,14 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setActionTargets([store.actor]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
         >戻る</button>
       </div>
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmSpell'}>
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { setActionPalette('spell'); setActionOptions({}); }} // オプションをリセットし, 法術選択パレットへ戻る
+        >戻る</button>
+      </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmDefense'}>
         <div className="confirm__grid">
           <div>{store.actor.name}</div>
@@ -184,6 +201,35 @@ function Action({ store }: { store: Store }) {
         ))}
         <button
           onClick={() => { setActionPalette('attackOption'); setActionOptions({}) }} // 攻撃オプションをリセットし, 攻撃オプションパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'elements'}>
+        {Object.entries(SPELL_ELEMENT_LABELS).map((arr) => (
+          <button
+            key={arr[0]}
+            disabled={!store.availability.cast[arr[0] as SpellElement]}
+            onClick={() => { setActionOptions({ element: arr[0] as SpellElement }); setIsExecuted(true); }} // 実行
+          >{arr[1]}</button>
+        ))}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'spell'}>
+        {Object.entries(SPELL_LIST).map((arr) => {
+          const element = arr[0] as SpellElement
+          const spells = arr[1]
+          return spells.map(spell => (
+            <button
+              className={spell.spellCast > store.actor.spellCast[element] || spell.spellType === 'defense' ? 'is-disable' : ''}
+              key={`${element}:${spell.id}`}
+              disabled={spell.id >= store.actor.spells[element] - 10 || store.actor.spellCast[element] === 0}
+              onClick={() => { setActionPalette('confirmSpell'); setActionOptions({ element, spellId: spell.id }); }} // 確認
+            >{spell.label}</button>
+          ))
+        })}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'move'}>

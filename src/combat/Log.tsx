@@ -1,8 +1,9 @@
 // Log.tsx
 
 import { type ReactNode } from 'react'
-import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type InjuryOnLimbResult, type FeintResult, type ActionResult } from './ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionType, type ActionRequest, type Judge, type AttackResult, type DefenseResult, type DmgResult, type InjuryOnLimbResult, type FeintResult, type SpellResult, type ActionResult } from './ActionStore'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
+import { SPELL_ELEMENT_LABELS } from './Spells'
 
 let count = 0
 
@@ -34,8 +35,13 @@ export class CombatLog {
     switch (type) {
       case 'attack':
         return `${request.options.fullPower !== 'none' ? '全力' : ''}${ACTION_LABELS[request.type]}:${resultLabel}`
-      case 'feint': case 'shoot': case 'snipe':
+      case 'feint': case 'shoot': case 'snipe': 
         return `${ACTION_LABELS[request.type]}:${resultLabel}`
+      case 'cast':
+        return `${ACTION_LABELS[request.type]}:${SPELL_ELEMENT_LABELS[request.options.element]}(${this.actor.spellCast[request.options.element]})`
+      case 'spell':
+        const spellResult = results[0].judge as SpellResult
+        return spellResult.spell // 法術名
       case 'move':
         return `${ACTION_LABELS[request.type]}:${POSITION_LABELS[request.options.position]}`
       case 'changePosture':
@@ -103,6 +109,15 @@ export class CombatLog {
     switch (type) {
       case 'ready':
         messages.unshift(<>{`${actor} は ${this.actor.attack.model.name} を構えた`}</>)
+        break
+
+      case 'cast':
+        messages.unshift(<>{`${actor} は ${SPELL_ELEMENT_LABELS[request.options.element]} の呪文に集中している`}</>)
+        break
+
+      case 'spell':
+        const spellResult = results[0].judge as SpellResult
+        messages.unshift(<>{`${actor} の ${spellResult.spell} 発動!!`}</>)
         break
 
       case 'defense':
@@ -254,6 +269,15 @@ export class CombatLog {
           } else {
             // 失敗
             messages.push(<>{`出目は ${feintResult.roll}, 狙いは失敗した...`}</>)
+          }
+        })
+        return messages
+
+      case 'cast':
+        results.forEach(result => {
+          const castResult = result.judge as Judge
+          if (!castResult.success) {
+            messages.push(<>{`${actor} は 集中に失敗した!`}</>)
           }
         })
         return messages

@@ -241,6 +241,10 @@
     @apply bg-emerald-400/50 text-white;
   }
 
+  .actions > button.is-disable {
+    @apply bg-black/75 text-gray-400 cursor-default;
+  }
+
   .actions .is-targeted {
     @apply text-yellow-400;
   }
