@@ -349,7 +349,14 @@ export class Character {
       pre: this.PRE,
       mre: this.MRE,
       dmgBuff: this.getParamLevel('怪力') % 2,
-      evBuff: this.getParamLevel('運動', true) %2
+      evBuff: this.getParamLevel('運動', true) %2,
+      spells: {
+        wood: this.getParam('木行術') > 0 ? this.getParamLevel('木行術') : 0,
+        fire: this.getParam('火行術') > 0 ? this.getParamLevel('火行術') : 0,
+        earth: this.getParam('土行術') > 0 ? this.getParamLevel('土行術') : 0,
+        metal: this.getParam('金行術') > 0 ? this.getParamLevel('金行術') : 0,
+        water: this.getParam('水行術') > 0 ? this.getParamLevel('水行術') : 0
+      }
     }
   }
 

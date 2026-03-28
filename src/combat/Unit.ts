@@ -7,6 +7,7 @@ import { UnitHealth as Health } from './Unit/Health'
 import { UnitAttack as Attack } from './Unit/Attack'
 import { UnitDefense as Defense } from './Unit/Defense'
 import { UnitSummary as Summary } from './Unit/Summary'
+import { SPELL_ELEMENTS, type Spells } from './Spells'
 
 const combatIds: number[] = [0, 1, 2, 3, 4, 5, 6, 7] as const
 
@@ -70,6 +71,7 @@ export type CombatUnitModel = {
   mre: number
   dmgBuff: number //「怪力」端数 (バフ)
   evBuff: number //「運動」端数 (バフ)
+  spells: Spells
 }
 
 // 戦闘ユニットを司るクラス
@@ -86,9 +88,11 @@ export class CombatUnit {
   public defense: Defense
   public health: Health
   public summary: Summary
+  public spells: Spells
+  public spellCast: Spells
 
   constructor(model: CombatUnitModel, order: number) {
-    const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre, dmgBuff, evBuff } = model
+    const { combatId, id, name, maxHP, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells } = model
     this.combatId = combatId
     this.id = id
     this.name = name
@@ -101,6 +105,11 @@ export class CombatUnit {
     this.attack = new Attack(this, attacks, this.defense.changeAttackKey)
     this.health = new Health(this, dmgBuff, evBuff)
     this.summary = new Summary(this)
+    this.spells = spells
+    this.spellCast = SPELL_ELEMENTS.reduce((acc, element) => {
+      acc[element] = 0
+      return acc
+    }, {} as Spells)
   }
 
   set history(log: Log) {
