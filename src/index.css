@@ -109,19 +109,23 @@
     @apply hover:text-[#999966] transition-colors duration-300;
   }
 
-  table {
-    @apply w-max my-6 text-[0.875em];
+  .table-wrapper {
+    @apply w-1/1 overflow-x-auto;
 
-    thead > tr {
-      @apply border-y border-white;
-    }
+    table {
+      @apply w-max my-6 text-[0.875em];
 
-    tbody > tr {
-      @apply border-b border-white hover:bg-white/10;
-    }
+      thead > tr {
+        @apply border-y border-white;
+      }
 
-    th, td {
-      @apply p-3 text-left;
+      tbody > tr {
+        @apply border-b border-white hover:bg-white/10;
+      }
+
+      th, td {
+        @apply p-3 text-left;
+      }
     }
   }
 
