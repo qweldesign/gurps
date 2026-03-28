@@ -8,7 +8,7 @@
 
 @layer project {
   .header {
-    @apply sticky top-0 left-0 w-1/1 h-[6em] border-b-2 border-b-white text-[1em] transition-all duration-1000;
+    @apply relative w-1/1 h-[6em] border-b-2 border-b-white text-[1em] transition-all duration-1000;
   }
 
   .header.entrance {
