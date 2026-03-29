@@ -398,4 +398,17 @@ export class Equipments {
     total += (this._leg?.gold ?? 0) * 0.15
     return total
   }
+
+  // Model用データに変換
+  get model(): EquipmentSet {
+    return {
+      weapon: this.weapon.name as WeaponKey,
+      spare: this.spare.name as WeaponKey,
+      shield: this.shield.name as WeaponKey,
+      body: this.body.name[0],
+      head: this.head.name[1] || '装備無し',
+      arm: this.arm.name[2] || '装備無し',
+      leg: this.leg.name[3] || '装備無し'
+    }
+  }
 }

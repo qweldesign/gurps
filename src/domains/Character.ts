@@ -250,4 +250,15 @@ export class Character {
   get gold(): number {
     return this.equipments.gold
   }
+  
+  // Model用データに変換
+  get model(): CharacterModel {
+    return {
+      id: this.id,
+      name: this.name,
+      gender: this.gender,
+      points: this.parameters.model,
+      equipments: this.equipments.model
+    }
+  }
 }

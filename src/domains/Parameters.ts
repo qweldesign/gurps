@@ -161,4 +161,9 @@ export class Parameters {
     for (const p of this.points.values()) total += p ?? 0
     return total
   }
+
+  // Model用データに変換
+  get model(): Point[] {
+    return PARAMETER_KEYS.map(key => this.get(key))
+  }
 }
