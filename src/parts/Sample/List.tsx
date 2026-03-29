@@ -59,6 +59,7 @@ function List({ units }: { units: SampleCharacter[] }) {
             <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
             <th>主技能</th>
             <th>副技能</th>
+            <th>装備</th>
           </tr>
         </thead>
         <tbody>
@@ -78,6 +79,7 @@ function List({ units }: { units: SampleCharacter[] }) {
               ) : (
                 <td>-</td>
               )}
+              <td>{`${unit.weapon.name} / ${unit.body.name[0]}`}</td>
             </tr>
           ))}
         </tbody>
