@@ -60,6 +60,16 @@ export class Character {
     return this.parameters.skills
   }
 
+  // 「武術」保有判定
+  get isWarrior(): boolean {
+    return this.parameters.isWarrior
+  }
+
+  // 「剣術」保有判定
+  get isFencer(): boolean {
+    return this.parameters.isFencer
+  }
+
   // Point 総計を算出
   get total(): number {
     return this.parameters.total

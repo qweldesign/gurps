@@ -145,6 +145,16 @@ export class Parameters {
       .filter(p => p.base !== 10)
   }
 
+  // 「武術」保有判定
+  get isWarrior(): boolean {
+    return this.get('武術') > 0 ? true : false
+  }
+
+  // 「剣術」保有判定
+  get isFencer(): boolean {
+    return this.get('剣術') > 0 ? true : false
+  }
+
   // Point 総計を算出
   get total(): number {
     let total = 0
