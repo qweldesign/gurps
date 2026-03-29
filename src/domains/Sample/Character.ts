@@ -1,6 +1,7 @@
 // Sample/Character.ts
 
 import { type Point, type ParameterKey } from '../Parameters'
+import { type WeaponKey, type BodyArmorKey } from '../Equipments'
 import { Character } from '../Character'
 
 const DEFAULT_POINTS = 10
@@ -44,6 +45,40 @@ const TACTIC_TABLE: ParameterKey[][] = [
   ['火行術', '修養', '武術', '礼法', '演技', '歴史', '怪力', '鍛錬', '探索', '運動'], // 6:術戦士B
   ['木行術', '修養', '剣術', '礼法', '交渉', '探索', '運動', '鍛錬', '水行術', '鑑定', '治癒', '歴史'], // 7:術剣士
   ['金行術', '土行術', '修養', '礼法', '交渉', '尋問', '演技', '探索', '運動', '鑑定', '治癒', '歴史'] // 8:術士
+]
+
+// 装備セット
+// 最貧, 貧弱, 普通, 強靭の最大4段階
+const EQUIPMENTS_TABLE: [WeaponKey, BodyArmorKey][][][] = [
+  [ // 重戦士, 術戦士F
+    [['ロングソード', '服'], ['バスタードソード', '革鎧'], ['バスタードソード', 'ブリガンディ'], ['バスタードソード', 'プレイトメイル']],
+    [['鎚槌', '革服'], ['戦鎚', '革鎧'], ['戦鎚', 'ブリガンディ'], ['戦鎚', 'プレイトメイル']],
+    [['手斧', '革服'], ['戦斧', '革鎧'], ['戦斧', 'ブリガンディ'], ['戦斧', 'プレイトメイル']]
+  ],
+  [ // 軽戦士
+    [['三日月刀', '服'], ['蒼龍刀', '革鎧'], ['蒼龍刀', 'チェインメイル'], ['蒼龍刀', 'ブリガンディ']],
+    [['ロングソード', '服'], ['グレートソード', '革鎧'], ['グレートソード', 'チェインメイル'], ['グレートソード', 'ブリガンディ']],
+    [['長槍', '革服'], ['鉾槍', '革鎧'], ['鉾槍', 'チェインメイル'], ['鉾槍', 'ブリガンディ']]
+  ],
+  [ // 術戦士B
+    [['ショートソード', '革服'], ['ロングソード', '革服'], ['バスタードソード', '革鎧'], ['バスタードソード', 'チェインメイル']],
+    [['ショートソード', '革服'], ['三日月刀', '革服'], ['蒼龍刀', '革鎧'], ['蒼龍刀', 'チェインメイル']],
+    [['長槍', '革服'], ['長槍', '革鎧'], ['薙刀', '革鎧'], ['薙刀', 'チェインメイル']]
+  ],
+  [ // 剣士, 盗賊, 術剣士
+    [['レイピア', '服'], ['レイピア', '革服'], ['レイピア', '革鎧']],
+    [['ロングソード', '服'], ['ロングソード', '革服'], ['ロングソード', '革鎧']],
+    [['三日月刀', '服'], ['三日月刀', '革服'], ['三日月刀', '革鎧']],
+    [['鎚槌', '革服'], ['鎚槌', '革鎧']],
+    [['手斧', '革服'], ['手斧', '革鎧']],
+    [['長槍', '革服'], ['長槍', '革鎧']]
+  ],
+  [ // 弓使い
+    [['長弓', '服'], ['長弓', '革服'], ['長弓', '革鎧']]
+  ],
+  [ // 術士
+    [['杖', '革服'], ['杖', '革鎧']]
+  ],
 ]
 
 // 名前 (PC用)
@@ -94,7 +129,7 @@ export class SampleCharacter extends Character {
     // ID・名前・性別・能力値の初期化
     const name = NPC_LIST[i]
     const gender = g ? '女性' : '男性'
-    super({ id, name, gender, points })
+    super({ id, name, gender, points, equipments: {} })
 
     // 能力値修正
     this.modifyAbilities(MOD_TABLE[b])
@@ -104,6 +139,9 @@ export class SampleCharacter extends Character {
 
     // 技能セットの選択
     this.setSkills(totalPoints, DEFAULT_POINTS)
+
+    // 装備セットの選択
+    this.setEquipments(a, b, totalPoints)
   }
 
   // 能力値修正
@@ -229,5 +267,40 @@ export class SampleCharacter extends Character {
   getSkillByPriority(index: number = 0) {
     const skill = TACTIC_TABLE[this.tactic][index]
     return this.getParamValue(skill)
+  }
+
+  // 装備セットのマップ番号を取得
+  private getEquipmentSetMap() {
+    return [
+      0, 1, 0,
+      3, 3, 4,
+      2, 3, 5
+    ][this.tactic]
+  }
+
+  // 装備の初期化
+  private setEquipments(a: number, b: number, totalPoints: number) {
+    const e = this.getEquipmentSetMap()
+    const table1 = EQUIPMENTS_TABLE[e]
+    const len1 = table1.length
+    const r = (a + b) % len1
+    const table2 = table1[r]
+    const len2 = table2.length
+    const t = Math.min((totalPoints >= 24 ? 3 : totalPoints >= 16 ? 2 : totalPoints >= 12 ? 1 : 0), len2 - 1)
+    const weaponKey = table2[t][0]
+    const armorKey = table2[t][1]
+    const skill = this.isWarrior ? '武術' : this.isFencer ? '剣術' : ''
+    this.setWeapon(weaponKey, true, skill)
+    this.setBody(armorKey)
+    // 条件に応じて予備武器をセット
+    if (this.tactic === 3 && totalPoints >= 16) { // 剣士
+      this.spare = '短弓'
+    } else if (this.tactic === 4 && totalPoints >= 16) { // 盗賊
+      this.spare = '弩'
+    } else if (this.tactic === 5 && totalPoints >= 16) { // 弓使い
+      this.spare = 'レイピア'
+    } else if (this.tactic === 5) {
+      this.spare = 'ダガー'
+    }
   }
 }
