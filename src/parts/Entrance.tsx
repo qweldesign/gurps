@@ -8,6 +8,9 @@ function Entrance() {
       <li className='nav__item'>
         <Link to="/docs/">ドキュメント</Link>
       </li>
+      <li className='nav__item'>
+        <Link to="/sample/">サンプル</Link>
+      </li>
     </ul>
   )
 }

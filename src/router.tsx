@@ -4,6 +4,7 @@ import { createBrowserRouter } from 'react-router'
 import App from './App'
 import Entrance from './parts/Entrance'
 import Docs from './parts/Docs'
+import Sample from './parts/Sample'
 import { docsLoader } from './docs/docsLoader'
 
 export const router = createBrowserRouter([
@@ -15,6 +16,10 @@ export const router = createBrowserRouter([
       { path: 'docs', children: [
         { index: true, element: <Docs />, loader: docsLoader },
         { path: ':docsId', element: <Docs />, loader: docsLoader }
+      ]},
+      { path: 'sample', children: [
+        { index: true, element: <Sample /> },
+        { path: ':uid', element: <Sample /> },
       ]}
     ]
   }

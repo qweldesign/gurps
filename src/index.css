@@ -39,6 +39,10 @@
     @apply flex flex-wrap items-center justify-center h-18 font-serif;
   }
 
+  .nav__item:not(:first-child)::before {
+    @apply content-["/"] mx-3;
+  }
+
   .nav__item a {
     @apply hover:text-[#999966] transition-colors duration-300;
   }
@@ -126,6 +130,10 @@
       th, td {
         @apply p-3 text-left;
       }
+    }
+
+    .cell {
+      @apply p-3 border-b border-white text-[0.875em] text-center;
     }
   }
 
