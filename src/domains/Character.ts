@@ -41,8 +41,15 @@ export class Character {
 
   // name を指定し, level を算出
   // includeWeight オプションにて胴防具の重量を加味
-  getParamLevel(name: ParameterKey): number {
-    return this.parameters.getLevel(name)
+  getParamLevel(name: ParameterKey, includeWeight: boolean = false): number {
+    const param = this.parameters.getValue(name)
+    let weight = 0
+    // 胴防具の重量を加味するのは 敏捷力 ベースのパラメータのみ
+    if (includeWeight && (param.name === '敏捷力' || param.base === '敏捷力')) {
+      // 敏捷力への修正は 重量 - 2 と定義
+      weight = Math.max(this.body.wt - 2, 0)
+    }
+    return this.parameters.getLevel(name) - weight
   }
 
   // name を指定し, その全ての属性を, オブジェクトに変換して取得
@@ -102,7 +109,7 @@ export class Character {
 
   //「よけ」を取得
   get DEV() {
-    return Math.floor(this.getParamLevel('運動') / 2) + 5
+    return Math.floor(this.getParamLevel('運動', true) / 2) + 5
   }
 
   // 身体抵抗値を取得
@@ -208,9 +215,9 @@ export class Character {
     const skill = weapon.skill
     if (skill === '剣術') {
       // 「武術」で「剣術」技能の武器を扱う場合は技能値の高い方を返す
-      return Math.max(this.getParamLevel('武術'), this.getParamLevel(skill))
+      return Math.max(this.getParamLevel('武術', true), this.getParamLevel(skill, true))
     } else {
-      return this.getParamLevel(skill)
+      return this.getParamLevel(skill, true)
     }
   }
 
@@ -242,5 +249,16 @@ export class Character {
   // Gold総額を算出して返す
   get gold(): number {
     return this.equipments.gold
+  }
+  
+  // Model用データに変換
+  get model(): CharacterModel {
+    return {
+      id: this.id,
+      name: this.name,
+      gender: this.gender,
+      points: this.parameters.model,
+      equipments: this.equipments.model
+    }
   }
 }
