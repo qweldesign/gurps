@@ -11,6 +11,9 @@ function Entrance() {
       <li className='nav__item'>
         <Link to="/sample/">サンプル</Link>
       </li>
+      <li className='nav__item'>
+        <Link to="/setup/">編成</Link>
+      </li>
     </ul>
   )
 }
