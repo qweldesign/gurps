@@ -112,7 +112,7 @@ const NPC_LIST: string[] = [
 export class SampleCharacter extends Character {
   public tactic: number // 技能修得や装備選択、自動行動時のロジックタイプ
 
-  constructor(id: number, generationKey: number, totalPoints: number = DEFAULT_POINTS) {
+  constructor(id: number, generationKey: number, totalPoints: number = DEFAULT_POINTS, multiplier: number = 1) {
     const A = ABILITY_TABLE.length // 16
     const i = Math.max(Math.min(generationKey, 63), 0) // 最大値・最小値指定
     const r1 = Math.floor(i / A) * A
@@ -124,7 +124,7 @@ export class SampleCharacter extends Character {
     const g = Math.floor(b / 2) // 性別
 
     // 基本能力値
-    const points = ABILITY_TABLE[a]
+    const points = [...ABILITY_TABLE[a]].map(p => p * multiplier as Point)
 
     // ID・名前・性別・能力値の初期化
     const name = NPC_LIST[i]
@@ -132,20 +132,19 @@ export class SampleCharacter extends Character {
     super({ id, name, gender, points, equipments: {} })
 
     // 能力値修正
-    this.modifyAbilities(MOD_TABLE[b])
+    this.modifyAbilities(MOD_TABLE[b], multiplier)
 
     // ロジックタイプを判定
-    this.tactic = this.getTactic()
+    this.tactic = this.getTactic(multiplier)
 
     // 技能セットの選択
-    this.setSkills(totalPoints, DEFAULT_POINTS)
+    this.setSkills(totalPoints, DEFAULT_POINTS, multiplier)
 
     // 装備セットの選択
     this.setEquipments(a, b, totalPoints)
   }
 
-  // 能力値修正
-  private modifyAbilities(mod: ParameterKey) {
+  private modifyAbilities(mod: ParameterKey, multiplier: number = 1) {
     // MOD_TABLE に対応した能力値を下げる (技能分を確保)
     this.stepParam(mod, -1)
     // 各能力値を取得
@@ -156,7 +155,11 @@ export class SampleCharacter extends Character {
     const param = this.getParamLevel(mod)
     // 特性が失われた場合の救済措置 (12 → 11に減少した場合のみ)
     // HTが12ある場合、ST, DX, IN のいずれかを12に戻す
-    const level = 12
+    let level = 12
+    while (multiplier > 1) {
+      level++
+      multiplier /= 2
+    }
     if (str < level && dex < level && int < level && ht > level - 1 && param === level - 1) {
       this.stepParam('生命力', -1)
       this.stepParam(mod, 1)
@@ -164,14 +167,17 @@ export class SampleCharacter extends Character {
   }
 
   // 技能修得や装備選択、自動行動時のロジックタイプを設定
-  private getTactic(): number {
-    // 各能力値を取得
+  private getTactic(multiplier: number = 1): number {
     const str = this.getParamLevel('筋力')
     const dex = this.getParamLevel('敏捷力')
     const int = this.getParamLevel('知力')
     const ht = this.getParamLevel('生命力')
     // ロジックタイプを判定
-    const level = 12
+    let level = 12
+    while (multiplier > 1) {
+      level++
+      multiplier /= 2
+    }
     if (str > level - 1) {
       if (int > level - 2) return 2 // 術戦士F
       else if (dex > level - 2) return 1 // 軽戦士
@@ -207,50 +213,76 @@ export class SampleCharacter extends Character {
   }
 
   // 技能の初期化
-  private setSkills(totalPoints: number, defaultPoints: number = DEFAULT_POINTS) {
+  private setSkills(totalPoints: number, defaultPoints: number = DEFAULT_POINTS, multiplier: number = 1) {
     // 修得技能セット
     const skills = TACTIC_TABLE[this.tactic]
     // 技能修得
-    if (totalPoints > defaultPoints) {
+    if (totalPoints > defaultPoints * multiplier) {
       // Point総計が標準(10)より多い場合は主技能を切り分ける
       const [main, ...other] = skills
-      this.setMainSkill(main, totalPoints)
-      this.setSkillLoop(other, totalPoints)
+      this.setMainSkill(main, totalPoints, multiplier)
+      this.setSkillLoop(other, totalPoints, multiplier)
     } else {
       // Point総計が標準(10)以下の場合は主技能を切り分けない
-      this.setSkillLoop(skills, totalPoints)
+      this.setSkillLoop(skills, totalPoints, multiplier)
     }
   }
 
   // Points 総計に対して主技能を設定
-  private setMainSkill(skill: ParameterKey, totalPoints: number) {
-    if (totalPoints >= 32) this.stepParam(skill, Math.floor(totalPoints / 16) + 4)
-      // 32CP = 初期:10 + 主:16 + 副:6
-      // 40CP = 初期:10 + 主:16 + 副:14
-      // 48CP = 初期:10 + 主:24 + 副:14
-      // 64CP = 初期:10 + 主:32 + 副:22
-    else if (totalPoints >= 24) this.stepParam(skill, 5) // 初期:10 + 主:8 + 副:6
-    else if (totalPoints >= 16) this.stepParam(skill, 4) // 初期:10 + 主:4 + 副:2
-    else if (totalPoints >= 12) this.stepParam(skill, 3) // 初期:10 + 主:2 + 副:0
-    else this.stepParam(skill, 1)
+  private setMainSkill(skill: ParameterKey, totalPoints: number, multiplier: number = 1) {
+    if (multiplier === 1) {
+      if (totalPoints >= 32) this.stepParam(skill, Math.floor(totalPoints / 16) + 4)
+        // 32CP = 初期:10 + 主:16 + 副:6
+        // 40CP = 初期:10 + 主:16 + 副:14
+        // 48CP = 初期:10 + 主:24 + 副:14
+        // 64CP = 初期:10 + 主:32 + 副:22
+      else if (totalPoints >= 24) this.stepParam(skill, 5) // 初期:10 + 主:8 + 副:6
+      else if (totalPoints >= 16) this.stepParam(skill, 4) // 初期:10 + 主:4 + 副:2
+      else if (totalPoints >= 12) this.stepParam(skill, 3) // 初期:10 + 主:2 + 副:0
+        else this.stepParam(skill, 1)
+      } else if (multiplier === 2) {
+      if (totalPoints >= 32) this.stepParam(skill, Math.floor(totalPoints / 16) + 3)
+        // 32CP = 初期:20 + 主:8 + 副:4
+        // 40CP = 初期:20 + 主:8 + 副:12
+        // 48CP = 初期:20 + 主:16 + 副:12
+        // 64CP = 初期:20 + 主:24 + 副:20
+      else if (totalPoints >= 24) this.stepParam(skill, 3) // 初期:20 + 主:2 + 副:2
+      else this.stepParam(skill, 1)
+    } else if (multiplier === 4) {
+      if (totalPoints >= 56) this.stepParam(skill, Math.floor(totalPoints / 16) + 2)
+        // 56CP = 初期:40 + 主:8 + 副:8
+        // 64CP = 初期:40 + 主:16 + 副:8
+      else if (totalPoints >= 48) this.stepParam(skill, 4) // 初期:40 + 主:4 + 副:4
+      else this.stepParam(skill, 1)
+    }
   }
 
   // 技能テーブルから順に技能を修得
-  private setSkillLoop(skills: ParameterKey[], totalPoints: number) {
+  private setSkillLoop(skills: ParameterKey[], totalPoints: number, multiplier: number = 1) {
+    // numberが有効な場合、1つ目の技能には必ず振る
+    // 能力値が16以上の場合、技能無しで maxLevel に到達してループを無視されるため
+    if (multiplier > 1) this.stepParam(skills[0])
     // 上限設定
     let maxPoint = 1
     let maxLevel = 12
+    let firstPoint = maxPoint // numberが有効な場合は1つ目の技能に多めに振る
+    while (multiplier > 1) {
+      maxLevel++
+      firstPoint *= 2
+      multiplier /= 2
+    }
     // ループ開始
     let count = 0
     while (
-      this.total < totalPoints // 合計が totalPoints に達した場合
+      this.total < totalPoints // 合計がtotalPointsに達した場合
       && count < 4 // 安全装置 (最大4周) 
     ) {
-      skills.map(skill => {
+      skills.map((skill, i) => {
         // 1つの技能を修得して下記条件に達したらループを抜ける
         while (
           this.total < totalPoints // 合計が totalPoints に達した場合
-          && this.getParam(skill) < maxPoint // 1つの技能に maxPoint 消費した場合
+          && ((i === 0 && this.getParam(skill) < firstPoint) // 1つ目の技能に firstPoint 消費した場合
+            || (i > 0 && this.getParam(skill) < maxPoint)) // 1つの技能に maxPoint 消費した場合
           && this.getParamLevel(skill) < maxLevel // 技能値が maxLevel に達した場合
         ) {
           this.stepParam(skill)
@@ -303,4 +335,19 @@ export class SampleCharacter extends Character {
       this.spare = 'ダガー'
     }
   }
+}
+
+// サンプルキャラクター生成
+export function createSamples(totalPoints = 10, multiplier: number = 1, size = 64, mod = 0, idMod = 0) {
+  const step = 64 / size // size より step を算出 (実質16固定)
+  const samples = []
+
+  for (let n = 0; n < size; n++) {
+    const id = n + idMod + 1 // 通常は1からカウント (呼び出すときは-1, idMod を足す)
+    const generationKey = Math.floor(n * step) + mod // 定数を足してサンプル生成
+    const sample = new SampleCharacter(id, generationKey, totalPoints, multiplier)
+    samples.push(sample)
+  }
+
+  return samples
 }
