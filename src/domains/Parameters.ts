@@ -68,9 +68,8 @@ export class Parameters {
 
   // CPの配列を Point の Map に変換
   constructor(points: Point[]) {
-    this.points = new Map(
-      points.map((p, i) => [PARAMETER_KEYS[i], p])
-    )
+    this.points = new Map()
+    points.forEach((p, i) => this.set(PARAMETER_KEYS[i], p))
   }
 
   // name と point を指定し, Point を追加
