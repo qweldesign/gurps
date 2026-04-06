@@ -1,9 +1,10 @@
 // Setup.tsx
 
-import { useState, useEffect, useMemo } from 'react'
+import { type ReactNode, useState, useEffect, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import List from './common/List'
 import Detail from './common/Detail'
+import Modal from './common/Modal'
 import { Character } from '../domains/Character'
 import { SampleCharacter } from '../domains/Sample/Character'
 import { SaveData } from '../domains/SaveData'
@@ -17,6 +18,11 @@ function Setup() {
   // List, Detail に渡すパラメータ
   const [units, setUnits] = useState<Character[]>([])
   const [unit, setUnit] = useState<Character | null>(null)
+
+  // Modal に渡すパラメータ
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
+  const [alertAction, setAlertAction] = useState<() => void>(() => () => {})
 
   // navigate, uid を取得
   const navigate = useNavigate()
@@ -47,8 +53,36 @@ function Setup() {
     })
   }
 
+  // 除名の確認
+  const confirmRemove = () => {
+    if (!unit) return
+    setAlertMessage(
+      <p>本当に {unit.name} を除名しますか？</p>
+    )
+    setAlertOpen(true)
+    setAlertAction(() => remove)
+  }
+
+  // 除名
+  const remove = () => {
+    if (!uid) return
+    setAlertOpen(false)
+    saveData.removeModel(uid)
+    navigate('/setup/')
+  }
+
+  // ゲーム初期化の確認
+  const confirmReset = () => {
+    setAlertMessage(
+      <p>本当にセーブデータを初期化しますか？</p>
+    )
+    setAlertOpen(true)
+    setAlertAction(() => reset)
+  }
+
   // ゲーム初期化
   const reset = () => {
+    setAlertOpen(false)
     saveData.clear()
     navigate('/')
   }
@@ -85,14 +119,22 @@ function Setup() {
             <List units={units} points={points} />
             <div className="text-center">
               <button className="w-48 h-12" onClick={() => navigate('./edit/')}>新規作成</button>
-              <button className="w-48 h-12" onClick={reset}>リセット</button>
+              <button className="w-48 h-12" onClick={confirmReset}>リセット</button>
             </div>
           </>
         :
           <>
             <Detail unit={unit} />
+            <div className="text-center">
+              <button className="w-48 h-12" onClick={() => navigate('/setup/')}>一覧へ戻る</button>
+              <button className="w-48 h-12" onClick={() => navigate(`/setup/edit/${uid}`)}>編集</button>
+              <button className="w-48 h-12" onClick={confirmRemove}>除名</button>
+            </div>
           </>
       }
+      {alertOpen && (
+        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={alertAction} />
+      )}
     </div>
   )
 }
