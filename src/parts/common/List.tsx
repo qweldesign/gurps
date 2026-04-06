@@ -68,7 +68,7 @@ function List({ units, points }: { units: Character[], points: number }) {
         </thead>
         <tbody>
           {sorted.map((unit) => (
-            <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`./${unit.id}`)}>
+            <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`./${String(unit.id).padStart(2, '0')}/`)}>
               <td>{unit.id}</td>
               <td>{unit.name}</td>
               <td>{unit.gender}</td>
