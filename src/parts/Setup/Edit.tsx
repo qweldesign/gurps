@@ -1,10 +1,11 @@
 // Setup/Edit.tsx
 
-import { type Reducer, useReducer, useEffect } from 'react'
+import { type ReactNode, type Reducer, useState, useReducer, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import ParametersSetting from './Edit/ParametersSetting'
 import EquipmentsSetting from './Edit/EquipmentsSetting'
 import ProfileSetting from './Edit/ProfileSetting'
+import Modal from '../common/Modal'
 import { type ParameterKey, Parameters } from '../../domains/Parameters'
 import { WEAPONS, ARMORS, type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type Weapon, type Armor, Equipments } from '../../domains/Equipments'
 import { type CharacterModel as Model } from '../../domains/Character'
@@ -33,15 +34,23 @@ export type ParamsState = {
   // プロフィール
   name: string // 名前設定
   gender: string // 性別設定
+
+  // 状態遷移トリガー
+  transitions: {
+    becameWarrior: boolean
+    lostWarrior: boolean
+  }
 }
 
 export type Action =
   | { type: 'INIT', payload: { prevModel: Model,  model: Model } }
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterKey, size: number } }
+  | { type: 'RESET_EQUIPS', payload: { prevModel: Model } }
   | { type: 'CHANGE_EQUIP', payload: { slot: 'weapon' | 'spare' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string } }
   | { type: 'SET_NAME', payload: { name: string } }
   | { type: 'SET_GENDER', payload: { gender: string } }
   | { type: 'AUTO_NAME', payload: { gender: string } }
+  | { type: 'CLEAR_TRANSITION' }
 
 function Edit() {
   // セーブデータの読み込み
@@ -66,7 +75,11 @@ function Edit() {
     name: '未設定',
     gender: '男性',
     weaponList: Object.entries(WEAPONS) as [WeaponKey, Weapon][],
-    armorList: Object.entries(ARMORS) as [BodyArmorKey, Armor][]
+    armorList: Object.entries(ARMORS) as [BodyArmorKey, Armor][],
+    transitions: {
+      becameWarrior: false,
+      lostWarrior: false
+    }
   }
 
   // 状態更新 (設定内容)
@@ -127,6 +140,7 @@ function Edit() {
         }
 
       case 'STEP_PARAM': {
+        const prevParams = action.payload.prevParams
         const nextParams = new Parameters(state.params.model)
         nextParams.step(action.payload.name, action.payload.size)
 
@@ -138,12 +152,27 @@ function Edit() {
           : Object.entries(ARMORS).filter(([, armor]) => armor.wt <= 2)
         ) as [BodyArmorKey, Armor][]
 
+        // 状態遷移トリガー
+        const becameWarrior = !prevParams.isWarrior && nextParams.isWarrior
+        const lostWarrior = prevParams.isWarrior && !nextParams.isWarrior
+
         return {
           ...state,
           params: nextParams,
-          weaponList, armorList
+          weaponList, armorList,
+          transitions: {
+            becameWarrior, lostWarrior
+          }
         }
       }
+
+      case 'RESET_EQUIPS':
+        return {
+          ...state,
+          isEquipChanged: false,
+          equips: new Equipments(action.payload.prevModel.equipments),
+          saleEquips: new Equipments({ body: '装備無し' })
+        }
 
       case 'CHANGE_EQUIP':
         const changeEquip = <T,>({
@@ -257,6 +286,15 @@ function Edit() {
           name: PC_LIST[n]
         }
 
+      case 'CLEAR_TRANSITION':
+        return {
+          ...state,
+          transitions: {
+            becameWarrior: false,
+            lostWarrior: false
+          }
+        }
+
       default:
         return state
     }
@@ -275,6 +313,18 @@ function Edit() {
     dispatch({ type: 'INIT', payload: { prevModel, model } })
   }
 
+  // RESET_EQUIPS
+  const onResetEquip = (prevModel: Model) => {
+    // 発火
+    dispatch({ type: 'RESET_EQUIPS', payload: { prevModel } }) 
+  }
+
+  // CLEAR_TRANSITION
+  const clearTransition = () => {
+    // 発火
+    dispatch({ type: 'CLEAR_TRANSITION' })
+  }
+
   // 残りCPを計算 isMax: true で持ち点を返す
   const calcPoints = (state: ParamsState, isMax: boolean = false): number => {
     let points = state.initialPoints
@@ -291,10 +341,57 @@ function Edit() {
     return gold
   }
 
+  // 状態管理 (Modal に渡すパラメータ)
+  const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
+  const [alertOpen, setAlertOpen] = useState(false)
+
   // 最初に一度だけ実行
   useEffect(() => {    
     onInit() // 初期化
   }, [])
+
+  // 「武術」セット/リセットを監視
+  useEffect(() => {
+    if (state.transitions.becameWarrior && state.isEquipChanged) {
+      //「武術」セット時 & 一度でも装備を変更していた場合
+      // アラート表示 (装備解除はしない)
+      // startGold 廃止に伴いメッセージ変更
+      const message = (
+        <p className="text-center">「武術」がセットされ、装備可能な武器・防具が変わりました。
+          <br />装備の選択をやり直してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      clearTransition()
+    } else if (state.transitions.lostWarrior) {
+      //「武術」リセット時
+      // アラート表示 & 装備解除
+      // startGold 廃止に伴いメッセージ変更
+      const message = (
+        <p className="text-center">「武術」がリセットされ、装備可能な武器・防具が変わりました。
+          <br />装備の選択をやり直してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      // LocalStorage からキャラクターデータを取得
+      const prevModel: Model = saveData.loadModel(uid)
+      onResetEquip(prevModel)
+      clearTransition()
+    }
+  }, [state.transitions.becameWarrior, state.transitions.lostWarrior])
+
+  // 所持金・装備変更を監視
+  useEffect(() => {
+    if (calcGold(state) < 0 && state.isEquipChanged) {
+      // 所持金が赤字になった場合のアラート
+      const message = (
+        <p className="text-center">装備の購入金額が所持金を超えています。
+          <br />装備を変更してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+    }
+  }, [state.transitions?.becameWarrior, state.transitions?.lostWarrior, state.equips])
 
   return (
     <div className="edit px-6">
@@ -306,6 +403,9 @@ function Edit() {
           <ProfileSetting state={state} dispatch={dispatch} />
         )}
       </div>
+      {alertOpen && (
+        <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={null} />
+      )}
     </div>
   )
 }
