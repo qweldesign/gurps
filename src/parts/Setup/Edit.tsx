@@ -4,9 +4,11 @@ import { type Reducer, useReducer, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import ParametersSetting from './Edit/ParametersSetting'
 import EquipmentsSetting from './Edit/EquipmentsSetting'
+import ProfileSetting from './Edit/ProfileSetting'
 import { type ParameterKey, Parameters } from '../../domains/Parameters'
 import { WEAPONS, ARMORS, type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type Weapon, type Armor, Equipments } from '../../domains/Equipments'
 import { type CharacterModel as Model } from '../../domains/Character'
+import { PC_LIST } from '../../domains/Sample/Character'
 import { SaveData } from '../../domains/SaveData'
 
 export type ParamsState = {
@@ -27,12 +29,19 @@ export type ParamsState = {
   saleEquips: Equipments // 外して売却する装備 (売却装備)
   weaponList: [WeaponKey, Weapon][] // 装備可能な武器一覧
   armorList: [BodyArmorKey, Armor][] // 装備可能な防具一覧
+
+  // プロフィール
+  name: string // 名前設定
+  gender: string // 性別設定
 }
 
 export type Action =
   | { type: 'INIT', payload: { prevModel: Model,  model: Model } }
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterKey, size: number } }
   | { type: 'CHANGE_EQUIP', payload: { slot: 'weapon' | 'spare' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string } }
+  | { type: 'SET_NAME', payload: { name: string } }
+  | { type: 'SET_GENDER', payload: { gender: string } }
+  | { type: 'AUTO_NAME', payload: { gender: string } }
 
 function Edit() {
   // セーブデータの読み込み
@@ -54,6 +63,8 @@ function Edit() {
     prevEquips: new Equipments({}),
     equips: new Equipments({}),
     saleEquips: new Equipments({}),
+    name: '未設定',
+    gender: '男性',
     weaponList: Object.entries(WEAPONS) as [WeaponKey, Weapon][],
     armorList: Object.entries(ARMORS) as [BodyArmorKey, Armor][]
   }
@@ -62,7 +73,9 @@ function Edit() {
   const reducer: Reducer<ParamsState, Action> = (state, action) => {
     switch (action.type) {
       case 'INIT':
-        // CP, 所持金を取得
+        // 名前, 性別, CP, 所持金を取得
+        const name = action.payload.model.name // 一時保存データがあれば優先
+        const gender = action.payload.model.gender
         const initialPoints = saveData.loadPoints()
         const initialGold = saveData.loadGold()
 
@@ -106,6 +119,7 @@ function Edit() {
 
         return {
           ...state,
+          name, gender,
           initialPoints, initialGold,
           prevParams, params,
           prevEquips, equips, saleEquips,
@@ -221,6 +235,27 @@ function Edit() {
               name: action.payload.name
             })
         }
+      
+      case 'SET_NAME':
+        return {
+          ...state,
+          name: action.payload.name
+        }
+      
+      case 'SET_GENDER':
+        return {
+          ...state,
+          gender: action.payload.gender
+        }
+
+      case 'AUTO_NAME':
+        const g = action.payload.gender === '男性' ? 0 : 1
+        const n = Math.floor((Math.random() + g) * PC_LIST.length / 2)
+        
+        return {
+          ...state,
+          name: PC_LIST[n]
+        }
 
       default:
         return state
@@ -267,6 +302,9 @@ function Edit() {
         <h3>キャラクター{isFirstCreation ? '作成' : '編集'}</h3>
         <ParametersSetting isFirstCreation={isFirstCreation} state={state} dispatch={dispatch} calcPoints={calcPoints} />
         <EquipmentsSetting isFirstCreation={isFirstCreation} state={state} dispatch={dispatch} calcGold={calcGold} />
+        {isFirstCreation && (
+          <ProfileSetting state={state} dispatch={dispatch} />
+        )}
       </div>
     </div>
   )
