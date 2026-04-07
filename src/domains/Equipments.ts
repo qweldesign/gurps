@@ -2,7 +2,7 @@
 
 import { type ParameterKey } from "./Parameters"
 
-const WEAPON_KEYS = [
+export const WEAPON_KEYS = [
   '装備無し', 'ダガー', 'ショートソード', 'レイピア', 'ロングソード', 'バスタードソード', 'グレートソード',
   '三日月刀', '蒼龍刀', '鎚槌', '手斧', '戦鎚', '戦斧', '杖', '長槍', '薙刀', '鉾槍',
   '短弓', '長弓', '弩', '拳', '蹴り', '拳+1', '蹴り+1', '拳+2', '蹴り+2',
@@ -11,23 +11,23 @@ const WEAPON_KEYS = [
 
 const WEAPON_USAGE_KEYS = ['バスタードソード(片手)', 'バスタードソード(両手)', '蒼龍刀(片手)', '蒼龍刀(両手)', '鉾槍(突き)', '鉾槍(振り)'] as const
 
-const BODY_ARMOR_KEYS = [
+export const BODY_ARMOR_KEYS = [
   '装備無し', '服', '革服', '革鎧', 'チェインメイル', 'ブリガンディ', 'プレイトメイル'
 ] as const
 
-const HEAD_ARMOR_KEYS = [
+export const HEAD_ARMOR_KEYS = [
   '装備無し', '革の帽子', 'ヘッドギア', 'チェインコイフ', 'オープンヘルム', 'クローズヘルム'
 ] as const
 
-const ARM_ARMOR_KEYS = [
+export const ARM_ARMOR_KEYS = [
   '装備無し', 'グローブ', 'レザーグローブ', 'ガントレット', 'ヴァンブレイス'
 ] as const
 
-const LEG_ARMOR_KEYS = [
+export const LEG_ARMOR_KEYS = [
   '装備無し', 'ブーツ', 'レザーブーツ', 'ソールレット', 'グリーヴ'
 ] as const
 
-const WEAPONS: Record<WeaponKey, Weapon> = {
+export const WEAPONS: Record<WeaponKey, Weapon> = {
   '装備無し': { id: 0, name: '装備無し', weaponType: 0, baseDmg: 2, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
   'ダガー': { id: 1, name: 'ダガー', weaponType: 1, baseDmg: 6, dmgType: 2, skill: '剣術', ready: 0, ev: 1, gold: 30 },
   'ショートソード': { id: 2, name: 'ショートソード', weaponType: 1, baseDmg: 6, dmgType: 1, skill: '剣術', ready: 0, ev: 1, gold: 40 },
@@ -59,7 +59,7 @@ const WEAPONS: Record<WeaponKey, Weapon> = {
   '大盾': { id: 28, name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '武術', ready: 1, ev: 4, gold: 20 }
  } as const
 
-const ARMORS: Record<BodyArmorKey, Armor> = {
+export const ARMORS: Record<BodyArmorKey, Armor> = {
   '装備無し': { id: 0, name:['装備無し', '装備無し', '装備無し', '装備無し'], sdr:0, tdr:0, dr: '0', wt:0, gold: 0},
   '服': { id: 1, name: ['服', null, null, null], sdr: 1, tdr: 0, dr: '1 (0)', wt: 0, replace: null, gold: 20 },
   '革服': { id: 2, name: ['革服', '革の帽子', 'グローブ', 'ブーツ'], sdr: 1, tdr: 1, dr: '1', wt: 0, gold: 40 },

@@ -12,6 +12,10 @@
   button {
     @apply inline-block m-6 rounded-md bg-gray-400 hover:bg-white text-white hover:text-black text-center transition-colors duration-300 cursor-pointer disabled:hover:bg-gray-400 disabled:hover:text-white disabled:opacity-50 disabled:cursor-default;
   }
+
+  input, select {
+    @apply w-24 h-9 rounded-md bg-white text-black text-center;
+  }
 }
 
 @layer project {
