@@ -3,6 +3,7 @@
 import { type Point, type ParameterKey, type Parameter, Parameters } from './Parameters'
 import { type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type EquipmentSet, type Weapon, type Armor, type Dmg, type WeaponSlotKey, type ArmorSlotKey, Equipments } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
+import { type CombatUnitModel } from './Combat/Unit'
 
 export type CharacterModel = {
   id: number
@@ -262,6 +263,18 @@ export class Character {
       gender: this.gender,
       points: this.parameters.model,
       equipments: this.equipments.model
+    }
+  }
+
+  // 戦闘モデル用データ変換
+  get combatUnitModel(): CombatUnitModel {
+    return {
+      id: this.id,
+      name: this.name,
+      maxHp: this.maxHp,
+      ev: this.DEV,
+      pre: this.PRE,
+      mre: this.MRE
     }
   }
 
