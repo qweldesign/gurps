@@ -1,14 +1,14 @@
 // Setup/Edit.tsx
 
 import { type ReactNode, type Reducer, useState, useReducer, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import ParametersSetting from './Edit/ParametersSetting'
 import EquipmentsSetting from './Edit/EquipmentsSetting'
 import ProfileSetting from './Edit/ProfileSetting'
 import Modal from '../common/Modal'
 import { type ParameterKey, Parameters } from '../../domains/Parameters'
 import { WEAPONS, ARMORS, type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type Weapon, type Armor, Equipments } from '../../domains/Equipments'
-import { type CharacterModel as Model } from '../../domains/Character'
+import { type CharacterModel as Model, Character } from '../../domains/Character'
 import { PC_LIST } from '../../domains/Sample/Character'
 import { SaveData } from '../../domains/SaveData'
 
@@ -55,8 +55,10 @@ export type Action =
 function Edit() {
   // セーブデータの読み込み
   const saveData = new SaveData()
+  const keys = saveData.loadKeys()
   
   // navigate, uid を取得
+  const navigate = useNavigate()
   let { uid = '00' } = useParams()
 
   // 新規作成かどうかを変数に格納
@@ -341,6 +343,11 @@ function Edit() {
     return gold
   }
 
+  // 名前が設定されているか判定
+  const checkName = (state: ParamsState): boolean => {
+    return state.name !== '未設定' && state.name !== '' 
+  }
+
   // 状態管理 (Modal に渡すパラメータ)
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
   const [alertOpen, setAlertOpen] = useState(false)
@@ -393,6 +400,67 @@ function Edit() {
     }
   }, [state.transitions?.becameWarrior, state.transitions?.lostWarrior, state.equips])
 
+  // 確認
+  const confirm = () => {
+    // 新規作成時で points を使い切ってない場合のアラート
+    if (isFirstCreation && calcPoints(state)) {
+      const message = (
+        <p className="text-center">キャラクターポイントを使い切っていません。
+          <br />ポイントを使い切ってください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
+    // 装備の購入金額が所持金を超えている場合のアラート
+    if (calcGold(state) < 0) {
+      const message = (
+        <p className="text-center">装備の購入金額が所持金を超えています。
+          <br />装備を変更してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
+    // 新規作成時で名前が未設定の場合のアラート
+    if (isFirstCreation && !checkName(state)) {
+      const message = (
+        <p className="text-center">名前を設定してください。</p>
+      )
+      setAlertMessage(message)
+      setAlertOpen(true)
+      return
+    }
+
+    // 確認用モデルの作成
+    const { name, gender, params, equips } = state
+    const confirmModel: Model = {
+      id: Number(uid),
+      name, gender,
+      points: params.model,
+      equipments: equips.model
+    }
+    
+    // キャラクターデータの一時保存 (SessionStorage を使用)
+    const unit = new Character(confirmModel)
+    unit.save(true)
+
+    // 所持金の一時保存
+    saveData.saveGold(calcGold(state), true)
+
+    // 確認画面へ進む
+    if (!isFirstCreation) {
+      navigate(`/setup/confirm/${uid}`)
+    } else {
+      navigate(`/setup/confirm/`)
+    }
+  }
+
+  // 作成 (編集) 中断
+  const back = () => navigate(keys.size ? '/setup/' : '/')
+
   return (
     <div className="edit px-6">
       <div className="max-w-[48em] mx-auto">
@@ -402,6 +470,15 @@ function Edit() {
         {isFirstCreation && (
           <ProfileSetting state={state} dispatch={dispatch} />
         )}
+        <section className="my-12 text-center">
+          {isFirstCreation && (
+            <p className="text-center">お疲れ様でした。もうすぐキャラクター作成は完了です。
+              <br />この内容でよろしければ、確認へ進んでください。
+            </p>
+          )}
+          <button className="w-48 h-12" onClick={confirm}>確認する</button>
+          <button className="w-48 h-12" onClick={back}>{isFirstCreation ? '作成' : '編集'}中断</button>
+        </section>
       </div>
       {alertOpen && (
         <Modal message={alertMessage} onClose={() => setAlertOpen(false)} onContinue={null} />

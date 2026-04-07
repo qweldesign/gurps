@@ -7,6 +7,7 @@ import Docs from './parts/Docs'
 import Sample from './parts/Sample'
 import Setup from './parts/Setup'
 import Edit from './parts/Setup/Edit'
+import Confirm from './parts/Setup/Confirm'
 import { docsLoader } from './docs/docsLoader'
 
 export const router = createBrowserRouter([
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
         { path: 'edit', children: [
           { index: true, element: <Edit /> },
           { path: ':uid', element: <Edit /> }
+        ]},
+        { path: 'confirm', children: [
+          { index: true, element: <Confirm /> },
+          { path: ':uid', element: <Confirm /> }
         ]}
       ]}
     ]
