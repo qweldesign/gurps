@@ -64,7 +64,9 @@ function Combat() {
           <div className="row justify-center min-w-lg lg:min-w-5xl">
             <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
               <h3 className="m-0 border-0 font-serif text-sm">Formation</h3>
-              <Formation />
+              {stateRef.current.formationStore && (
+                <Formation store={stateRef.current.formationStore} />
+              )}
             </div>
             <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
               <h3 className="m-0 border-0 font-serif text-sm">Summary</h3>

@@ -157,6 +157,34 @@
     @apply absolute inset-0 w-xs sm:w-max h-max m-auto p-12 border-2 border-white rounded-3xl bg-black/70 text-white text-center;
   }
 
+  .formation {
+    @apply grid grid-cols-4 items-center text-[15px] text-center;
+  }
+
+  .formation__col.is-back {
+    @apply grid grid-rows-4
+  }
+
+  .formation__col.is-front {
+    @apply grid grid-rows-3
+  }
+
+  .formation__col.is-player.is-front {
+    @apply border-e border-orange-400;
+  }
+
+  .formation__col.is-enemy.is-front {
+    @apply border-s border-orange-400;
+  }
+
+  .formation__cell {
+    @apply h-9 leading-9;
+  }
+
+  .formation__cell.is-current {
+    @apply bg-emerald-400/50
+  }
+
   .cover {
     @apply fixed inset-0 -z-10 w-1/1 h-1/1;
   }
