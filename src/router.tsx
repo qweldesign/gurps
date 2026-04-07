@@ -5,6 +5,7 @@ import App from './App'
 import Entrance from './parts/Entrance'
 import Docs from './parts/Docs'
 import Sample from './parts/Sample'
+import Setup from './parts/Setup'
 import { docsLoader } from './docs/docsLoader'
 
 export const router = createBrowserRouter([
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
       { path: 'sample', children: [
         { index: true, element: <Sample /> },
         { path: ':uid', element: <Sample /> },
+      ]},
+      { path: 'setup', children: [
+        { index: true, element: <Setup /> },
+        { path: ':uid', element: <Setup /> },
       ]}
     ]
   }

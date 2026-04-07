@@ -1,25 +1,27 @@
-// Sample/List.tsx
+// common/List.tsx
 
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type ParameterKey } from '../../domains/Parameters'
-import { type SampleCharacter } from '../../domains/Sample/Character'
+import { type Character } from '../../domains/Character'
 
-type SortKey = 'id' | 'tactic' | '筋力' | '敏捷力' | '知力' | '生命力'
+type SortKey = 'id' | 'skill' | '筋力' | '敏捷力' | '知力' | '生命力'
 
-function List({ units }: { units: SampleCharacter[] }) {
-  const navigate = useNavigate()
-  
+function List({ units, points }: { units: Character[], points: number }) {
   const [sortKey, setSortKey] = useState<SortKey>('id')
   const [sortDir, setSortDir] = useState({
     id: false, // false: asc▲, true:desc▼
-    tactic: false,
+    skill: false,
     '筋力': false,
     '敏捷力': false,
     '知力': false,
     '生命力': false
   })
 
+  // navigate を取得
+  const navigate = useNavigate()
+
+  // 状態更新
   const handleSort = (key: SortKey) => {
     setSortKey(key)
     setSortDir(prev => ({
@@ -28,14 +30,17 @@ function List({ units }: { units: SampleCharacter[] }) {
     }))
   }
 
-  const sorted = useMemo((): SampleCharacter[] => {
+  // 状態が更新されたらソートを行う
+  const sorted = useMemo((): Character[] => {
     if (sortKey === 'id') {
       return units.sort((a, b) => {
         return (a.id - b.id) * (sortDir.id ? -1 : 1)
       })
-    } else if (sortKey === 'tactic') {
+    } else if (sortKey === 'skill') {
       return units.sort((a, b) => {
-        return (a.tactic - b.tactic) * (sortDir.tactic ?  -1 : 1)
+        const skillA = a.mainSkill
+        const skillB = b.mainSkill
+        return (skillA.id! - skillB.id!) * (sortDir.skill ?  -1 : 1)
       })
     } else {
       return units.sort((a, b) => {
@@ -52,34 +57,28 @@ function List({ units }: { units: SampleCharacter[] }) {
             <th onClick={() => handleSort('id')}>ID <span className="text-xs cursor-pointer">{sortDir.id ? '▼' : '▲'}</span></th>
             <th>名前</th>
             <th>性別</th>
-            <th onClick={() => handleSort('tactic')}>タイプ <span className="text-xs cursor-pointer">{sortDir.tactic ? '▼' : '▲'}</span></th>
             <th onClick={() => handleSort('筋力')}>筋力 <span className="text-xs cursor-pointer">{sortDir['筋力'] ? '▼' : '▲'}</span></th>
             <th onClick={() => handleSort('敏捷力')}>敏捷力 <span className="text-xs cursor-pointer">{sortDir['敏捷力'] ? '▼' : '▲'}</span></th>
             <th onClick={() => handleSort('知力')}>知力 <span className="text-xs cursor-pointer">{sortDir['知力'] ? '▼' : '▲'}</span></th>
             <th onClick={() => handleSort('生命力')}>生命力 <span className="text-xs cursor-pointer">{sortDir['生命力'] ? '▼' : '▲'}</span></th>
-            <th>主技能</th>
-            <th>副技能</th>
+            <th onClick={() => handleSort('skill')}>主技能 <span className="text-xs cursor-pointer">{sortDir.skill ? '▼' : '▲'}</span></th>
             <th>装備</th>
+            <th>CP</th>
           </tr>
         </thead>
         <tbody>
           {sorted.map((unit) => (
-            <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`/sample/${String(unit.id).padStart(2, '0')}`)}>
+            <tr className="cursor-pointer" key={unit.id} onClick={() => navigate(`./${unit.id}`)}>
               <td>{unit.id}</td>
               <td>{unit.name}</td>
               <td>{unit.gender}</td>
-              <td>{unit.getTacticName()}</td>
               <td>{`${unit.getParamLevel('筋力')} (${unit.getParam('筋力')}CP)`}</td>
               <td>{`${unit.getParamLevel('敏捷力')} (${unit.getParam('敏捷力')}CP)`}</td>
               <td>{`${unit.getParamLevel('知力')} (${unit.getParam('知力')}CP)`}</td>
               <td>{`${unit.getParamLevel('生命力')} (${unit.getParam('生命力')}CP)`}</td>
-              <td>{`${unit.getSkillByPriority().name}: ${unit.getSkillByPriority().level}`}</td>
-              {unit.getSkillByPriority(1).point ? (
-                <td>{`${unit.getSkillByPriority(1).name}: ${unit.getSkillByPriority(1).level}`}</td>
-              ) : (
-                <td>-</td>
-              )}
+              <td>{`${unit.mainSkill.name}: ${unit.mainSkill.level}`}</td>
               <td>{`${unit.weapon.name} / ${unit.body.name[0]}`}</td>
+              <td>{unit.total} / {points}</td>
             </tr>
           ))}
         </tbody>

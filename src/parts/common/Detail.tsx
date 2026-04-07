@@ -1,4 +1,4 @@
-// Sample/Detail.tsx
+// common/Detail.tsx
 
 import { Fragment } from 'react'
 import { type Weapon, type Armor, type WeaponSlotKey, type ArmorSlotKey } from '../../domains/Equipments'

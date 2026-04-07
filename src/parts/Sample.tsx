@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import List from './Sample/List'
-import Detail from './Sample/Detail'
+import List from './common/List'
+import Detail from './common/Detail'
 import { SampleCharacter } from '../domains/Sample/Character'
 
 function Sample() {
@@ -58,7 +58,7 @@ function Sample() {
         <option value="64/4">{'64CP (初期40CP)'}</option>
       </select>
       {!sample
-        ? <List units={samples} />
+        ? <List units={samples} points={points} />
         : (
           <>
             <Detail unit={sample} />
