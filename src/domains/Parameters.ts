@@ -4,14 +4,14 @@ const POINT_STEP = [
   0, 0.5, 1, 2, 4, 8, 16, 24, 32
 ] as const
 
-const PARAMETER_KEYS = [
+export const PARAMETER_KEYS = [
   '筋力', '敏捷力', '知力', '生命力',
   '武術', '剣術', '弓術', '木行術', '火行術', '土行術', '金行術', '水行術',
   '怪力', '格闘', '柔術', '探索', '運動', '細工', '早業', '隠密', '軽業', '演奏', '舞踏', '技術',
   '礼法', '交渉', '尋問', '演技', '鑑定', '治癒', '歴史', '言語', '知識', '修養', '鍛錬', '歌唱'
 ] as const
 
-const PARAMETERS: Record<ParameterKey, { id: number, base: ParameterKey | 10 }> = {
+export const PARAMETERS: Record<ParameterKey, { id: number, base: ParameterKey | 10 }> = {
   '筋力': { id: 0, base: 10 },
   '敏捷力': { id: 1, base: 10 },
   '知力': { id: 2, base: 10 },

@@ -60,7 +60,7 @@ function Setup() {
     setGold(saveData.loadGold())
     const keys = saveData.loadKeys()
     // 不足メンバーを補完
-    if (!keys.size) {
+    if (keys.size === 1) {
       saveUnits(5 - keys.size)
     }
     // モデル読み込みとユニット生成
@@ -84,6 +84,7 @@ function Setup() {
           <>
             <List units={units} points={points} />
             <div className="text-center">
+              <button className="w-48 h-12" onClick={() => navigate('./edit/')}>新規作成</button>
               <button className="w-48 h-12" onClick={reset}>リセット</button>
             </div>
           </>

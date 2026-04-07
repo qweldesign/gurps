@@ -71,7 +71,7 @@
     @apply order-1 w-1/1 max-w-sm p-6;
   }
 
-  .primary-col, .secondary-col {
+  .primary-col, .secondary-col, .edit {
     h1, h2, h3 ,h4, h5 {
       @apply font-serif leading-relaxed tracking-wide;
     }
@@ -123,26 +123,26 @@
 
   .table-wrapper {
     @apply w-1/1 overflow-x-auto;
+  }
 
-    table {
-      @apply my-6 text-[0.875em];
+  table {
+    @apply my-6 text-[0.875em];
 
-      thead > tr {
-        @apply border-y border-white;
-      }
-
-      tbody > tr {
-        @apply border-b border-white hover:bg-white/10;
-      }
-
-      th, td {
-        @apply p-3 text-left;
-      }
+    thead > tr {
+      @apply border-y border-white;
     }
 
-    .cell {
-      @apply p-3 border-b border-white text-[0.875em] text-center;
+    tbody > tr {
+      @apply border-b border-white hover:bg-white/10;
     }
+
+    th, td {
+      @apply p-3 text-left;
+    }
+  }
+
+  .cell {
+    @apply p-3 border-b border-white text-[0.875em] text-center;
   }
 
   .cover {

@@ -4,7 +4,7 @@ import { type Point, type ParameterKey, type Parameter, Parameters } from './Par
 import { type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type EquipmentSet, type Weapon, type Armor, type Dmg, type WeaponSlotKey, type ArmorSlotKey, Equipments } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
 
-type CharacterModel = {
+export type CharacterModel = {
   id: number
   name: string
   gender: string
