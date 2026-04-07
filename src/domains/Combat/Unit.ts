@@ -1,5 +1,7 @@
 // Combat/Unit.ts
 
+import { CombatUnitHealth as Health } from './Unit/Health'
+
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
 export const SIDE_KEYS = ['player', 'enemy'] as const
@@ -32,13 +34,15 @@ export class CombatUnit {
   public name: string
   public side: Side
   public position: Position
+  public health: Health
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { id, name } = model
+    const { id, name, maxHp } = model
     this.combatId = combatId
     this.id = id
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
     this.position = 'back'
+    this.health = new Health(maxHp)
   }
 }

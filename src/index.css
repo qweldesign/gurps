@@ -185,6 +185,42 @@
     @apply bg-emerald-400/50
   }
 
+  .summary {
+    @apply p-3;
+  }
+
+  .summary__turn {
+    @apply italic text-[15px];
+  }
+
+  .summary__grid {
+    @apply grid grid-rows-9 text-[15px] text-center;
+  }
+
+  .summary__row {
+    @apply grid grid-cols-4 h-9 leading-9;
+  }
+
+  .summary__row.is-current {
+    @apply bg-emerald-400/50;
+  }
+
+  .summary__row:first-child {
+    @apply border-b border-white;
+  }
+
+  .summary__row:has(.is-injured) {
+    @apply text-yellow-400;
+  }
+
+  .summary__row:has(.is-stunned) {
+    @apply text-orange-400;
+  }
+
+  .summary__row:has(.is-unconscious) {
+    @apply text-red-400;
+  }
+
   .cover {
     @apply fixed inset-0 -z-10 w-1/1 h-1/1;
   }
