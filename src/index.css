@@ -184,6 +184,26 @@
   .formation__cell.is-current {
     @apply bg-emerald-400/50
   }
+  
+  .actions {
+    @apply flex flex-wrap justify-center gap-3 py-3;
+  }
+
+  .actions[data-disable="true"] {
+    @apply hidden
+  }
+
+  .actions > button {
+    @apply w-36 h-9 m-0 rounded-none bg-black/50 hover:bg-white/50 text-[15px] disabled:hidden;
+  }
+
+  .actions > button.is-small {
+    @apply w-24;
+  }
+
+  .actions > button.is-large {
+    @apply w-48;
+  }
 
   .summary {
     @apply p-3;
@@ -219,6 +239,22 @@
 
   .summary__row:has(.is-unconscious) {
     @apply text-red-400;
+  }
+
+  .timeline {
+    @apply transition-none duration-300;
+  }
+
+  .timeline.is-scrolling {
+    @apply -mt-8 transition-all;
+  }
+
+  .timeline > p {
+    @apply my-3 text-justify;
+  }
+
+  .timeline > p:not(:has(span)) {
+    @apply px-3
   }
 
   .cover {
