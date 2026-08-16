@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
-import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
+import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'all'
 
@@ -52,8 +52,12 @@ function Action({ store }: { store: Store }) {
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
           disabled={!store.availability.attack}
-          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); }} // ターゲットパレットへ進む
+          onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, ターゲットパレットへ進む
         >攻撃</button>
+        <button
+          disabled={!store.availability.attack}
+          onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
+        >特殊攻撃</button>
         <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionKey('move'); }} // 移動オプションパレットへ進む
@@ -69,6 +73,34 @@ function Action({ store }: { store: Store }) {
         >実行</button>
         <button
           onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'attackOption'}>
+        {FULL_POWER_KEYS.map(key => key !== 'none' && (
+          <button
+            className="is-large"
+            key={key}
+            onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: key }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >{FULL_POWER_OPTIONS[key].label}</button>
+        ))}
+        <button
+          className="is-large"
+          onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+        >部位狙い</button>
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'aim'}>
+        {AIM_KEYS.map(key => (
+          <button
+            className="is-small"
+            key={key}
+            onClick={() => { setActionPalette('target'); setActionOptions({ ...actionOptions, aim: key }); }} // 部位狙いをセットし, ターゲットパレットへ進む
+          >{`${AIM_OPTIONS[key].label} (${AIM_OPTIONS[key].mod})`}</button>
+        ))}
+        <button
+          onClick={() => { setActionPalette('attackOption'); setActionOptions({}); }} // 攻撃オプションをリセットし, 攻撃オプションパレットへ戻る
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'move'}>
@@ -92,9 +124,16 @@ function Action({ store }: { store: Store }) {
                 onClick={() => { setActionPalette('confirmAttack'); setActionTargets([target]); }} // ターゲットをセットし, 攻撃確認パレットへ進む
               >{target.name}</button>
             ))}
-            <button
-              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
-            >戻る</button>
+            {actionOptions.aim === 'body' && actionOptions.fullPower === 'none' && ( // 通常攻撃時
+              <button
+                onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+              >戻る</button>
+            )}
+            {(actionOptions.aim !== 'body' || actionOptions.fullPower !== 'none') && ( // 特殊攻撃時
+              <button
+                onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body' }); }} // 部位狙いのみリセットし, 部位狙いパレットへ戻る
+              >戻る</button>
+            )}
           </>
         )}
       </div>

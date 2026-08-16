@@ -55,6 +55,8 @@ export type Aim = typeof AIM_KEYS[number]
 
 // 行動オプション
 export type ActionOptions = {
+  aim?: Aim
+  fullPower?: FullPower
   position?: Position
 }
 

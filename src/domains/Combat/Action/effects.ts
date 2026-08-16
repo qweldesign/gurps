@@ -2,6 +2,7 @@
 
 import { CombatState as State } from '../State'
 import { type Position, type CombatUnit as Unit } from '../Unit'
+import { AIM_OPTIONS, FULL_POWER_OPTIONS, type Aim, type FullPower } from './types'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -12,8 +13,8 @@ export class ActionEffects {
   }
 
   //「攻撃」実行 (暫定: コンソール出力のみ)
-  attack(target: Unit) {
-    console.log({ target })
+  attack(aim: Aim, fullPower: FullPower, target: Unit) {
+    console.log({ aim: AIM_OPTIONS[aim], fullPower: FULL_POWER_OPTIONS[fullPower], target })
   }
 
   //「移動」実行
