@@ -2,7 +2,7 @@
 
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest } from './Stores/ActionStore'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest } from './Action'
 
 let count = 0
 

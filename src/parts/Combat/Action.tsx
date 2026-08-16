@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { type Position } from '../../domains/Combat/Unit'
-import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatActionStore as Store } from '../../domains/Combat/Stores/ActionStore'
+import { type ActionKey, POSITION_LABELS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
 type ActionPalette = 'main' | 'move' | 'hidden'
 

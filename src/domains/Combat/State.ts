@@ -2,18 +2,18 @@
 
 import { CombatLog as Log } from './Log'
 import { type CombatUnitModel as Model, CombatUnit as Unit } from './Unit'
-import { CombatFormationStore as FormationStore } from './Stores/FormationStore'
-import { CombatActionStore as ActionStore } from './Stores/ActionStore'
+import { CombatFormation as Formation } from './Formation'
+import { CombatAction as Action } from './Action'
 
 // 全ての情報を集約・管理するクラス
 export class CombatState {
   public round: number // 経過時間
   public turnIndex: number // 行動順
   public units: Unit[]
-  public formationStore: FormationStore | null
+  public formation: Formation | null
   public logs: Log[]
-  public playLog: () => Promise<void> // Combat 本体から受け取り, ActionStore から呼び出す
-  public actionStore: ActionStore | null
+  public playLog: () => Promise<void> // Combat 本体から受け取り, Action から呼び出す
+  public action: Action | null
 
   constructor(models: Model[], playLog: () => Promise<void>) {
     this.round = 1 // 1からカウント
@@ -21,10 +21,10 @@ export class CombatState {
     this.units = models.map((model, i) => {
       return new Unit(model, i + 1) // combatIdは1からカウント
     })
-    this.formationStore = null
+    this.formation = null
     this.logs = []
     this.playLog = playLog
-    this.actionStore = null
+    this.action = null
   }
 
   get actor() {
@@ -38,16 +38,16 @@ export class CombatState {
       this.round++
       this.turnIndex %= this.units.length
     }
-    this.formationStore = new FormationStore(this.actor, this.units)
+    this.formation = new Formation(this.actor, this.units)
     // 新しいログを追加
     const newLog = new Log(this.actor)
     this.logs.unshift(newLog)
     // ターン開始ログを表示
     await this.playLog()
     // コマンドパレット初期化
-    this.actionStore = new ActionStore(this)
+    this.action = new Action(this)
     //　コマンド入力待機
-    await this.actionStore.promise.then(() => {
+    await this.action.promise.then(() => {
       // 自身を呼び出し, また次のターンへ進む
       this.debug()
       this.nextTurn()

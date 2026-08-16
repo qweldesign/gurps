@@ -1,6 +1,6 @@
 // Combat/Formation.tsx
 
-import { BACK_VALUES, FRONT_VALUES, CombatFormationStore as Store } from '../../domains/Combat/Stores/FormationStore'
+import { BACK_VALUES, FRONT_VALUES, CombatFormation as Store } from '../../domains/Combat/Formation'
 
 function Formation({ store }: { store: Store }) {
   const PLAYER_BACK_VALUES = BACK_VALUES.player
