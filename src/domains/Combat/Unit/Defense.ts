@@ -67,19 +67,34 @@ export class CombatUnitDefense {
 
   get parryTarget() {
     let target = this._parryTarget
-    target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
+    if (this.self.posture === 'prone') {
+      target -= 4 // 転倒状態による修正
+    } else {
+      target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
+      target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
+    }
     return target
   }
 
   get blockTarget() {
     let target = this._blockTarget
-    target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
+    if (this.self.posture === 'prone') {
+      target -= 4 // 転倒状態による修正
+    } else {
+      target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
+      target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
+    }
     return target
   }
 
   get dodgeTarget() {
     let target = this._dodgeTarget
-    target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
+    if (this.self.posture === 'prone') {
+      target -= 4 // 転倒状態による修正
+    } else {
+      target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
+      target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
+    }
     return target
   }
 
