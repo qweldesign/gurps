@@ -23,6 +23,13 @@ export class ActionAvailability {
     return this.state.actor.attack.ready === 0 && this.state.actor.position !== 'back'
   }
 
+  //「脚・足首狙い」実行可否取得
+  // 屈み以上の姿勢 (直立以外), または竿状武器・射撃武器を構えていることが条件
+  canLegAttack(): boolean {
+    const actor = this.state.actor
+    return actor.posture !== 'standing' || actor.attack.model.isPole || actor.attack.model.isMissile
+  }
+
   //「牽制」実行可否取得
   // 「攻撃」と同条件
   canFeint(): boolean {

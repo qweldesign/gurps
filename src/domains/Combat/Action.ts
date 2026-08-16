@@ -53,6 +53,7 @@ export class CombatAction {
     return {
       ready: this.availabilityChecker.canReady(),
       attack: this.availabilityChecker.canAttack(),
+      legAttack: this.availabilityChecker.canLegAttack(),
       feint: this.availabilityChecker.canFeint(),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
