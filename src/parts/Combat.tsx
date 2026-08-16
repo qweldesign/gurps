@@ -76,6 +76,9 @@ function Combat() {
       // スクロールアニメーションクラスを奪取
       if (messages.length >= 10) {
         timelineRef.current?.classList.remove('is-scrolling')
+        // 除去を即座にレイアウトへ反映させる (再フローの強制)
+        // トランジションが正しく開始させるための処置
+        void timelineRef.current?.offsetHeight
       }
     }, 300)
 
