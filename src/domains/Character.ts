@@ -324,7 +324,9 @@ export class Character {
       defenses: this.combatDefenseModels,
       ev: this.DEV,
       pre: this.PRE,
-      mre: this.MRE
+      mre: this.MRE,
+      dmgBuff: this.getParamLevel('怪力') % 2, //「怪力」端数 (StatusBuff の初期値)
+      evBuff: this.getParamLevel('運動', true) % 2 //「運動」端数 (StatusBuff の初期値)
     }
   }
 
