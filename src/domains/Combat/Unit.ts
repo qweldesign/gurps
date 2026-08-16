@@ -97,6 +97,6 @@ export class CombatUnit {
     this.posture = 'standing'
     this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
     this.attack = new Attack(this, attacks, this.defense.changeWeaponSlotKey.bind(this.defense))
-    this.health = new Health(maxHp)
+    this.health = new Health(this, maxHp)
   }
 }
