@@ -89,3 +89,5 @@ export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
+  | { type: 'knockedDown', judge: Judge }
+  | { type: 'fatal', judge: Judge }

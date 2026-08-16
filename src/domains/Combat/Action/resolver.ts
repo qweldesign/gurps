@@ -1,7 +1,7 @@
 // Combat/Action/resolver.ts
 
 import { type CombatUnit as Unit } from '../Unit'
-import { judge, roll } from '../Dice'
+import { judge, roll, type Judge } from '../Dice'
 import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseResult, type DmgResult } from './types'
 
 // 攻撃の判定結果を返す
@@ -34,4 +34,14 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
   const rate = attack.dmgType === 0 ? 1 : attack.dmgType === 1 ? 1.5 : 2
   const rolled = Math.floor(roll(count, mod).roll * rate)
   return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
+}
+
+// 朦朧状態からの回復判定を返す (成功: 朦朧のみ, 失敗: 転倒)
+export function judgeKnockedDown(target: Unit): Judge {
+  return judge(target.defense.pre)
+}
+
+// 気絶からの生存判定を返す (成功: 気絶のみ, 失敗: 死亡)
+export function judgeFatal(target: Unit): Judge {
+  return judge(target.defense.pre)
 }

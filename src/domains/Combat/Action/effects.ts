@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeKnockedDown, judgeFatal } from './resolver'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -13,7 +13,7 @@ export class ActionEffects {
     this.state = state
   }
 
-  //「攻撃」実行 (暫定: 判定結果を返すのみ. ダメージ効果 (HP減少) の実装は未着手)
+  //「攻撃」実行 (判定結果に基づき, HPへのダメージ反映と朦朧・転倒・気絶・死亡までを処理する)
   attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
     const results: ActionResult[] = []
     const actor = this.state.actor
@@ -33,10 +33,28 @@ export class ActionEffects {
     // ダメージ判定
     const dmgJudge = rollDmg(actor, aim, fullPower, target)
     results.push({ type: 'dmg', judge: dmgJudge })
+    if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 
-    //
-    // ダメージ効果の実装 (未着手)
-    //
+    // ダメージ効果
+    target.health.injury += dmgJudge.roll
+
+    // 朦朧状態・転倒判定
+    if (target.health.stunned) {
+      const knockedDownJudge = judgeKnockedDown(target)
+      results.push({ type: 'knockedDown', judge: knockedDownJudge })
+      if (!knockedDownJudge.success) {
+        target.posture = 'prone' // 姿勢変更
+      }
+    }
+
+    // 気絶・死亡判定
+    if (target.health.unconscious) {
+      const fatalJudge = judgeFatal(target)
+      results.push({ type: 'fatal', judge: fatalJudge })
+      if (!fatalJudge.success) {
+        target.health.dead = true // 死亡
+      }
+    }
 
     return results
   }
