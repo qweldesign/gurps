@@ -2,14 +2,14 @@
 
 import { CombatState as State } from './State'
 import { POSITION_KEYS } from './Unit'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type FullPower, type Aim } from './Action/types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
 import { ActionEffects } from './Action/effects'
 
 // 定数・型定義は Action/types.ts に集約する
 // 既存の呼び出し元 (Action.tsx, Log.tsx) が引き続き参照できるよう, ここから re-export する
 export { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS }
-export type { ActionKey, ActionOptions, ActionRequest, FullPower, Aim }
+export type { ActionKey, ActionOptions, ActionRequest, ActionResult, FullPower, Aim }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 // 行動可否判定は Action/availability.ts, 状態変更は Action/effects.ts に委譲する
@@ -70,9 +70,10 @@ export class CombatAction {
     this.unlocked = false
 
     // 行動実行
+    let results: ActionResult[] = []
     switch (action.key) {
       case 'attack':
-        this.effects.attack(action.options.aim, action.options.fullPower, action.targets[0])
+        results = this.effects.attack(action.options.aim, action.options.fullPower, action.targets[0])
         break
 
       case 'move':
@@ -85,7 +86,7 @@ export class CombatAction {
 
     // ログを更新
     const log = this.state.logs[0]
-    log.receiveResults(action)
+    log.receiveResults(action, results)
 
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ

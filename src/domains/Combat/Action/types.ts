@@ -83,3 +83,9 @@ export type DefenseResult = Judge & {
 
 // ダメージ判定結果
 export type DmgResult = Judge
+
+// 行動実行後の判定結果の定義
+export type ActionResult =
+  | { type: 'attack', judge: AttackResult }
+  | { type: 'defense', judge: DefenseResult }
+  | { type: 'dmg', judge: DmgResult }
