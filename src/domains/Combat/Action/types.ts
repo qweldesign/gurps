@@ -3,8 +3,9 @@
 import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
+import { type SpellElement } from '../Spells'
 
-export const ACTION_KEYS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'cast', 'spell', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   ready: '準備',
@@ -12,6 +13,8 @@ export const ACTION_LABELS: Record<ActionKey, string> = {
   feint: '牽制',
   shoot: '射撃',
   snipe: '狙い',
+  cast: '集中',
+  spell: '法術',
   defense: '全力防御',
   move: '移動',
   changeWeapon: '装備変更',
@@ -65,6 +68,8 @@ export type Aim = typeof AIM_KEYS[number]
 export type ActionOptions = {
   aim?: Aim
   fullPower?: FullPower
+  element?: SpellElement
+  spellId?: number
   position?: Position
   posture?: Posture
   weaponSlotKey?: WeaponSlotKey
@@ -72,12 +77,16 @@ export type ActionOptions = {
 
 // 行動キーとオプションの組み合わせ
 // targets は「攻撃」等, ターゲット選択を伴う行動のみ空でない配列になる
+// 「集中」「法術」は現状 (効果未実装, 判定ログのみ) ターゲットを取らない. 系統ごとの効果 (assist/resist/shoot/range/recover/defense/other) を
+// 実装する際に, shoot 系統の術など対象を要するものが出てくるので, その段階で targets: [Unit] へ拡張する
 export type ActionRequest =
   | { key: 'ready', options: {}, targets: [] }
   | { key: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { key: 'feint', options: {}, targets: [Unit] }
   | { key: 'shoot', options: { aim: Aim }, targets: [Unit] }
   | { key: 'snipe', options: {}, targets: [Unit] }
+  | { key: 'cast', options: { element: SpellElement }, targets: [] }
+  | { key: 'spell', options: { element: SpellElement, spellId: number }, targets: [] }
   | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }
   | { key: 'changeWeapon', options: { weaponSlotKey: WeaponSlotKey }, targets: [] }
@@ -109,6 +118,11 @@ export type FeintResult = Score & {
   target: Unit
 }
 
+// 法術の判定結果 (発動した術の名称を持つ)
+export type SpellResult = Judge & {
+  spell: string
+}
+
 // 頭・四肢の故障結果 (判定は伴わず, 部位のみを持つ)
 export type InjuryOnLimbResult = {
   limb: Aim
@@ -120,6 +134,8 @@ export type ActionResult =
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
   | { type: 'feint', judge: FeintResult }
+  | { type: 'cast', judge: Judge }
+  | { type: 'spell', judge: SpellResult }
   | { type: 'recovery', judge: Judge }
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }

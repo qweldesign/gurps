@@ -4,7 +4,8 @@ import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeCast, judgeSpell, judgeRecovery, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
+import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -182,6 +183,25 @@ export class ActionEffects {
   //「狙い」実行 (「牽制」と全く同じ判定・効果処理を, 近接に限らないターゲットに対して用いる)
   snipe(target: Unit): ActionResult[] {
     return this.feint(target)
+  }
+
+  //「集中」実行 (該当する系統の詠唱時間を1蓄積する. 他の系統に集中していた場合, その詠唱時間はリセットされる)
+  // 聾・沈黙状態の場合のみ判定を要する (それ以外は無条件で詠唱時間が進む)
+  cast(element: SpellElement): ActionResult[] {
+    const actor = this.state.actor
+    actor.spellCast[element]++
+    SPELL_ELEMENTS.forEach(spellElement => {
+      if (spellElement !== element) actor.spellCast[spellElement] = 0
+    })
+    const castJudge = judgeCast(actor, element)
+    return castJudge ? [{ type: 'cast', judge: castJudge }] : []
+  }
+
+  //「法術」実行 (蓄積した詠唱時間を消費して発動する. 全ての系統の詠唱時間をリセットする)
+  spell(element: SpellElement, spellId: number): ActionResult[] {
+    const actor = this.state.actor
+    SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
+    return [{ type: 'spell', judge: judgeSpell(actor, element, spellId) }]
   }
 
   //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)

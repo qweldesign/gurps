@@ -2,14 +2,15 @@
 
 import { CombatState as State } from './State'
 import { POSITION_KEYS, POSTURE_KEYS, type Posture } from './Unit'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type InjuryOnLimbResult, type FullPower, type Aim } from './Action/types'
+import { SPELL_ELEMENTS, type SpellElement } from './Spells'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
 import { ActionEffects } from './Action/effects'
 
 // 定数・型定義は Action/types.ts に集約する
 // 既存の呼び出し元 (Action.tsx, Log.tsx) が引き続き参照できるよう, ここから re-export する
 export { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS }
-export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, FeintResult, FullPower, Aim }
+export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, FeintResult, SpellResult, FullPower, Aim }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 // 行動可否判定は Action/availability.ts, 状態変更は Action/effects.ts に委譲する
@@ -57,6 +58,11 @@ export class CombatAction {
       feint: this.availabilityChecker.canFeint(),
       shoot: this.availabilityChecker.canShoot(),
       snipe: this.availabilityChecker.canSnipe(),
+      cast: SPELL_ELEMENTS.reduce((acc, element) => {
+        acc[element] = this.availabilityChecker.canCast(element)
+        return acc
+      }, {} as Record<SpellElement, boolean>),
+      spell: SPELL_ELEMENTS.some(element => this.availabilityChecker.canSpell(element)),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
@@ -115,6 +121,14 @@ export class CombatAction {
         results = this.effects.snipe(action.targets[0])
         break
 
+      case 'cast':
+        results = this.effects.cast(action.options.element)
+        break
+
+      case 'spell':
+        results = this.effects.spell(action.options.element, action.options.spellId)
+        break
+
       case 'defense':
         results = this.effects.defense()
         break
@@ -145,7 +159,7 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時・法術発動時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
     const firstResult = results[0]
     if (action.key === 'recovery' && firstResult?.type === 'recovery' && firstResult.judge.success) {
@@ -160,7 +174,7 @@ export class CombatAction {
       this.unlocked = true
       nextTurn = false
     }
-    if (action.key === 'shoot') {
+    if (action.key === 'shoot' || action.key === 'spell') {
       this.unlocked = true
       nextTurn = false
     }

@@ -2,7 +2,8 @@
 
 import { type CombatUnit as Unit } from '../Unit'
 import { judge, roll, score, type Judge } from '../Dice'
-import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult } from './types'
+import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from './types'
+import { SPELL_LIST, type SpellElement } from '../Spells'
 
 // 攻撃の判定結果を返す (武器の準備状態の更新は effects 側の責務とする. ここでは判定のみ行う)
 export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit): Omit<AttackResult, 'ready'> {
@@ -59,6 +60,18 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
 // 射撃武器の場合, target の姿勢・距離による修正を含める (近接武器の場合は影響なし)
 export function judgeFeint(actor: Unit, target: Unit): FeintResult {
   return { target, ...score(actor.attack.getTarget('body', 'none', target)) }
+}
+
+// 「集中」の判定結果を返す (聾または沈黙状態の場合のみ判定を要する. それ以外は判定不要 (無条件で詠唱時間が進む) につき null を返す)
+export function judgeCast(actor: Unit, element: SpellElement): Judge | null {
+  if (!actor.health.deafened && !actor.statusEffects.silence) return null
+  return judge(actor.spells[element] - 6)
+}
+
+// 「法術」の判定結果を返す (発動する術の名称を含む)
+export function judgeSpell(actor: Unit, element: SpellElement, spellId: number): SpellResult {
+  const spell = SPELL_LIST[element][spellId].label
+  return { spell, ...judge(actor.spells[element]) }
 }
 
 // 朦朧状態からの回復判定を返す (成功: 回復, 失敗: 朦朧状態の継続)

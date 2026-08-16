@@ -2,6 +2,7 @@
 
 import { CombatState as State } from '../State'
 import { type Position, type Posture } from '../Unit'
+import { type SpellElement } from '../Spells'
 
 // 行動可否判定を司るクラス / Action.availability に対応
 export class ActionAvailability {
@@ -47,6 +48,18 @@ export class ActionAvailability {
   // 「射撃」の実行可否条件に加え, 狂戦士状態ではないことが条件
   canSnipe(): boolean {
     return this.canShoot() && !this.state.actor.statusEffects.berserk
+  }
+
+  //「集中」実行可否取得
+  // 該当する系統の術の技能値が11以上であることが条件
+  canCast(element: SpellElement): boolean {
+    return this.state.actor.spells[element] > 10
+  }
+
+  //「法術」実行可否取得
+  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上であることが条件
+  canSpell(element: SpellElement): boolean {
+    return this.state.actor.spellCast[element] > 0
   }
 
   //「全力防御」実行可否取得
