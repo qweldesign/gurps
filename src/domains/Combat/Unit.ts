@@ -1,6 +1,8 @@
 // Combat/Unit.ts
 
 import { type WeaponSlotKey, type ArmorSlotKey } from '../Equipments'
+import { CombatUnitAttack as Attack } from './Unit/Attack'
+import { CombatUnitDefense as Defense } from './Unit/Defense'
 import { CombatUnitHealth as Health } from './Unit/Health'
 
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
@@ -81,16 +83,20 @@ export class CombatUnit {
   public side: Side
   public position: Position
   public posture: Posture
+  public attack: Attack
+  public defense: Defense
   public health: Health
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { id, name, maxHp } = model
+    const { id, name, maxHp, attacks, defenses, ev, pre, mre } = model
     this.combatId = combatId
     this.id = id
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
     this.position = 'back'
     this.posture = 'standing'
+    this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
+    this.attack = new Attack(this, attacks, this.defense.changeWeaponSlotKey.bind(this.defense))
     this.health = new Health(maxHp)
   }
 }
