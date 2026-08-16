@@ -6,6 +6,7 @@ import { CombatUnitDefense as Defense } from './Unit/Defense'
 import { CombatUnitHealth as Health } from './Unit/Health'
 import { CombatUnitStatusBuff as StatusBuff } from './Unit/StatusBuff'
 import { CombatUnitStatusEffects as StatusEffects } from './Unit/StatusEffects'
+import { SPELL_ELEMENTS, type Spells } from './Spells'
 import { type CombatLog as Log } from './Log'
 
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
@@ -78,6 +79,7 @@ export type CombatUnitModel = {
   mre: number
   dmgBuff: number //「怪力」端数 (バフ初期値)
   evBuff: number //「運動」端数 (バフ初期値)
+  spells: Spells
 }
 
 // 戦闘ユニットを司るクラス
@@ -93,10 +95,12 @@ export class CombatUnit {
   public health: Health
   public statusBuff: StatusBuff
   public statusEffects: StatusEffects
+  public spells: Spells
+  public spellCast: Spells
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff } = model
+    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells } = model
     this.combatId = combatId
     this.id = id
     this.name = name
@@ -108,6 +112,11 @@ export class CombatUnit {
     this.health = new Health(this, maxHp)
     this.statusBuff = new StatusBuff(dmgBuff, evBuff)
     this.statusEffects = new StatusEffects()
+    this.spells = spells
+    this.spellCast = SPELL_ELEMENTS.reduce((acc, element) => {
+      acc[element] = 0
+      return acc
+    }, {} as Spells)
     this.history = null
   }
 
