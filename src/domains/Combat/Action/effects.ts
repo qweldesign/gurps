@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeKnockedDown, judgeFatal } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeRecovery, judgeKnockedDown, judgeFatal } from './resolver'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -39,7 +39,7 @@ export class ActionEffects {
     target.health.injury += dmgJudge.roll
 
     // 朦朧状態・転倒判定
-    if (target.health.stunned) {
+    if (dmgJudge.roll >= target.health.maxHp / 2) {
       const knockedDownJudge = judgeKnockedDown(target)
       results.push({ type: 'knockedDown', judge: knockedDownJudge })
       if (!knockedDownJudge.success) {
@@ -67,5 +67,14 @@ export class ActionEffects {
   //「待機」実行
   wait() {
     // 状態変更なし
+  }
+
+  // 朦朧状態からの「回復」実行 (stunned な状態のターン開始時に自動実行される)
+  recovery(): ActionResult[] {
+    const recoveryJudge = judgeRecovery(this.state.actor)
+    if (recoveryJudge.success) {
+      this.state.actor.health.stunned = false // 回復
+    }
+    return [{ type: 'recovery', judge: recoveryJudge }]
   }
 }

@@ -36,6 +36,11 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
   return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
 }
 
+// 朦朧状態からの回復判定を返す (成功: 回復, 失敗: 朦朧状態の継続)
+export function judgeRecovery(actor: Unit): Judge {
+  return judge(actor.defense.pre)
+}
+
 // 朦朧状態からの回復判定を返す (成功: 朦朧のみ, 失敗: 転倒)
 export function judgeKnockedDown(target: Unit): Judge {
   return judge(target.defense.pre)

@@ -37,7 +37,7 @@ export class CombatLog {
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
 
-      default: // case 'wait':
+      default: // case 'recovery': case 'wait':
         return ACTION_LABELS[request.key]
     }
   }
@@ -76,51 +76,65 @@ export class CombatLog {
         messages.push(<>{`${actor} は 待機している`}</>)
         break
 
-      default: // case 'attack':
+      default: // case 'attack': case 'recovery':
         break
     }
     messages.push(<>&nbsp;</>)
     return messages
   }
 
-  // 攻撃の判定結果ログを生成
+  // 攻撃・回復の判定結果ログを生成
   private createResultMessages(request: ActionRequest, results: ActionResult[]): ReactNode[] {
     const messages: ReactNode[] = []
-    if (request.key !== 'attack') return messages
     const actor = this.actor.name
-    const target = request.targets[0].name
-    results.forEach(result => {
-      switch (result.type) {
-        case 'attack':
-          messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
-          messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
-          break
+    switch (request.key) {
+      case 'attack': {
+        const target = request.targets[0].name
+        results.forEach(result => {
+          switch (result.type) {
+            case 'attack':
+              messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
+              messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              break
 
-        case 'defense': {
-          const defenseTypeLabel = result.judge.defenseType === 'parry' ? '武器による受け流し'
-            : result.judge.defenseType === 'block' ? '盾による受け止め' : '回避'
-          messages.push(<>{`${target} は ${defenseTypeLabel} を試みた!`}</>)
-          messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
-          break
-        }
+            case 'defense': {
+              const defenseTypeLabel = result.judge.defenseType === 'parry' ? '武器による受け流し'
+                : result.judge.defenseType === 'block' ? '盾による受け止め' : '回避'
+              messages.push(<>{`${target} は ${defenseTypeLabel} を試みた!`}</>)
+              messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              break
+            }
 
-        case 'dmg':
-          if (result.judge.roll < 1) messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
-          else if (!result.judge.critical) messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
-          else messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
-          break
+            case 'dmg':
+              if (result.judge.roll < 1) messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
+              else if (!result.judge.critical) messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
+              else messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
+              break
 
-        case 'knockedDown': // 朦朧状態・転倒判定の結果ログ
-          if (result.judge.success) messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
-          else messages.push(<>{`${target} は 転倒した!!`}</>)
-          break
+            case 'knockedDown': // 朦朧状態・転倒判定の結果ログ
+              if (result.judge.success) messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
+              else messages.push(<>{`${target} は 転倒した!!`}</>)
+              break
 
-        case 'fatal': // 気絶・死亡判定の結果ログ
-          if (result.judge.success) messages.push(<>{`${target} は 気絶した...`}</>)
-          else messages.push(<>{`${target} は 死亡した...`}</>)
-          break
+            case 'fatal': // 気絶・死亡判定の結果ログ
+              if (result.judge.success) messages.push(<>{`${target} は 気絶した...`}</>)
+              else messages.push(<>{`${target} は 死亡した...`}</>)
+              break
+          }
+        })
+        break
       }
-    })
+
+      case 'recovery': // 朦朧状態からの回復判定の結果ログ
+        results.forEach(result => {
+          if (result.judge.success) messages.push(<>{`${actor} は 朦朧状態から回復した!`}</>)
+          else messages.push(<>{`${actor} は 朦朧としていて何も行動できない...`}</>)
+        })
+        break
+
+      default: // case 'move': case 'wait':
+        break
+    }
     return messages
   }
 

@@ -33,6 +33,11 @@ export class CombatAction {
     this.promise = new Promise(resolve => {
       this.resolve = resolve
     })
+
+    // 朦朧状態の場合は「回復」を自動実行する
+    if (this.actor.health.stunned) {
+      this.execute({ key: 'recovery', options: {}, targets: [] })
+    }
   }
 
   get actor() {
@@ -80,6 +85,10 @@ export class CombatAction {
         this.effects.move(action.options.position)
         break
 
+      case 'recovery':
+        results = this.effects.recovery()
+        break
+
       default: // case 'wait':
         this.effects.wait()
     }
@@ -88,8 +97,15 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
+    // 行動終了分岐 (回復成功時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    let nextTurn = true
+    if (action.key === 'recovery' && results[0].judge.success) {
+      this.unlocked = true
+      nextTurn = false
+    }
+
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    this.resolve()
+    if (nextTurn) this.resolve()
   }
 }
