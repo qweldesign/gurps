@@ -57,6 +57,9 @@ export class CombatState {
       this.actor.attack.nextTurn()
       // 行動者の能動防御 (受け・止めの試行回数, 全力防御) をリセット
       this.actor.defense.nextTurn()
+      // 行動者の状態異常・バフの残存時間を更新
+      this.actor.statusEffects.nextTurn()
+      this.actor.statusBuff.nextTurn()
       // 自身を呼び出し, また次のターンへ進む
       this.debug()
       this.nextTurn()
