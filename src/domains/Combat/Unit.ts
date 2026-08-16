@@ -1,5 +1,6 @@
 // Combat/Unit.ts
 
+import { type WeaponSlotKey, type ArmorSlotKey } from '../Equipments'
 import { CombatUnitHealth as Health } from './Unit/Health'
 
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
@@ -17,11 +18,44 @@ export type Side = typeof SIDE_KEYS[number]
 // 戦闘ユニットの配置
 export type Position = typeof POSITION_KEYS[number]
 
+// 攻撃手段の定義
+export type CombatAttackModel = {
+  name: string
+  dmgName: string
+  dmgDice: number
+  dmgMod: number
+  dmgType: number
+  level: number
+  ev: number
+  ready: number
+  isChain: boolean
+  isPole: boolean
+  isMissile: boolean
+  isShield: boolean
+}
+
+// 総攻撃手段の定義
+export type CombatAttackModels = Record<WeaponSlotKey, CombatAttackModel>
+
+// 防御部位の定義
+export type CombatDefenseModel = {
+  name: string
+  dr: string
+  sdr: number
+  tdr: number
+  wt: number
+}
+
+// 総防御部位の定義
+export type CombatDefenseModels = Record<ArmorSlotKey, CombatDefenseModel>
+
 // 戦闘ユニットのモデル
 export type CombatUnitModel = {
   id: number
   name: string
   maxHp: number
+  attacks: CombatAttackModels
+  defenses: CombatDefenseModels
   ev: number
   pre: number
   mre: number

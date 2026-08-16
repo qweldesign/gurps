@@ -90,9 +90,9 @@ const DMG_STEP: BaseDmg[] = [
   { id: 17, name: '4d+1', dice: 4, mod: 1 }
 ] as const
 
-const WEAPON_SLOT_KEYS = ['main', 'sub', 'spare', 'shield'] as const
+export const WEAPON_SLOT_KEYS = ['main', 'sub', 'spare', 'shield'] as const
 
-const ARMOR_SLOT_KEYS = ['body', 'head', 'arm', 'leg'] as const
+export const ARMOR_SLOT_KEYS = ['body', 'head', 'arm', 'leg'] as const
 
 export type WeaponKey = typeof WEAPON_KEYS[number]
 

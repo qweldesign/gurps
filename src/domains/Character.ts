@@ -1,9 +1,9 @@
 // Character.ts
 
 import { type Point, type ParameterKey, type Parameter, Parameters } from './Parameters'
-import { type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type EquipmentSet, type Weapon, type Armor, type Dmg, type WeaponSlotKey, type ArmorSlotKey, Equipments } from './Equipments'
+import { type WeaponKey, type BodyArmorKey, type HeadArmorKey, type ArmArmorKey, type LegArmorKey, type EquipmentSet, type Weapon, type Armor, type Dmg, type WeaponSlotKey, type ArmorSlotKey, WEAPON_SLOT_KEYS, ARMOR_SLOT_KEYS, Equipments } from './Equipments'
 import { STORAGE_KEY } from './SaveData'
-import { type CombatUnitModel } from './Combat/Unit'
+import { type CombatAttackModels, type CombatDefenseModels, type CombatUnitModel } from './Combat/Unit'
 
 export type CharacterModel = {
   id: number
@@ -266,12 +266,62 @@ export class Character {
     }
   }
 
+  // 武器の戦闘モデル用データ変換
+  get combatAttackModels(): CombatAttackModels {
+    const map = {
+      main: this.mainUsage,
+      sub: this.subUsage,
+      spare: this.spare,
+      shield: this.shield
+    }
+    return WEAPON_SLOT_KEYS.reduce<CombatAttackModels>((acc, key) => {
+      const item = map[key]
+      acc[key] = {
+        name: item.name,
+        dmgName: this.getDmgName(key),
+        dmgDice: this.getDmg(key).dice,
+        dmgMod: this.getDmg(key).mod,
+        dmgType: this.getDmg(key).type,
+        level: this.getLevel(key),
+        ev: item.ev,
+        ready: item.ready,
+        isChain: item.weaponType === 2 ? true : false, // 鎖状
+        isPole: item.weaponType === 4 ? true : false, // 竿状
+        isMissile: item.weaponType === 5 ? true : false,
+        isShield: item.weaponType === 6 && key === 'shield' ? true : false
+      }
+      return acc
+    }, {} as CombatAttackModels)
+  }
+
+  // 防具の戦闘モデル用データ変換
+  get combatDefenseModels(): CombatDefenseModels {
+    const { body, head, arm, leg } = this
+    const map = { body, head, arm, leg }
+    return ARMOR_SLOT_KEYS.reduce<CombatDefenseModels>((acc, key) => {
+      const item = map[key]
+      acc[key] = {
+        name: key === 'head' ? item.name[1] ?? '装備無し'
+          : key === 'arm' ? item.name[2] ?? '装備無し'
+          : key === 'leg' ? item.name[3] ?? '装備無し'
+          : item.name[0],
+        dr: item.dr,
+        sdr: item.sdr,
+        tdr: item.tdr,
+        wt: item.wt
+      }
+      return acc
+    }, {} as CombatDefenseModels)
+  }
+
   // 戦闘モデル用データ変換
   get combatUnitModel(): CombatUnitModel {
     return {
       id: this.id,
       name: this.name,
       maxHp: this.maxHp,
+      attacks: this.combatAttackModels,
+      defenses: this.combatDefenseModels,
       ev: this.DEV,
       pre: this.PRE,
       mre: this.MRE
