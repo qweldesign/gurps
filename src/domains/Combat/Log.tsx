@@ -1,7 +1,7 @@
 // Combat/Log.tsx
 
 import { type ReactNode } from 'react'
-import { CombatUnit as Unit } from './Unit'
+import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
 import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type InjuryOnLimbResult } from './Action'
 
@@ -39,6 +39,9 @@ export class CombatLog {
 
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
+
+      case 'changePosture':
+        return `${ACTION_LABELS[request.key]}:${POSTURE_MODS[request.options.posture].label}`
 
       default: // case 'ready': case 'changeWeapon': case 'recovery': case 'wait':
         return ACTION_LABELS[request.key]
@@ -94,6 +97,10 @@ export class CombatLog {
 
       case 'changeWeapon':
         messages.push(<>{`${actor} は武器を ${this.actor.attack.model.name} に持ち替えた`}</>)
+        break
+
+      case 'changePosture':
+        messages.push(<>{`${actor} は ${POSTURE_MODS[request.options.posture].label} の姿勢に変更した`}</>)
         break
 
       case 'wait':
@@ -190,7 +197,7 @@ export class CombatLog {
         })
         break
 
-      default: // case 'ready': case 'move': case 'changeWeapon': case 'wait':
+      default: // case 'ready': case 'move': case 'changeWeapon': case 'changePosture': case 'wait':
         break
     }
     return messages

@@ -2,7 +2,7 @@
 
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
-import { type Position, type CombatUnit as Unit } from '../Unit'
+import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 
@@ -188,6 +188,12 @@ export class ActionEffects {
   //「装備変更」実行
   changeWeapon(weaponSlotKey: WeaponSlotKey): ActionResult[] {
     this.state.actor.attack.key = weaponSlotKey
+    return []
+  }
+
+  //「姿勢変更」実行
+  changePosture(posture: Posture): ActionResult[] {
+    this.state.actor.posture = posture
     return []
   }
 

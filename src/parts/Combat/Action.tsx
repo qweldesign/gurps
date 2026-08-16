@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { WEAPON_SLOT_KEYS } from '../../domains/Equipments'
-import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
+import { type Position, POSTURE_MODS, type Posture, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'changeWeapon' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'changeWeapon' | 'changePosture' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'all'
 
@@ -82,6 +82,10 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.changeWeapon}
           onClick={() => { setActionPalette('changeWeapon'); setActionKey('changeWeapon'); }} // 装備変更オプションパレットへ進む
         >装備変更</button>
+        <button
+          disabled={!store.availability.changePosture.standing && !store.availability.changePosture.crouching && !store.availability.changePosture.kneeling && !store.availability.changePosture.prone}
+          onClick={() => { setActionPalette('changePosture'); setActionKey('changePosture'); }} // 姿勢変更オプションパレットへ進む
+        >姿勢変更</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmReady'}>
         <div className="confirm__grid">
@@ -192,6 +196,18 @@ function Action({ store }: { store: Store }) {
             key={key}
             onClick={() => { setActionOptions({ weaponSlotKey: key }); if (key !== store.actor.attack.key) setIsExecuted(true); }} // 実行 (既に構えている武器の場合は実行しない)
           >{store.actor.attack.getModelByKey(key).name}</button>
+        ))}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'changePosture'}>
+        {Object.entries(POSTURE_MODS).map((arr) => (
+          <button
+            key={arr[0]}
+            disabled={!store.availability.changePosture[arr[0] as Posture]}
+            onClick={() => { setActionOptions({ posture: arr[0] as Posture }); setIsExecuted(true); }} // 実行
+          >{arr[1].label}</button>
         ))}
         <button
           onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る

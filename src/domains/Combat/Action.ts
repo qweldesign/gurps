@@ -1,7 +1,7 @@
 // Combat/Action.ts
 
 import { CombatState as State } from './State'
-import { POSITION_KEYS } from './Unit'
+import { POSITION_KEYS, POSTURE_KEYS, type Posture } from './Unit'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type InjuryOnLimbResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
 import { ActionEffects } from './Action/effects'
@@ -18,6 +18,7 @@ export class CombatAction {
   public round: number
   public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
   public hasChangedWeapon: boolean // 「装備変更」を実行したかどうか (1ターンに1度まで)
+  public hasChangedPosture: boolean // 「姿勢変更」を実行したかどうか (1ターンに1度まで)
   public promise: Promise<void>
   private resolve!: () => void
   private readonly availabilityChecker: ActionAvailability
@@ -28,6 +29,7 @@ export class CombatAction {
     this.round = state.round
     this.unlocked = true // コマンドパレットをアンロック
     this.hasChangedWeapon = false
+    this.hasChangedPosture = false
     this.availabilityChecker = new ActionAvailability(state)
     this.effects = new ActionEffects(state)
 
@@ -58,6 +60,10 @@ export class CombatAction {
         return acc
       }, {} as Record<typeof POSITION_KEYS[number], boolean>),
       changeWeapon: this.availabilityChecker.canChangeWeapon() && !this.hasChangedWeapon,
+      changePosture: POSTURE_KEYS.reduce((acc, posture) => {
+        acc[posture as Posture] = this.availabilityChecker.canChangePosture(posture as Posture) && !this.hasChangedPosture
+        return acc
+      }, {} as Record<Posture, boolean>),
       wait: this.availabilityChecker.canWait()
     }
   }
@@ -79,6 +85,9 @@ export class CombatAction {
   async execute (action: ActionRequest) {
     // コマンドパレットをロック (アンロックはコンストラクタで行われる)
     this.unlocked = false
+
+    // コマンド実行前の姿勢 (「姿勢変更」のターン終了判定に用いる)
+    const prevPosture = this.actor.posture
 
     // 行動実行
     let results: ActionResult[] = []
@@ -108,6 +117,11 @@ export class CombatAction {
         this.hasChangedWeapon = true // 1ターンに1度まで
         break
 
+      case 'changePosture':
+        results = this.effects.changePosture(action.options.posture)
+        this.hasChangedPosture = true // 1ターンに1度まで
+        break
+
       case 'recovery':
         results = this.effects.recovery()
         break
@@ -120,7 +134,7 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 行動終了分岐 (回復成功時・装備変更時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
     const firstResult = results[0]
     if (action.key === 'recovery' && firstResult?.type === 'recovery' && firstResult.judge.success) {
@@ -128,6 +142,10 @@ export class CombatAction {
       nextTurn = false
     }
     if (action.key === 'changeWeapon') {
+      this.unlocked = true
+      nextTurn = false
+    }
+    if (action.key === 'changePosture' && prevPosture !== 'prone') {
       this.unlocked = true
       nextTurn = false
     }
