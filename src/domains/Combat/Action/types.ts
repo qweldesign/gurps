@@ -2,12 +2,13 @@
 
 import { type ArmorSlotKey } from '../../Equipments'
 import { type Position, type CombatUnit as Unit } from '../Unit'
-import { type Judge } from '../Dice'
+import { type Judge, type Score } from '../Dice'
 
-export const ACTION_KEYS = ['attack', 'move', 'recovery', 'wait'] as const
+export const ACTION_KEYS = ['attack', 'feint', 'move', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   attack: '攻撃',
+  feint: '牽制',
   move: '移動',
   recovery: '回復',
   wait: '待機'
@@ -65,6 +66,7 @@ export type ActionOptions = {
 // targets は「攻撃」等, ターゲット選択を伴う行動のみ空でない配列になる
 export type ActionRequest =
   | { key: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
+  | { key: 'feint', options: {}, targets: [Unit] }
   | { key: 'move', options: { position: Position }, targets: [] }
   | { key: 'recovery', options: {}, targets: [] }
   | { key: 'wait', options: {}, targets: [] }
@@ -86,11 +88,17 @@ export type DefenseResult = Judge & {
 // ダメージ判定結果
 export type DmgResult = Judge
 
+// 牽制の判定結果 (成功度: 相手の防御目標値をこの分だけ下げる)
+export type FeintResult = Score & {
+  target: Unit
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
   | { type: 'dmg', judge: DmgResult }
+  | { type: 'feint', judge: FeintResult }
   | { type: 'recovery', judge: Judge }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }

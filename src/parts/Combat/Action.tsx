@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmAttack' | 'confirmFeint' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
 
-type TargetPalette = 'attack' | 'all'
+type TargetPalette = 'attack' | 'feint' | 'all'
 
 function Action({ store }: { store: Store }) {
   // 状態管理
@@ -58,6 +58,10 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, ターゲットパレットへ進む
         >攻撃</button>
         <button
+          disabled={!store.availability.feint}
+          onClick={() => { setActionPalette('target'); setTargetPalette('feint'); setActionKey('feint'); }} // ターゲットパレットへ進む
+        >牽制</button>
+        <button
           disabled={!store.availability.attack}
           onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
         >特殊攻撃</button>
@@ -78,9 +82,27 @@ function Action({ store }: { store: Store }) {
             <div>{store.actor.attack.model.name}: {store.actor.attack.model.dmgName}</div>
             <div>{target.defense.getModelByKey(AIM_OPTIONS[actionOptions.aim ?? 'body'].group).name}: {target.defense.getModelByKey(AIM_OPTIONS[actionOptions.aim ?? 'body'].group).dr}</div>
             <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower ?? 'none', target)}</div>
-            <div>防御目標値: {target.defense.target}</div>
+            <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {target.defense.getTarget(store.actor, actionOptions.aim ?? 'body')}</div>
             <div>効果: </div>
             <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', target.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType))} 点</div>
+          </div>
+        )}
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmFeint'}>
+        {target && (
+          <div className="confirm__grid">
+            <div>{store.actor.name}</div>
+            <div>{target.name}</div>
+            <div>牽制目標値: {store.actor.attack.target}</div>
+            <div>防御目標値: {target.defense.getTarget(store.actor, 'body')}</div>
+            <div>効果: </div>
+            <div>防御目標値の低下</div>
           </div>
         )}
         <button
@@ -149,6 +171,19 @@ function Action({ store }: { store: Store }) {
                 onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body' }); }} // 部位狙いのみリセットし, 部位狙いパレットへ戻る
               >戻る</button>
             )}
+          </>
+        )}
+        {targetPalette === 'feint' && (
+          <>
+            {store.target.melee.map(target => (
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmFeint'); setActionTargets([target]); }} // ターゲットをセットし, 牽制確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
           </>
         )}
       </div>

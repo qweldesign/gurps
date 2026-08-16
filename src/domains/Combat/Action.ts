@@ -48,6 +48,7 @@ export class CombatAction {
   get availability() {
     return {
       attack: this.availabilityChecker.canAttack(),
+      feint: this.availabilityChecker.canFeint(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
         return acc
@@ -79,6 +80,10 @@ export class CombatAction {
     switch (action.key) {
       case 'attack':
         results = this.effects.attack(action.options.aim, action.options.fullPower, action.targets[0])
+        break
+
+      case 'feint':
+        results = this.effects.feint(action.targets[0])
         break
 
       case 'move':

@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeRecovery, judgeKnockedDown, judgeFatal } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown, judgeFatal } from './resolver'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -62,6 +62,16 @@ export class ActionEffects {
     }
 
     return results
+  }
+
+  //「牽制」実行
+  feint(target: Unit): ActionResult[] {
+    const actor = this.state.actor
+    const feintJudge = judgeFeint(actor, target)
+    if (feintJudge.success) {
+      actor.attack.feint = { currentTurn: true, target, score: feintJudge.score }
+    }
+    return [{ type: 'feint', judge: feintJudge }]
   }
 
   //「移動」実行

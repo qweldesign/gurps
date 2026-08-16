@@ -32,7 +32,10 @@ export class CombatLog {
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {
       case 'attack':
-        return `${ACTION_LABELS[request.key]}:${this.createResultLabel(request, results)}`
+        return `${ACTION_LABELS[request.key]}:${this.createAttackResultLabel(request, results)}`
+
+      case 'feint':
+        return `${ACTION_LABELS[request.key]}:${this.createFeintResultLabel(results)}`
 
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
@@ -44,7 +47,7 @@ export class CombatLog {
 
   // 攻撃の成否ラベルを生成
   // 攻撃(成功) → 防御(失敗) → ダメージ(貫通) の場合のみ「成功」を返す
-  private createResultLabel(request: ActionRequest, results: ActionResult[]): string {
+  private createAttackResultLabel(request: ActionRequest, results: ActionResult[]): string {
     if (request.key !== 'attack') return ''
     let success = false
     results.forEach(result => {
@@ -63,6 +66,19 @@ export class CombatLog {
     return success ? '成功' : '失敗'
   }
 
+  // 牽制の成否ラベルを生成 (成功時は成功度も表示)
+  private createFeintResultLabel(results: ActionResult[]): string {
+    let success = false
+    let score = 0
+    results.forEach(result => {
+      if (result.type === 'feint') {
+        success = result.judge.success
+        score = result.judge.score
+      }
+    })
+    return success ? `成功(${score})` : '失敗'
+  }
+
   // 結果ログ生成
   private createMessages(request: ActionRequest, results: ActionResult[]): ReactNode[] {
     const actor = this.actor.name
@@ -76,7 +92,7 @@ export class CombatLog {
         messages.push(<>{`${actor} は 待機している`}</>)
         break
 
-      default: // case 'attack': case 'recovery':
+      default: // case 'attack': case 'feint': case 'recovery':
         break
     }
     messages.push(<>&nbsp;</>)
@@ -120,6 +136,21 @@ export class CombatLog {
               if (result.judge.success) messages.push(<>{`${target} は 気絶した...`}</>)
               else messages.push(<>{`${target} は 死亡した...`}</>)
               break
+          }
+        })
+        break
+      }
+
+      case 'feint': { // 牽制の判定結果ログ
+        const target = request.targets[0].name
+        results.forEach(result => {
+          if (result.type !== 'feint') return
+          messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた!`}</>)
+          if (result.judge.success) {
+            messages.push(<>{`出目は ${result.judge.roll}、牽制は成功した!`}</>)
+            messages.push(<>{`次のターン, ${target} は防御判定に -${result.judge.score} の修正が課せられる!`}</>)
+          } else {
+            messages.push(<>{`出目は ${result.judge.roll}、牽制は失敗した...`}</>)
           }
         })
         break

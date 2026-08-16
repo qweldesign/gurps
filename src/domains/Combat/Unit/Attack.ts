@@ -4,11 +4,19 @@ import { type WeaponSlotKey } from '../../Equipments'
 import { type Aim, AIM_OPTIONS, type FullPower } from '../Action/types'
 import { POSTURE_MODS, type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels, CombatUnit as Unit } from '../Unit'
 
+// 牽制の持ち越し情報 (成功時, 次の自分の攻撃 (対象が同じ場合のみ) の防御目標値を下げる)
+export type Feint = {
+  currentTurn: boolean // true: 牽制を行ったターン自身 (まだ適用されない), false: 次ターン以降 (適用可能)
+  target: Unit
+  score: number
+}
+
 export class CombatUnitAttack {
   private self: Unit
   private models: AttackModels
   private _key: WeaponSlotKey
   public ready: number
+  public feint: Feint | null
   private changeKeyCallback: (attacks: AttackModels, key: WeaponSlotKey) => void
 
   constructor(self: Unit, attacks: AttackModels, callback: (attacks: AttackModels, key: WeaponSlotKey) => void) {
@@ -16,7 +24,18 @@ export class CombatUnitAttack {
     this.models = attacks
     this._key = 'main'
     this.ready = 0
+    this.feint = null
     this.changeKeyCallback = callback
+  }
+
+  nextTurn() {
+    if (this.feint && this.feint.currentTurn) {
+      // 牽制を行った自身のターンが終わったので, 次ターンに適用可能な状態としてマークする
+      this.feint.currentTurn = false
+    } else if (this.feint) {
+      // 適用されないまま次のターンを迎えたので, 牽制を破棄する
+      this.feint = null
+    }
   }
 
   // 攻撃キーの変更 (装備変更)

@@ -17,6 +17,12 @@ export class ActionAvailability {
     return this.state.actor.position !== 'back'
   }
 
+  //「牽制」実行可否取得
+  // 「攻撃」と同条件
+  canFeint(): boolean {
+    return this.canAttack()
+  }
+
   //「移動」実行可否取得
   // 後退は自身が後方に配置されていないこと
   // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる

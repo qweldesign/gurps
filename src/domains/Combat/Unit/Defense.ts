@@ -161,7 +161,8 @@ export class CombatUnitDefense {
     )
   }
 
-  // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得
+  // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得 (表示用)
+  // actor が自身に牽制を成功させている場合, その分の修正も反映する (judgeDefense と同じ優先順・同じ計算)
   getTarget(actor: Unit, aim: Aim) {
     let target
     if (this.getCanBlock(aim)) {
@@ -171,7 +172,9 @@ export class CombatUnitDefense {
     } else {
       target = this.getDodgeTarget()
     }
-    return Math.max(target, 4)
+    const feint = actor.attack.feint
+    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
+    return target - feintScore
   }
 
   // 胴防御モデルを取得
