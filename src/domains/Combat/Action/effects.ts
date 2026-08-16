@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown, judgeFatal } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -80,27 +80,74 @@ export class ActionEffects {
 
     // ダメージ判定
     const dmgJudge = rollDmg(actor, aim, fullPower, target)
-    results.push({ type: 'dmg', judge: dmgJudge })
+
+    // 部位狙いによる, 頭・四肢への負傷上限と故障判定
+    // (耳・目は2点, 手首・足首は最大HPの1/3, 腕・脚は最大HPの1/2を超える負傷を負えず, 超えた分は故障として扱う)
+    let injuryOnLimb = false
+    let dmg = dmgJudge.roll
+    if (aim === 'ear' || aim === 'eye') {
+      injuryOnLimb = dmg >= 2
+      dmg = Math.min(dmg, 2)
+    }
+    if (aim === 'hand' || aim === 'foot') {
+      injuryOnLimb = dmg >= target.health.maxHp / 3
+      dmg = Math.min(dmg, Math.floor(target.health.maxHp / 3))
+    }
+    if (aim === 'arm' || aim === 'leg') {
+      injuryOnLimb = dmg >= target.health.maxHp / 2
+      dmg = Math.min(dmg, Math.floor(target.health.maxHp / 2))
+    }
+
+    results.push({ type: 'dmg', judge: { ...dmgJudge, roll: dmg } })
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 
     // ダメージ効果
-    target.health.injury += dmgJudge.roll
+    target.health.injury += dmg
 
-    // 朦朧状態・転倒判定
-    if (dmgJudge.roll >= target.health.maxHp / 2) {
-      const knockedDownJudge = judgeKnockedDown(target)
-      results.push({ type: 'knockedDown', judge: knockedDownJudge })
-      if (!knockedDownJudge.success) {
-        target.posture = 'prone' // 姿勢変更
-      }
+    // 頭・四肢を狙った攻撃 (負傷上限を超えた場合のみ故障する)
+    if (injuryOnLimb) {
+      results.push({ type: 'injuryOnLimb', judge: { limb: aim } })
     }
 
-    // 気絶・死亡判定
-    if (target.health.unconscious) {
-      const fatalJudge = judgeFatal(target)
-      results.push({ type: 'fatal', judge: fatalJudge })
-      if (!fatalJudge.success) {
-        target.health.dead = true // 死亡
+    // それ以外 (頭・体・喉・肚) を狙った攻撃
+    if (aim === 'head' || aim === 'body' || aim === 'neck' || aim === 'stomach') {
+      // 朦朧状態・転倒判定 (気絶に至っていない場合のみ行う. 頭・喉狙いは急所のため, 最大HPの1/3以上でも対象になる)
+      if (!target.health.unconscious && (dmg >= target.health.maxHp / 2 || ((aim === 'head' || aim === 'neck') && dmg >= target.health.maxHp / 3))) {
+        target.health.stunned = true
+        const knockedDownJudge = judgeKnockedDown(target)
+        results.push({ type: 'knockedDown', judge: knockedDownJudge })
+        if (!knockedDownJudge.success) {
+          target.posture = 'prone' // 姿勢変更
+        }
+      }
+
+      // 気絶・死亡判定 (負傷が最大HPに達し, 気絶している場合)
+      if (target.health.unconscious) {
+        const fatalJudge = judgeFatal(target)
+        results.push({ type: 'fatal', judge: fatalJudge })
+        if (!fatalJudge.success) {
+          target.health.dead = true // 死亡
+        }
+        return results // ダメージで気絶した時はここで処理を止める
+      }
+
+      // 気絶判定 (頭狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に気絶する)
+      if (aim === 'head' && dmg >= target.health.maxHp / 2) {
+        const unconsciousJudge = judgeUnconscious(target, actor.attack.model.dmgType)
+        if (!unconsciousJudge.success) {
+          results.push({ type: 'unconscious', judge: unconsciousJudge })
+          target.health.unconscious = true
+        }
+      }
+
+      // 即死判定 (喉狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に死亡する)
+      if (aim === 'neck' && dmg >= target.health.maxHp / 2) {
+        const deadJudge = judgeDead(target, actor.attack.model.dmgType)
+        if (!deadJudge.success) {
+          results.push({ type: 'dead', judge: deadJudge })
+          target.health.unconscious = true
+          target.health.dead = true
+        }
       }
     }
 

@@ -97,6 +97,11 @@ export type FeintResult = Score & {
   target: Unit
 }
 
+// 頭・四肢の故障結果 (判定は伴わず, 部位のみを持つ)
+export type InjuryOnLimbResult = {
+  limb: Aim
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -104,5 +109,8 @@ export type ActionResult =
   | { type: 'dmg', judge: DmgResult }
   | { type: 'feint', judge: FeintResult }
   | { type: 'recovery', judge: Judge }
+  | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
+  | { type: 'unconscious', judge: Judge }
+  | { type: 'dead', judge: Judge }

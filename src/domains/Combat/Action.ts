@@ -2,14 +2,14 @@
 
 import { CombatState as State } from './State'
 import { POSITION_KEYS } from './Unit'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type FullPower, type Aim } from './Action/types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type InjuryOnLimbResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
 import { ActionEffects } from './Action/effects'
 
 // 定数・型定義は Action/types.ts に集約する
 // 既存の呼び出し元 (Action.tsx, Log.tsx) が引き続き参照できるよう, ここから re-export する
 export { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS }
-export type { ActionKey, ActionOptions, ActionRequest, ActionResult, FeintResult, FullPower, Aim }
+export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, FeintResult, FullPower, Aim }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 // 行動可否判定は Action/availability.ts, 状態変更は Action/effects.ts に委譲する
@@ -109,7 +109,8 @@ export class CombatAction {
 
     // 行動終了分岐 (回復成功時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
-    if (action.key === 'recovery' && results[0].judge.success) {
+    const firstResult = results[0]
+    if (action.key === 'recovery' && firstResult?.type === 'recovery' && firstResult.judge.success) {
       this.unlocked = true
       nextTurn = false
     }

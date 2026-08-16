@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type InjuryOnLimbResult } from './Action'
 
 let count = 0
 
@@ -143,6 +143,10 @@ export class CombatLog {
               else messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
               break
 
+            case 'injuryOnLimb': // 部位狙いによる, 顔・四肢の故障ログ
+              this.pushInjuryOnLimbMessage(messages, target, result.judge)
+              break
+
             case 'knockedDown': // 朦朧状態・転倒判定の結果ログ
               if (result.judge.success) messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
               else messages.push(<>{`${target} は 転倒した!!`}</>)
@@ -151,6 +155,14 @@ export class CombatLog {
             case 'fatal': // 気絶・死亡判定の結果ログ
               if (result.judge.success) messages.push(<>{`${target} は 気絶した...`}</>)
               else messages.push(<>{`${target} は 死亡した...`}</>)
+              break
+
+            case 'unconscious': // 気絶判定 (頭狙い) の結果ログ. 失敗 (=気絶) 時のみ結果が渡ってくる
+              if (!result.judge.success) messages.push(<>{`${target} は 気絶した!!`}</>)
+              break
+
+            case 'dead': // 即死判定 (喉狙い) の結果ログ. 失敗 (=即死) 時のみ結果が渡ってくる
+              if (!result.judge.success) messages.push(<>{`${target} は 即死した!!!`}</>)
               break
           }
         })
@@ -168,6 +180,7 @@ export class CombatLog {
 
       case 'recovery': // 朦朧状態からの回復判定の結果ログ
         results.forEach(result => {
+          if (result.type !== 'recovery') return
           if (result.judge.success) messages.push(<>{`${actor} は 朦朧状態から回復した!`}</>)
           else messages.push(<>{`${actor} は 朦朧としていて何も行動できない...`}</>)
         })
@@ -187,6 +200,19 @@ export class CombatLog {
       messages.push(<>{`次のターン, ${target} は防御判定に -${judge.score} の修正が課せられる!`}</>)
     } else {
       messages.push(<>{`出目は ${judge.roll}、牽制は失敗した...`}</>)
+    }
+  }
+
+  // 部位狙いによる, 顔・四肢の故障ログを追加する
+  private pushInjuryOnLimbMessage(messages: ReactNode[], target: string, judge: InjuryOnLimbResult) {
+    if (judge.limb === 'ear') {
+      messages.push(<>{`${target} は 耳を故障した!!`}</>)
+    } else if (judge.limb === 'eye') {
+      messages.push(<>{`${target} は 目を故障した!!`}</>)
+    } else if (judge.limb === 'arm' || judge.limb === 'hand') {
+      messages.push(<>{`${target} は 腕を故障した!!`}</>)
+    } else if (judge.limb === 'leg' || judge.limb === 'foot') {
+      messages.push(<>{`${target} は 脚を故障した!!`}</>)
     }
   }
 
