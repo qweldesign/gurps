@@ -53,6 +53,8 @@ export class CombatState {
     this.action = new Action(this)
     //　コマンド入力待機
     await this.action.promise.then(() => {
+      // 牽制の持ち越し状態を更新 (自身のターン終了時点で適用可能に, 未適用なら破棄)
+      this.actor.attack.nextTurn()
       // 行動者の能動防御 (受け・止めの試行回数, 全力防御) をリセット
       this.actor.defense.nextTurn()
       // 自身を呼び出し, また次のターンへ進む
