@@ -9,6 +9,15 @@ export const SIDE_KEYS = ['player', 'enemy'] as const
 
 export const POSITION_KEYS = ['back', 'left', 'center', 'right'] as const
 
+export const POSTURE_KEYS: string[] = ['standing', 'crouching', 'kneeling', 'prone'] as const
+
+export const POSTURE_MODS: Record<Posture, { attackMod: number, defenseMod: number, missileMod: number, label: string }> = {
+  'standing': { attackMod: 0, defenseMod: 0, missileMod: 0, label: '直立' },
+  'crouching': { attackMod: -2, defenseMod: 0, missileMod: -2, label: '屈み' },
+  'kneeling': { attackMod: -2, defenseMod: -2, missileMod: -4, label: '膝着き' },
+  'prone': { attackMod: -4, defenseMod: -4, missileMod: -8, label: '這い' }
+} as const
+
 // 戦闘ユニットID
 export type CombatId = typeof combatIds[number]
 
@@ -17,6 +26,9 @@ export type Side = typeof SIDE_KEYS[number]
 
 // 戦闘ユニットの配置
 export type Position = typeof POSITION_KEYS[number]
+
+// 戦闘ユニットの姿勢
+export type Posture = typeof POSTURE_KEYS[number]
 
 // 攻撃手段の定義
 export type CombatAttackModel = {
@@ -68,6 +80,7 @@ export class CombatUnit {
   public name: string
   public side: Side
   public position: Position
+  public posture: Posture
   public health: Health
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
@@ -77,6 +90,7 @@ export class CombatUnit {
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
     this.position = 'back'
+    this.posture = 'standing'
     this.health = new Health(maxHp)
   }
 }
