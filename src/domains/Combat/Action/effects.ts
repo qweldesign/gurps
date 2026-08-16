@@ -27,6 +27,11 @@ export class ActionEffects {
     if (!attackJudge.critical) {
       const defenseJudge = judgeDefense(actor, aim, target)
       results.push({ type: 'defense', judge: defenseJudge })
+
+      // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
+      if (defenseJudge.defenseType === 'parry') target.defense.parryCount++
+      else if (defenseJudge.defenseType === 'block') target.defense.blockCount++
+
       if (defenseJudge.success) return results // 防御成功時はここで処理を止める
     }
 
