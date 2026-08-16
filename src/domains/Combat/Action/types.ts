@@ -2,6 +2,7 @@
 
 import { type ArmorSlotKey } from '../../Equipments'
 import { type Position } from '../Unit'
+import { type Judge } from '../Dice'
 
 export const ACTION_KEYS = ['move', 'wait'] as const
 
@@ -60,3 +61,20 @@ export type ActionOptions = {
 export type ActionRequest =
   | { key: 'move', options: { position: Position } }
   | { key: 'wait', options: {} }
+
+// 防御種別
+export type DefenseType = 'parry' | 'block' | 'dodge'
+
+// 攻撃判定結果
+export type AttackResult = Judge & {
+  aim: Aim
+  fullPower: FullPower
+}
+
+// 防御判定結果
+export type DefenseResult = Judge & {
+  defenseType: DefenseType
+}
+
+// ダメージ判定結果
+export type DmgResult = Judge
