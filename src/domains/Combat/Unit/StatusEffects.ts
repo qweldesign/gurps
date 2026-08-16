@@ -30,4 +30,16 @@ export class CombatUnitStatusEffects {
     this.berserk = Math.max(this.berserk - 1, 0)
     this.panic = Math.max(this.panic - 1, 0)
   }
+  
+  // Summary 表示用ラベル取得 (優先度が高い状態異常を1つ返す)
+  get label(): string {
+    if (this.silence) return '沈黙'
+    if (this.resistant) return '痛覚鈍麻'
+    if (this.poisoned) return '毒'
+    if (this.paralyzed) return '麻痺'
+    if (this.dazed) return '幻惑'
+    if (this.berserk) return '狂戦士'
+    if (this.panic) return 'パニック'
+    return ''
+  }
 }

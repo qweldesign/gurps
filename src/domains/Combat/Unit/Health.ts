@@ -70,4 +70,20 @@ export class CombatUnitHealth {
     else if (ratio < 2 / 3) return 'injured'
     else return 'normal'
   }
+
+  // Summary 表示用ラベル取得 (深刻度が高い状態を優先して1つ返す)
+  get label(): string {
+    if (this.dead) return '死亡'
+    if (this.unconscious) return '気絶'
+    if (this.stunned) return '朦朧状態'
+    if (this.puppeted) return '傀儡'
+    if (this.blinded) return '盲目'
+    if (this.injuryOnArm) return '腕故障'
+    if (this.injuryOnLeg) return '脚故障'
+    if (this.deafened) return '聾'
+    if (this.burning) return '火だるま'
+    if (this.dazzled) return '眩しい'
+    if (this.confused) return '混乱'
+    return ''
+  }
 }

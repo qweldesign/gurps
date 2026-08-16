@@ -46,4 +46,13 @@ export class CombatUnitStatusBuff {
     // 残ターン数が残っていれば, 効果は一定
     return this.drBuff > 0 ? 1 : 0
   }
+
+  // Summary 表示用ラベル取得 (該当するバフを1つ返す)
+  get label(): string {
+    if (this.levelBuff > 0) return '命中UP'
+    if (this.dmgBuff > 0) return '攻撃UP'
+    if (this.evBuff > 0) return '回避UP'
+    if (this.drBuff > 0) return '防御UP'
+    return ''
+  }
 }

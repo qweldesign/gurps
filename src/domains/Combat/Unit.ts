@@ -110,4 +110,9 @@ export class CombatUnit {
     this.statusEffects = new StatusEffects()
     this.history = null
   }
+
+  // Summary 表示用ラベル取得 (状態 → 状態異常 → バフの優先順で, 該当する最初のものを返す)
+  get label(): string {
+    return this.health.label || this.statusEffects.label || this.statusBuff.label
+  }
 }
