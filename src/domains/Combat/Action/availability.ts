@@ -18,9 +18,10 @@ export class ActionAvailability {
   }
 
   //「攻撃」実行可否取得
-  // 武器が準備状態, 射撃武器ではない, かつ自身が前方に配置されていることが条件 (暫定)
+  // 武器が準備状態, 射撃武器ではない, 自身が前方に配置されている, かつ狂戦士状態ではないことが条件 (暫定)
   canAttack(): boolean {
-    return this.state.actor.attack.ready === 0 && !this.state.actor.attack.model.isMissile && this.state.actor.position !== 'back'
+    const actor = this.state.actor
+    return actor.attack.ready === 0 && !actor.attack.model.isMissile && actor.position !== 'back' && !actor.statusEffects.berserk
   }
 
   //「脚・足首狙い」実行可否取得
@@ -43,26 +44,27 @@ export class ActionAvailability {
   }
 
   //「狙い」実行可否取得
-  // 「射撃」と同条件
+  // 「射撃」の実行可否条件に加え, 狂戦士状態ではないことが条件
   canSnipe(): boolean {
-    return this.canShoot()
+    return this.canShoot() && !this.state.actor.statusEffects.berserk
   }
 
   //「全力防御」実行可否取得
+  // 狂戦士状態ではないことが条件
   canDefense(): boolean {
-    return true
+    return !this.state.actor.statusEffects.berserk
   }
 
   //「移動」実行可否取得
   // 姿勢が「膝着き」でないこと
-  // 後退は自身が後方に配置されていないこと
+  // 後退は自身が後方に配置されていないこと, かつ狂戦士状態ではないこと
   // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
   canMove(position: Position): boolean {
     const actor = this.state.actor
     if (!this.state.formation) return false
     if (actor.posture === 'kneeling') return false
     if (position === 'back') {
-      return this.state.formation[actor.side].back[actor.combatId] === null ? true : false
+      return this.state.formation[actor.side].back[actor.combatId] === null && !actor.statusEffects.berserk ? true : false
     } else {
       return this.state.formation[actor.side].front[position] === null ? true : false
     }
