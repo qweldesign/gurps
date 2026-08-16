@@ -4,8 +4,8 @@ import { type CombatUnit as Unit } from '../Unit'
 import { judge, roll, score, type Judge } from '../Dice'
 import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult } from './types'
 
-// 攻撃の判定結果を返す
-export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit): AttackResult {
+// 攻撃の判定結果を返す (武器の準備状態の更新は effects 側の責務とする. ここでは判定のみ行う)
+export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit): Omit<AttackResult, 'ready'> {
   const attackTarget = actor.attack.getTarget(aim, fullPower, target)
   return { aim, fullPower, ...judge(attackTarget) }
 }
@@ -13,7 +13,8 @@ export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target:
 // 防御の判定結果を返す
 // 「止め」「受け」「よけ」のうち, 最も成功率の高い防御を自動選択する
 // actor が target に対して牽制を成功させている場合, 防御目標値から牽制の成功度分を減算する
-export function judgeDefense(actor: Unit, aim: Aim, target: Unit): DefenseResult {
+// (武器の準備状態の更新は effects 側の責務とする. ここでは判定のみ行う)
+export function judgeDefense(actor: Unit, aim: Aim, target: Unit): Omit<DefenseResult, 'ready'> {
   const defense = target.defense
   const feint = actor.attack.feint
   const feintScore = (feint && feint.target === target) ? feint.score : 0

@@ -47,6 +47,7 @@ export class CombatAction {
   // 実行可否
   get availability() {
     return {
+      ready: this.availabilityChecker.canReady(),
       attack: this.availabilityChecker.canAttack(),
       feint: this.availabilityChecker.canFeint(),
       move: POSITION_KEYS.reduce((acc, position) => {
@@ -78,6 +79,10 @@ export class CombatAction {
     // 行動実行
     let results: ActionResult[] = []
     switch (action.key) {
+      case 'ready':
+        results = this.effects.ready()
+        break
+
       case 'attack':
         results = this.effects.attack(action.options.aim, action.options.fullPower, action.targets[0])
         break

@@ -13,6 +13,12 @@ export class ActionEffects {
     this.state = state
   }
 
+  //「準備」実行
+  ready(): ActionResult[] {
+    this.state.actor.attack.ready--
+    return []
+  }
+
   //「攻撃」実行 (判定結果に基づき, HPへのダメージ反映と朦朧・転倒・気絶・死亡までを処理する)
   attack(aim: Aim, fullPower: FullPower, target: Unit): ActionResult[] {
     const results: ActionResult[] = []
@@ -20,18 +26,27 @@ export class ActionEffects {
 
     // 攻撃判定
     const attackJudge = judgeAttack(actor, aim, fullPower, target)
-    results.push({ type: 'attack', judge: attackJudge })
+    // 武器の準備状態を更新 (準備の要る武器の場合, 攻撃後は非準備状態になる)
+    actor.attack.ready = actor.attack.model.ready
+    results.push({ type: 'attack', judge: { ...attackJudge, ready: actor.attack.ready === 0 } })
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
     // 防御判定 (攻撃判定がクリティカルであればスキップ)
     if (!attackJudge.critical) {
       const defenseJudge = judgeDefense(actor, aim, target)
-      results.push({ type: 'defense', judge: defenseJudge })
 
       // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
-      if (defenseJudge.defenseType === 'parry') target.defense.parryCount++
-      else if (defenseJudge.defenseType === 'block') target.defense.blockCount++
+      // 「受け」の場合のみ, 武器の準備状態も更新する (準備の要る武器の場合, 受けの後は非準備状態になる)
+      let ready = true
+      if (defenseJudge.defenseType === 'parry') {
+        target.defense.parryCount++
+        target.attack.ready = target.attack.model.ready
+        ready = target.attack.ready === 0
+      } else if (defenseJudge.defenseType === 'block') {
+        target.defense.blockCount++
+      }
 
+      results.push({ type: 'defense', judge: { ...defenseJudge, ready } })
       if (defenseJudge.success) return results // 防御成功時はここで処理を止める
     }
 

@@ -4,9 +4,10 @@ import { type ArmorSlotKey } from '../../Equipments'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
 
-export const ACTION_KEYS = ['attack', 'feint', 'move', 'recovery', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'move', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
+  ready: '準備',
   attack: '攻撃',
   feint: '牽制',
   move: '移動',
@@ -65,6 +66,7 @@ export type ActionOptions = {
 // 行動キーとオプションの組み合わせ
 // targets は「攻撃」等, ターゲット選択を伴う行動のみ空でない配列になる
 export type ActionRequest =
+  | { key: 'ready', options: {}, targets: [] }
   | { key: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { key: 'feint', options: {}, targets: [Unit] }
   | { key: 'move', options: { position: Position }, targets: [] }
@@ -78,11 +80,13 @@ export type DefenseType = 'parry' | 'block' | 'dodge'
 export type AttackResult = Judge & {
   aim: Aim
   fullPower: FullPower
+  ready: boolean // 攻撃後の武器の準備状態 (false: 非準備状態になった)
 }
 
 // 防御判定結果
 export type DefenseResult = Judge & {
   defenseType: DefenseType
+  ready: boolean // 防御後の武器の準備状態 (「受け」のみ変化しうる. 「止め」「よけ」は常に true)
 }
 
 // ダメージ判定結果

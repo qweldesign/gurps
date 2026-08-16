@@ -40,7 +40,7 @@ export class CombatLog {
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
 
-      default: // case 'recovery': case 'wait':
+      default: // case 'ready': case 'recovery': case 'wait':
         return ACTION_LABELS[request.key]
     }
   }
@@ -84,6 +84,10 @@ export class CombatLog {
     const actor = this.actor.name
     const messages = this.createResultMessages(request, results)
     switch (request.key) {
+      case 'ready':
+        messages.push(<>{`${actor} は ${this.actor.attack.model.name} を構えた`}</>)
+        break
+
       case 'move':
         messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
@@ -111,6 +115,10 @@ export class CombatLog {
             case 'attack':
               messages.push(<>{`${actor} の ${this.actor.attack.model.name} による攻撃!`}</>)
               messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              if (!result.judge.success && !result.judge.ready) {
+                // 攻撃失敗時のみ非準備状態への変化をログに表示
+                messages.push(<>{`${actor} の ${this.actor.attack.model.name} は非準備状態になった`}</>)
+              }
               break
 
             case 'defense': {
@@ -118,6 +126,10 @@ export class CombatLog {
                 : result.judge.defenseType === 'block' ? '盾による受け止め' : '回避'
               messages.push(<>{`${target} は ${defenseTypeLabel} を試みた!`}</>)
               messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              if (result.judge.success && !result.judge.ready) {
+                // 受け成功時のみ非準備状態への変化をログに表示
+                messages.push(<>{`${target} の ${request.targets[0].attack.model.name} は非準備状態になった`}</>)
+              }
               break
             }
 
@@ -163,7 +175,7 @@ export class CombatLog {
         })
         break
 
-      default: // case 'move': case 'wait':
+      default: // case 'ready': case 'move': case 'wait':
         break
     }
     return messages

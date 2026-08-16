@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmAttack' | 'confirmFeint' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'all'
 
@@ -54,6 +54,10 @@ function Action({ store }: { store: Store }) {
       <div className="absolute top-0 left-0 w-1/1 my-3 italic text-sm text-center">第 {store.round} ターン / {store.actor.name} の行動</div>
       <div className="actions" data-disable={actionPalette !== 'main'}>
         <button
+          disabled={!store.availability.ready}
+          onClick={() => { setActionPalette('confirmReady'); setActionKey('ready'); }} // 準備確認パレットへ進む
+        >準備</button>
+        <button
           disabled={!store.availability.attack}
           onClick={() => { setActionPalette('target'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, ターゲットパレットへ進む
         >攻撃</button>
@@ -73,6 +77,18 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.wait}
           onClick={() => { setIsExecuted(true); }} // 実行
         >待機</button>
+      </div>
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmReady'}>
+        <div className="confirm__grid">
+          <div>{store.actor.name}</div>
+          <div className="text-left">{store.actor.attack.model.name} を構える</div>
+        </div>
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
         {target && (

@@ -11,10 +11,16 @@ export class ActionAvailability {
     this.state = state
   }
 
+  //「準備」実行可否取得
+  // 武器が非準備状態であることが条件
+  canReady(): boolean {
+    return this.state.actor.attack.ready > 0
+  }
+
   //「攻撃」実行可否取得
-  // 自身が前方に配置されていることが条件 (暫定)
+  // 武器が準備状態, かつ自身が前方に配置されていることが条件 (暫定)
   canAttack(): boolean {
-    return this.state.actor.position !== 'back'
+    return this.state.actor.attack.ready === 0 && this.state.actor.position !== 'back'
   }
 
   //「牽制」実行可否取得
