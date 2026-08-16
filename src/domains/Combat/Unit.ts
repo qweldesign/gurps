@@ -4,6 +4,8 @@ import { type WeaponSlotKey, type ArmorSlotKey } from '../Equipments'
 import { CombatUnitAttack as Attack } from './Unit/Attack'
 import { CombatUnitDefense as Defense } from './Unit/Defense'
 import { CombatUnitHealth as Health } from './Unit/Health'
+import { CombatUnitStatusBuff as StatusBuff } from './Unit/StatusBuff'
+import { CombatUnitStatusEffects as StatusEffects } from './Unit/StatusEffects'
 
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
@@ -73,6 +75,8 @@ export type CombatUnitModel = {
   ev: number
   pre: number
   mre: number
+  dmgBuff: number //「怪力」端数 (バフ初期値)
+  evBuff: number //「運動」端数 (バフ初期値)
 }
 
 // 戦闘ユニットを司るクラス
@@ -86,9 +90,11 @@ export class CombatUnit {
   public attack: Attack
   public defense: Defense
   public health: Health
+  public statusBuff: StatusBuff
+  public statusEffects: StatusEffects
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { id, name, maxHp, attacks, defenses, ev, pre, mre } = model
+    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff } = model
     this.combatId = combatId
     this.id = id
     this.name = name
@@ -98,5 +104,7 @@ export class CombatUnit {
     this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
     this.attack = new Attack(this, attacks, this.defense.changeWeaponSlotKey.bind(this.defense))
     this.health = new Health(this, maxHp)
+    this.statusBuff = new StatusBuff(dmgBuff, evBuff)
+    this.statusEffects = new StatusEffects()
   }
 }
