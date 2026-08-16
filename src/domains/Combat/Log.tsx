@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult } from './Action'
 
 let count = 0
 
@@ -133,6 +133,10 @@ export class CombatLog {
               break
             }
 
+            case 'feint': // 全力攻撃オプション「牽制即攻撃」による, 直後の攻撃に先立つ牽制の結果ログ
+              this.pushFeintMessages(messages, actor, target, result.judge)
+              break
+
             case 'dmg':
               if (result.judge.roll < 1) messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
               else if (!result.judge.critical) messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
@@ -157,13 +161,7 @@ export class CombatLog {
         const target = request.targets[0].name
         results.forEach(result => {
           if (result.type !== 'feint') return
-          messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた!`}</>)
-          if (result.judge.success) {
-            messages.push(<>{`出目は ${result.judge.roll}、牽制は成功した!`}</>)
-            messages.push(<>{`次のターン, ${target} は防御判定に -${result.judge.score} の修正が課せられる!`}</>)
-          } else {
-            messages.push(<>{`出目は ${result.judge.roll}、牽制は失敗した...`}</>)
-          }
+          this.pushFeintMessages(messages, actor, target, result.judge)
         })
         break
       }
@@ -179,6 +177,17 @@ export class CombatLog {
         break
     }
     return messages
+  }
+
+  // 牽制の判定結果ログを追加する (「牽制」単体実行と, 全力攻撃オプション「牽制即攻撃」の両方から利用される)
+  private pushFeintMessages(messages: ReactNode[], actor: string, target: string, judge: FeintResult) {
+    messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた!`}</>)
+    if (judge.success) {
+      messages.push(<>{`出目は ${judge.roll}、牽制は成功した!`}</>)
+      messages.push(<>{`次のターン, ${target} は防御判定に -${judge.score} の修正が課せられる!`}</>)
+    } else {
+      messages.push(<>{`出目は ${judge.roll}、牽制は失敗した...`}</>)
+    }
   }
 
   private getResultLabel(judge: Judge): string {
