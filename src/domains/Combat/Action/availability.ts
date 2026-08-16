@@ -11,6 +11,12 @@ export class ActionAvailability {
     this.state = state
   }
 
+  //「攻撃」実行可否取得
+  // 自身が前方に配置されていることが条件 (暫定)
+  canAttack(): boolean {
+    return this.state.actor.position !== 'back'
+  }
+
   //「移動」実行可否取得
   // 後退は自身が後方に配置されていないこと
   // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる

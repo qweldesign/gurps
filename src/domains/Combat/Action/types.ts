@@ -1,12 +1,13 @@
 // Combat/Action/types.ts
 
 import { type ArmorSlotKey } from '../../Equipments'
-import { type Position } from '../Unit'
+import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge } from '../Dice'
 
-export const ACTION_KEYS = ['move', 'wait'] as const
+export const ACTION_KEYS = ['attack', 'move', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
+  attack: '攻撃',
   move: '移動',
   wait: '待機'
 } as const
@@ -58,9 +59,11 @@ export type ActionOptions = {
 }
 
 // 行動キーとオプションの組み合わせ
+// targets は「攻撃」等, ターゲット選択を伴う行動のみ空でない配列になる
 export type ActionRequest =
-  | { key: 'move', options: { position: Position } }
-  | { key: 'wait', options: {} }
+  | { key: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
+  | { key: 'move', options: { position: Position }, targets: [] }
+  | { key: 'wait', options: {}, targets: [] }
 
 // 防御種別
 export type DefenseType = 'parry' | 'block' | 'dodge'

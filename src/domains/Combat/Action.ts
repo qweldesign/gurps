@@ -42,6 +42,7 @@ export class CombatAction {
   // 実行可否
   get availability() {
     return {
+      attack: this.availabilityChecker.canAttack(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
         return acc
@@ -50,8 +51,19 @@ export class CombatAction {
     }
   }
 
+  // ターゲットを結果として生成 (Formation の配置情報を元に絞り込む)
+  get target() {
+    const formation = this.state.formation
+    return {
+      all: this.state.units,
+      allies: formation?.getAllies() ?? [],
+      enemies: formation?.getEnemies() ?? [],
+      melee: formation?.getMeleeTargets() ?? []
+    }
+  }
+
   // 実行
-  // ActionRequest のプロパティ (key, options) を引数に取って処理を進め,
+  // ActionRequest のプロパティ (key, options, targets) を引数に取って処理を進め,
   // ActionResult の配列を Log に渡し, 再生して次のターンへ移る
   async execute (action: ActionRequest) {
     // コマンドパレットをロック (アンロックはコンストラクタで行われる)
@@ -59,6 +71,10 @@ export class CombatAction {
 
     // 行動実行
     switch (action.key) {
+      case 'attack':
+        this.effects.attack(action.targets[0])
+        break
+
       case 'move':
         this.effects.move(action.options.position)
         break

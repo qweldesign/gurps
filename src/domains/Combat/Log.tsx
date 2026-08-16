@@ -31,6 +31,9 @@ export class CombatLog {
   private createLabel(request: ActionRequest): string {
     const key = request.key
     switch (key) {
+      case 'attack':
+        return `${ACTION_LABELS[request.key]}`
+      
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
       
@@ -45,6 +48,10 @@ export class CombatLog {
     const key = request.key
     const messages = []
     switch (key) {
+      case 'attack':
+        messages.push(<>{`${actor} の攻撃!`}</>)
+        break
+
       case 'move':
         messages.push(<>{`${actor} は ${POSITION_LABELS[request.options.position]} へ移動した`}</>)
         break
