@@ -1,6 +1,7 @@
 // Combat/Action/effects.ts
 
 import { CombatState as State } from '../State'
+import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeRecovery, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
@@ -182,6 +183,12 @@ export class ActionEffects {
   //「移動」実行
   move(position: Position) {
     this.state.actor.position = position
+  }
+
+  //「装備変更」実行
+  changeWeapon(weaponSlotKey: WeaponSlotKey): ActionResult[] {
+    this.state.actor.attack.key = weaponSlotKey
+    return []
   }
 
   //「待機」実行

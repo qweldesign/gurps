@@ -17,6 +17,7 @@ export class CombatAction {
   private state: State
   public round: number
   public unlocked: boolean // コマンドパレットのロック状態 → Actions にて検知
+  public hasChangedWeapon: boolean // 「装備変更」を実行したかどうか (1ターンに1度まで)
   public promise: Promise<void>
   private resolve!: () => void
   private readonly availabilityChecker: ActionAvailability
@@ -26,6 +27,7 @@ export class CombatAction {
     this.state = state
     this.round = state.round
     this.unlocked = true // コマンドパレットをアンロック
+    this.hasChangedWeapon = false
     this.availabilityChecker = new ActionAvailability(state)
     this.effects = new ActionEffects(state)
 
@@ -55,6 +57,7 @@ export class CombatAction {
         acc[position] = this.availabilityChecker.canMove(position)
         return acc
       }, {} as Record<typeof POSITION_KEYS[number], boolean>),
+      changeWeapon: this.availabilityChecker.canChangeWeapon() && !this.hasChangedWeapon,
       wait: this.availabilityChecker.canWait()
     }
   }
@@ -100,6 +103,11 @@ export class CombatAction {
         this.effects.move(action.options.position)
         break
 
+      case 'changeWeapon':
+        results = this.effects.changeWeapon(action.options.weaponSlotKey)
+        this.hasChangedWeapon = true // 1ターンに1度まで
+        break
+
       case 'recovery':
         results = this.effects.recovery()
         break
@@ -112,10 +120,14 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 行動終了分岐 (回復成功時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    // 行動終了分岐 (回復成功時・装備変更時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
     const firstResult = results[0]
     if (action.key === 'recovery' && firstResult?.type === 'recovery' && firstResult.judge.success) {
+      this.unlocked = true
+      nextTurn = false
+    }
+    if (action.key === 'changeWeapon') {
       this.unlocked = true
       nextTurn = false
     }

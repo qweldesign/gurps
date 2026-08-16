@@ -229,6 +229,10 @@
     @apply w-48;
   }
 
+  .actions > button.is-current {
+    @apply bg-emerald-400/50 text-white;
+  }
+
   .summary {
     @apply p-3;
   }

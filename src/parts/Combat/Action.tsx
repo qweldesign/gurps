@@ -1,10 +1,11 @@
 // Combat/Action.tsx
 
 import { useState, useEffect } from 'react'
+import { WEAPON_SLOT_KEYS } from '../../domains/Equipments'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'changeWeapon' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'all'
 
@@ -77,6 +78,10 @@ function Action({ store }: { store: Store }) {
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionKey('move'); }} // 移動オプションパレットへ進む
         >移動</button>
+        <button
+          disabled={!store.availability.changeWeapon}
+          onClick={() => { setActionPalette('changeWeapon'); setActionKey('changeWeapon'); }} // 装備変更オプションパレットへ進む
+        >装備変更</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmReady'}>
         <div className="confirm__grid">
@@ -175,6 +180,18 @@ function Action({ store }: { store: Store }) {
             disabled={!store.availability.move[arr[0] as Position]}
             onClick={() => { setActionOptions({ position: arr[0] as Position }); setIsExecuted(true); }} // 実行
           >{arr[1]}</button>
+        ))}
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions option" data-disable={actionPalette !== 'changeWeapon'}>
+        {WEAPON_SLOT_KEYS.map(key => key !== 'shield' && store.actor.attack.getModelByKey(key).name !== '装備無し' && (
+          <button
+            className={`is-large ${key === store.actor.attack.key ? 'is-current' : ''}`}
+            key={key}
+            onClick={() => { setActionOptions({ weaponSlotKey: key }); if (key !== store.actor.attack.key) setIsExecuted(true); }} // 実行 (既に構えている武器の場合は実行しない)
+          >{store.actor.attack.getModelByKey(key).name}</button>
         ))}
         <button
           onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る

@@ -47,6 +47,13 @@ export class ActionAvailability {
     }
   }
 
+  //「装備変更」実行可否取得
+  // sub, spare のいずれかに武器を持っていることが条件 (他に持ち替え先の武器が無ければ非表示)
+  canChangeWeapon(): boolean {
+    const isSingle = (['sub', 'spare'] as const).every(key => this.state.actor.attack.getModelByKey(key).name === '装備無し')
+    return !isSingle
+  }
+
   //「待機」実行可否取得
   canWait(): boolean {
     return true

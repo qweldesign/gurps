@@ -1,10 +1,10 @@
 // Combat/Action/types.ts
 
-import { type ArmorSlotKey } from '../../Equipments'
+import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
 import { type Position, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
 
-export const ACTION_KEYS = ['ready', 'attack', 'feint', 'defense', 'move', 'recovery', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'defense', 'move', 'changeWeapon', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   ready: '準備',
@@ -12,6 +12,7 @@ export const ACTION_LABELS: Record<ActionKey, string> = {
   feint: '牽制',
   defense: '全力防御',
   move: '移動',
+  changeWeapon: '装備変更',
   recovery: '回復',
   wait: '待機'
 } as const
@@ -62,6 +63,7 @@ export type ActionOptions = {
   aim?: Aim
   fullPower?: FullPower
   position?: Position
+  weaponSlotKey?: WeaponSlotKey
 }
 
 // 行動キーとオプションの組み合わせ
@@ -72,6 +74,7 @@ export type ActionRequest =
   | { key: 'feint', options: {}, targets: [Unit] }
   | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }
+  | { key: 'changeWeapon', options: { weaponSlotKey: WeaponSlotKey }, targets: [] }
   | { key: 'recovery', options: {}, targets: [] }
   | { key: 'wait', options: {}, targets: [] }
 
