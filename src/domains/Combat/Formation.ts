@@ -12,11 +12,13 @@ type Formation = { back: BackFormation, front: FrontFormation }
 // ユニットの配置を司るクラス / Formationコンポーネントに対応
 export class CombatFormation {
   public actor: Unit // CSSマーク用
+  private units: Unit[]
   private back: Map<number, Unit | null>
   private front: Map<string, Unit | null>
 
   constructor(actor: Unit, units: Unit[]) {
     this.actor = actor
+    this.units = units
     this.back = new Map<number, Unit | null>()
     this.front = new Map<string, Unit | null>()
     // Front 初期化
@@ -59,5 +61,39 @@ export class CombatFormation {
 
   get enemy(): Formation {
     return this.getFormation('enemy')
+  }
+
+  // 味方取得
+  getAllies(): Unit[] {
+    return this.units.filter(unit => unit.side === this.actor.side)
+  }
+
+  // 敵取得
+  getEnemies(): Unit[] {
+    return this.units.filter(unit => unit.side !== this.actor.side)
+  }
+
+  // 近接攻撃対象取得
+  getMeleeTargets(): Unit[] {
+    const enemies = this.getEnemies()
+    switch (this.actor.position) {
+      case 'left':
+        return enemies.filter(unit => {
+          return unit.position === 'right' || unit.position === 'center'
+        })
+
+      case 'center':
+        return enemies.filter(unit => {
+          return unit.position !== 'back'
+        })
+
+      case 'right':
+        return enemies.filter(unit => {
+          return unit.position === 'left' || unit.position === 'center'
+        })
+
+      default: // case 'back':
+        return []
+    }
   }
 }
