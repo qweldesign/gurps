@@ -59,23 +59,31 @@ export class ActionEffects {
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
     // 防御判定 (攻撃判定がクリティカルか, 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合はスキップ)
+    // 全力防御中の対象は, 最初の防御に失敗しても続けて別の防御方法を試みるため, 複数回分の結果が返ることがある
     const canDefend = target.defense.getCanBlock(aim) || target.defense.canParry || target.defense.canDodge
     if (!attackJudge.critical && canDefend) {
-      const defenseJudge = judgeDefense(actor, aim, target)
+      const defenseJudges = judgeDefense(actor, aim, target)
 
-      // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
-      // 「受け」の場合のみ, 武器の準備状態も更新する (準備の要る武器の場合, 受けの後は非準備状態になる)
-      let ready = true
-      if (defenseJudge.defenseType === 'parry') {
-        target.defense.parryCount++
-        target.attack.ready = target.attack.model.ready
-        ready = target.attack.ready === 0
-      } else if (defenseJudge.defenseType === 'block') {
-        target.defense.blockCount++
+      let defended = false
+      for (const defenseJudge of defenseJudges) {
+        // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
+        // 「受け」の場合のみ, 武器の準備状態も更新する (準備の要る武器の場合, 受けの後は非準備状態になる)
+        let ready = true
+        if (defenseJudge.defenseType === 'parry') {
+          target.defense.parryCount++
+          target.attack.ready = target.attack.model.ready
+          ready = target.attack.ready === 0
+        } else if (defenseJudge.defenseType === 'block') {
+          target.defense.blockCount++
+        }
+
+        results.push({ type: 'defense', judge: { ...defenseJudge, ready } })
+        if (defenseJudge.success) {
+          defended = true
+          break
+        }
       }
-
-      results.push({ type: 'defense', judge: { ...defenseJudge, ready } })
-      if (defenseJudge.success) return results // 防御成功時はここで処理を止める
+      if (defended) return results // 防御成功時はここで処理を止める
     }
 
     // ダメージ判定
@@ -163,6 +171,12 @@ export class ActionEffects {
       actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score }
     }
     return [{ type: 'feint', judge: feintJudge }]
+  }
+
+  //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)
+  defense(): ActionResult[] {
+    this.state.actor.defense.isFullDefenseTurn = true
+    return []
   }
 
   //「移動」実行

@@ -29,6 +29,11 @@ export class ActionAvailability {
     return this.canAttack()
   }
 
+  //「全力防御」実行可否取得
+  canDefense(): boolean {
+    return true
+  }
+
   //「移動」実行可否取得
   // 後退は自身が後方に配置されていないこと
   // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる

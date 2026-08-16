@@ -10,21 +10,33 @@ export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target:
   return { aim, fullPower, ...judge(attackTarget) }
 }
 
-// 防御の判定結果を返す
-// 「止め」「受け」「よけ」のうち, 最も成功率の高い防御を自動選択する
+// 防御の判定結果を配列で返す
+// 「止め」「受け」「よけ」の優先順で防御を試みる. いずれかが成功すればそこで終了する
+// 全力防御選択中は, 最初の防御に失敗しても, 残り試行回数の範囲で別の防御方法を続けて試みる
 // actor が target に対して牽制を成功させている場合, 防御目標値から牽制の成功度分を減算する
 // (武器の準備状態の更新は effects 側の責務とする. ここでは判定のみ行う)
-export function judgeDefense(actor: Unit, aim: Aim, target: Unit): Omit<DefenseResult, 'ready'> {
+export function judgeDefense(actor: Unit, aim: Aim, target: Unit): Array<Omit<DefenseResult, 'ready'>> {
   const defense = target.defense
   const feint = actor.attack.feint
   const feintScore = (feint && feint.target === target) ? feint.score : 0
+  const maxAttempts = defense.isFullDefense ? 2 : 1
+  const results: Array<Omit<DefenseResult, 'ready'>> = []
+
   if (defense.getCanBlock(aim)) {
-    return { defenseType: 'block', ...judge(defense.getBlockTarget(actor) - feintScore) }
-  } else if (defense.canParry) {
-    return { defenseType: 'parry', ...judge(defense.getParryTarget(actor) - feintScore) }
-  } else {
-    return { defenseType: 'dodge', ...judge(defense.getDodgeTarget() - feintScore) }
+    const blockResult = { defenseType: 'block' as const, ...judge(defense.getBlockTarget(actor) - feintScore) }
+    results.push(blockResult)
+    if (blockResult.success) return results
   }
+  if (defense.canParry && results.length < maxAttempts) {
+    const parryResult = { defenseType: 'parry' as const, ...judge(defense.getParryTarget(actor) - feintScore) }
+    results.push(parryResult)
+    if (parryResult.success) return results
+  }
+  if (results.length < maxAttempts) {
+    const dodgeResult = { defenseType: 'dodge' as const, ...judge(defense.getDodgeTarget() - feintScore) }
+    results.push(dodgeResult)
+  }
+  return results
 }
 
 // ダメージの判定結果を返す

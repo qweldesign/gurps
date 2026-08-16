@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { type Position, type CombatUnit as Unit } from '../../domains/Combat/Unit'
 import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionOptions, type ActionRequest, CombatAction as Store } from '../../domains/Combat/Action'
 
-type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
+type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmDefense' | 'attackOption' | 'aim' | 'move' | 'target' | 'hidden'
 
 type TargetPalette = 'attack' | 'feint' | 'all'
 
@@ -70,13 +70,13 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
         >特殊攻撃</button>
         <button
+          disabled={!store.availability.defense}
+          onClick={() => { setActionPalette('confirmDefense'); setActionKey('defense'); }} // 防御確認パレットへ進む
+        >全力防御</button>
+        <button
           disabled={!store.availability.move.back && !store.availability.move.left && !store.availability.move.center && !store.availability.move.right}
           onClick={() => { setActionPalette('move'); setActionKey('move'); }} // 移動オプションパレットへ進む
         >移動</button>
-        <button
-          disabled={!store.availability.wait}
-          onClick={() => { setIsExecuted(true); }} // 実行
-        >待機</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmReady'}>
         <div className="confirm__grid">
@@ -126,6 +126,18 @@ function Action({ store }: { store: Store }) {
         >実行</button>
         <button
           onClick={() => { setActionPalette('target'); setActionTargets([]); }} // ターゲットをリセットし, ターゲットパレットへ戻る
+        >戻る</button>
+      </div>
+      <div className="actions confirm" data-disable={actionPalette !== 'confirmDefense'}>
+        <div className="confirm__grid">
+          <div>{store.actor.name}</div>
+          <div className="text-left">全力防御</div>
+        </div>
+        <button
+          onClick={() => { setIsExecuted(true); }} // 実行
+        >実行</button>
+        <button
+          onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'attackOption'}>
