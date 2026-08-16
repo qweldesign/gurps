@@ -44,6 +44,8 @@ export class CombatState {
       isAlive = !this.actor.health.unconscious
     }
     this.formation = new Formation(this.actor, this.units)
+    // 前ターンのログを, その行動者の履歴として保持 (Summaryの行動ラベル表示用)
+    if (this.logs[0]) this.logs[0].actor.history = this.logs[0]
     // 新しいログを追加
     const newLog = new Log(this.actor)
     this.logs.unshift(newLog)

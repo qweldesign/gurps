@@ -14,7 +14,7 @@ function Summary({ state }: { state: State }) {
             <div>{unit.name}</div>
             <div>{unit.health.Hp} / {unit.health.maxHp}</div>
             <div className={`is-${unit.health.condition}`}>{unit.health.condition}</div>
-            <div>&nbsp;</div>
+            <div>{unit.history?.label ?? ''}</div>
           </div>
         ))}
       </div>

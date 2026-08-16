@@ -6,6 +6,7 @@ import { CombatUnitDefense as Defense } from './Unit/Defense'
 import { CombatUnitHealth as Health } from './Unit/Health'
 import { CombatUnitStatusBuff as StatusBuff } from './Unit/StatusBuff'
 import { CombatUnitStatusEffects as StatusEffects } from './Unit/StatusEffects'
+import { type CombatLog as Log } from './Log'
 
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
@@ -92,6 +93,7 @@ export class CombatUnit {
   public health: Health
   public statusBuff: StatusBuff
   public statusEffects: StatusEffects
+  public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
     const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff } = model
@@ -106,5 +108,6 @@ export class CombatUnit {
     this.health = new Health(this, maxHp)
     this.statusBuff = new StatusBuff(dmgBuff, evBuff)
     this.statusEffects = new StatusEffects()
+    this.history = null
   }
 }
