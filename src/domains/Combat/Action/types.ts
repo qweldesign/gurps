@@ -4,12 +4,14 @@ import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
 
-export const ACTION_KEYS = ['ready', 'attack', 'feint', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   ready: '準備',
   attack: '攻撃',
   feint: '牽制',
+  shoot: '射撃',
+  snipe: '狙い',
   defense: '全力防御',
   move: '移動',
   changeWeapon: '装備変更',
@@ -74,6 +76,8 @@ export type ActionRequest =
   | { key: 'ready', options: {}, targets: [] }
   | { key: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
   | { key: 'feint', options: {}, targets: [Unit] }
+  | { key: 'shoot', options: { aim: Aim }, targets: [Unit] }
+  | { key: 'snipe', options: {}, targets: [Unit] }
   | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }
   | { key: 'changeWeapon', options: { weaponSlotKey: WeaponSlotKey }, targets: [] }

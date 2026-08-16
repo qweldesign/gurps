@@ -55,9 +55,10 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
   return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
 }
 
-// 牽制の判定結果を返す (成功度がそのまま target の次の防御目標値へのペナルティになる)
+// 牽制・狙いの判定結果を返す (成功度がそのまま target の次の防御目標値へのペナルティになる)
+// 射撃武器の場合, target の姿勢・距離による修正を含める (近接武器の場合は影響なし)
 export function judgeFeint(actor: Unit, target: Unit): FeintResult {
-  return { target, ...score(actor.attack.target) }
+  return { target, ...score(actor.attack.getTarget('body', 'none', target)) }
 }
 
 // 朦朧状態からの回復判定を返す (成功: 回復, 失敗: 朦朧状態の継続)

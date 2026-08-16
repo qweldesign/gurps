@@ -55,6 +55,8 @@ export class CombatAction {
       attack: this.availabilityChecker.canAttack(),
       legAttack: this.availabilityChecker.canLegAttack(),
       feint: this.availabilityChecker.canFeint(),
+      shoot: this.availabilityChecker.canShoot(),
+      snipe: this.availabilityChecker.canSnipe(),
       defense: this.availabilityChecker.canDefense(),
       move: POSITION_KEYS.reduce((acc, position) => {
         acc[position] = this.availabilityChecker.canMove(position)
@@ -105,6 +107,14 @@ export class CombatAction {
         results = this.effects.feint(action.targets[0])
         break
 
+      case 'shoot':
+        results = this.effects.shoot(action.options.aim, action.targets[0])
+        break
+
+      case 'snipe':
+        results = this.effects.snipe(action.targets[0])
+        break
+
       case 'defense':
         results = this.effects.defense()
         break
@@ -135,7 +145,7 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
     const firstResult = results[0]
     if (action.key === 'recovery' && firstResult?.type === 'recovery' && firstResult.judge.success) {
@@ -147,6 +157,10 @@ export class CombatAction {
       nextTurn = false
     }
     if (action.key === 'changePosture' && prevPosture !== 'prone') {
+      this.unlocked = true
+      nextTurn = false
+    }
+    if (action.key === 'shoot') {
       this.unlocked = true
       nextTurn = false
     }

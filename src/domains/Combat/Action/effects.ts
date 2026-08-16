@@ -174,6 +174,16 @@ export class ActionEffects {
     return [{ type: 'feint', judge: feintJudge }]
   }
 
+  //「射撃」実行 (武器・ターゲット選定が異なるのみで,「攻撃」の通常攻撃と同じ判定・効果処理を用いる)
+  shoot(aim: Aim, target: Unit): ActionResult[] {
+    return this.attackRoutine(aim, 'none', target)
+  }
+
+  //「狙い」実行 (「牽制」と全く同じ判定・効果処理を, 近接に限らないターゲットに対して用いる)
+  snipe(target: Unit): ActionResult[] {
+    return this.feint(target)
+  }
+
   //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)
   defense(): ActionResult[] {
     this.state.actor.defense.isFullDefenseTurn = true

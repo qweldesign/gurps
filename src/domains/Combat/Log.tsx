@@ -107,7 +107,7 @@ export class CombatLog {
         messages.push(<>{`${actor} は 待機している`}</>)
         break
 
-      default: // case 'attack': case 'feint': case 'recovery':
+      default: // case 'attack': case 'feint': case 'shoot': case 'snipe': case 'recovery':
         break
     }
     messages.push(<>&nbsp;</>)
@@ -119,7 +119,7 @@ export class CombatLog {
     const messages: ReactNode[] = []
     const actor = this.actor.name
     switch (request.key) {
-      case 'attack': {
+      case 'attack': case 'shoot': {
         const target = request.targets[0].name
         results.forEach(result => {
           switch (result.type) {
@@ -180,11 +180,12 @@ export class CombatLog {
         break
       }
 
-      case 'feint': { // 牽制の判定結果ログ
+      case 'feint': case 'snipe': { // 牽制・狙いの判定結果ログ
         const target = request.targets[0].name
+        const label = request.key === 'feint' ? '牽制' : '狙い'
         results.forEach(result => {
           if (result.type !== 'feint') return
-          this.pushFeintMessages(messages, actor, target, result.judge)
+          this.pushFeintMessages(messages, actor, target, result.judge, label)
         })
         break
       }
@@ -203,14 +204,15 @@ export class CombatLog {
     return messages
   }
 
-  // 牽制の判定結果ログを追加する (「牽制」単体実行と, 全力攻撃オプション「牽制即攻撃」の両方から利用される)
-  private pushFeintMessages(messages: ReactNode[], actor: string, target: string, judge: FeintResult) {
-    messages.push(<>{`${actor} は ${target} に対して牽制を仕掛けた!`}</>)
+  // 牽制・狙いの判定結果ログを追加する (「牽制」「狙い」単体実行と, 全力攻撃オプション「牽制即攻撃」の両方から利用される)
+  private pushFeintMessages(messages: ReactNode[], actor: string, target: string, judge: FeintResult, label: string = '牽制') {
+    const opening = label === '牽制' ? `${label}を仕掛けた!` : `${label}を定めた`
+    messages.push(<>{`${actor} は ${target} に対して${opening}`}</>)
     if (judge.success) {
-      messages.push(<>{`出目は ${judge.roll}、牽制は成功した!`}</>)
+      messages.push(<>{`出目は ${judge.roll}、${label}は成功した!`}</>)
       messages.push(<>{`次のターン, ${target} は防御判定に -${judge.score} の修正が課せられる!`}</>)
     } else {
-      messages.push(<>{`出目は ${judge.roll}、牽制は失敗した...`}</>)
+      messages.push(<>{`出目は ${judge.roll}、${label}は失敗した...`}</>)
     }
   }
 

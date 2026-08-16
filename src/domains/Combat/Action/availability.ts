@@ -18,9 +18,9 @@ export class ActionAvailability {
   }
 
   //「攻撃」実行可否取得
-  // 武器が準備状態, かつ自身が前方に配置されていることが条件 (暫定)
+  // 武器が準備状態, 射撃武器ではない, かつ自身が前方に配置されていることが条件 (暫定)
   canAttack(): boolean {
-    return this.state.actor.attack.ready === 0 && this.state.actor.position !== 'back'
+    return this.state.actor.attack.ready === 0 && !this.state.actor.attack.model.isMissile && this.state.actor.position !== 'back'
   }
 
   //「脚・足首狙い」実行可否取得
@@ -34,6 +34,18 @@ export class ActionAvailability {
   // 「攻撃」と同条件
   canFeint(): boolean {
     return this.canAttack()
+  }
+
+  //「射撃」実行可否取得
+  // 武器が準備状態, かつ射撃武器を構えていることが条件
+  canShoot(): boolean {
+    return this.state.actor.attack.ready === 0 && this.state.actor.attack.model.isMissile
+  }
+
+  //「狙い」実行可否取得
+  // 「射撃」と同条件
+  canSnipe(): boolean {
+    return this.canShoot()
   }
 
   //「全力防御」実行可否取得
