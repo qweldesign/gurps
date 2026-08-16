@@ -17,6 +17,9 @@ function Action({ store }: { store: Store }) {
   const [actionTargets, setActionTargets] = useState<Unit[]>([])
   const [isExecuted, setIsExecuted] = useState<boolean>(false)
 
+  // 攻撃実行前確認パレット用の選択中ターゲット
+  const target = actionTargets[0]
+
   // execute
   const execute = async () => {
     const request = { key: actionKey, options: actionOptions, targets: actionTargets } as ActionRequest
@@ -68,6 +71,18 @@ function Action({ store }: { store: Store }) {
         >待機</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmAttack'}>
+        {target && (
+          <div className="confirm__grid">
+            <div>{store.actor.name}</div>
+            <div>{target.name}</div>
+            <div>{store.actor.attack.model.name}: {store.actor.attack.model.dmgName}</div>
+            <div>{target.defense.getModelByKey(AIM_OPTIONS[actionOptions.aim ?? 'body'].group).name}: {target.defense.getModelByKey(AIM_OPTIONS[actionOptions.aim ?? 'body'].group).dr}</div>
+            <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower ?? 'none', target)}</div>
+            <div>防御目標値: {target.defense.target}</div>
+            <div>効果: </div>
+            <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', target.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType))} 点</div>
+          </div>
+        )}
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
