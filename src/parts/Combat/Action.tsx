@@ -26,6 +26,10 @@ function Action({ store }: { store: Store }) {
   const execute = async () => {
     const request = { key: actionKey, options: actionOptions, targets: actionTargets } as ActionRequest
     await store.execute(request)
+    // 射撃・法術など, ターンを終えない行動の直後は store.unlocked が同一関数呼び出し内で false→true に戻るため,
+    // 以下の useEffect ([store.unlocked] の変化を検知する) では変化を捉えられずパレットがリセットされない
+    // ここで直接検知し, 同じ行動者のまま次のコマンド選択に戻れるようにする
+    if (store.unlocked) reset()
   }
 
   // execute後, 変数を初期状態に戻す
