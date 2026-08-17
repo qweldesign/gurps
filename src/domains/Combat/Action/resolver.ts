@@ -59,24 +59,25 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
 // 術 (直接ダメージ型/転倒効果) に対する防御判定を配列で返す
 // 「射撃の解決のように」対象が「受け」-4/「止め」-2/「よけ」のいずれかで回避判定を行う (judgeDefense と同じ優先順で解決する)
 // allowParry: false の場合,「受け」を選択肢から除外する (足首を狙う「茨の呪縛」「アースハンド」など)
+// extraMod: いずれの防御方法にも一律で加算する追加修正 (例: 「召雷」の金属装備者に対する -2)
 // 牽制の持ち越しは考慮しない (術者側の武器による牽制とは無関係のため)
-export function judgeSpellDefense(target: Unit, aim: Aim, allowParry: boolean = true): Array<Omit<DefenseResult, 'ready'>> {
+export function judgeSpellDefense(target: Unit, aim: Aim, allowParry: boolean = true, extraMod: number = 0): Array<Omit<DefenseResult, 'ready'>> {
   const defense = target.defense
   const maxAttempts = defense.isFullDefense ? 2 : 1
   const results: Array<Omit<DefenseResult, 'ready'>> = []
 
   if (defense.getCanBlock(aim)) {
-    const blockResult = { defenseType: 'block' as const, ...judge(defense.blockTarget - 2) }
+    const blockResult = { defenseType: 'block' as const, ...judge(defense.blockTarget - 2 + extraMod) }
     results.push(blockResult)
     if (blockResult.success) return results
   }
   if (allowParry && defense.canParry && results.length < maxAttempts) {
-    const parryResult = { defenseType: 'parry' as const, ...judge(defense.parryTarget - 4) }
+    const parryResult = { defenseType: 'parry' as const, ...judge(defense.parryTarget - 4 + extraMod) }
     results.push(parryResult)
     if (parryResult.success) return results
   }
   if (results.length < maxAttempts) {
-    const dodgeResult = { defenseType: 'dodge' as const, ...judge(defense.dodgeTarget) }
+    const dodgeResult = { defenseType: 'dodge' as const, ...judge(defense.dodgeTarget + extraMod) }
     results.push(dodgeResult)
   }
   return results
@@ -84,8 +85,9 @@ export function judgeSpellDefense(target: Unit, aim: Aim, allowParry: boolean = 
 
 // 術の直接ダメージ型 (射撃呪文) の判定結果を返す
 // 武器ではなく術のダイス数・ダメージ型を用いる点のみ rollDmg と異なる (DR減算・部位狙いによる急所倍率は同様に考慮する)
-export function rollSpellDmg(dice: number, dmgType: number, aim: Aim, target: Unit): DmgResult {
-  const dr = target.defense.getDR(AIM_OPTIONS[aim].group, dmgType)
+// ignoreDR: true の場合, DRを無視する (例: 「召雷」の金属防具)
+export function rollSpellDmg(dice: number, dmgType: number, aim: Aim, target: Unit, ignoreDR: boolean = false): DmgResult {
+  const dr = ignoreDR ? 0 : target.defense.getDR(AIM_OPTIONS[aim].group, dmgType)
   const mod = -dr
   const rate = aim === 'neck' || aim === 'stomach'
     ? (dmgType === 0 ? 1.5 : dmgType === 1 ? 2 : 3)

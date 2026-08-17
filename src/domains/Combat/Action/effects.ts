@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
-import { type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult } from './types'
+import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
@@ -318,16 +318,21 @@ export class ActionEffects {
     const aim = effect.aim ?? 'body'
     const allowParry = effect.allowParry ?? true
 
+    // 金属装備者へのペナルティ (「召雷」用. 対象部位の防具がSDR>2 (チェインメイル以上) なら金属製とみなす)
+    // 該当する場合, 回避判定に一律-2, かつダメージ計算でDRを無視する
+    const isMetal = effect.metalPenalty === true && target.defense.getModelByKey(AIM_OPTIONS[aim].group).sdr > 2
+    const extraMod = isMetal ? -2 : 0
+
     // 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合は防御判定自体をスキップする
     const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
     if (canDefend) {
-      const defenseJudges = judgeSpellDefense(target, aim, allowParry)
+      const defenseJudges = judgeSpellDefense(target, aim, allowParry, extraMod)
       const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
       results.push(...defenseResults)
       if (defended) return results // 防御成功時はここで処理を止める
     }
 
-    const dmgJudge = rollSpellDmg(effect.dice, effect.dmgType, aim, target)
+    const dmgJudge = rollSpellDmg(effect.dice, effect.dmgType, aim, target, isMetal)
     results.push(...this.resolveDamage(dmgJudge, aim, effect.dmgType, target))
 
     return results

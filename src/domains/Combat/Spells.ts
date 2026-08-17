@@ -15,7 +15,7 @@ const WOOD_SPELL: Spell[] = [
   { id: 2, label: '風の刃', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 1 }], targetScope: 'enemy' },
   { id: 3, label: 'サイレンス', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'silence', duration: 'margin' }], targetScope: 'enemy' },
   { id: 4, label: 'リストレーション', spellType: 'range', spellCast: 3 },
-  { id: 5, label: '召雷', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 0 }], targetScope: 'enemy' }
+  { id: 5, label: '召雷', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 0, metalPenalty: true }], targetScope: 'enemy' }
 ] as const
 
 const FIRE_SPELL: Spell[] = [
@@ -96,11 +96,13 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // (DR減算・部位狙いによる負傷上限/故障・朦朧/転倒・気絶/死亡までの解決は, 通常の攻撃・射撃と共通のロジックを用いる)
 // trip: dmg と同じ回避判定を経た上で, ダメージの代わりに転倒判定 (mod 付き) のみを行う (「アースハンド」用)
 // aim: 未指定なら 'body' (通常の射撃呪文). allowParry: 未指定なら true. 足首を狙う術など「受け」による回避が許されない場合のみ false を指定する
+// metalPenalty: true の場合, 対象の (aim部位に対応する) 防具が金属製 (SDR > 2, チェインメイル以上) なら,
+// 回避判定に一律 -2 の修正を与え, かつダメージ計算でDRを無視する (例: 「召雷」)
 export type SpellEffect =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget, duration: number }
   | { kind: 'debuff', target: StatusEffectTarget, duration: number | 'margin', resistMod?: number }
-  | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean }
+  | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean }
   | { kind: 'trip', mod?: number, aim?: Aim, allowParry?: boolean }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)
