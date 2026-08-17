@@ -120,9 +120,10 @@ export type FeintResult = Score & {
   target: Unit
 }
 
-// 法術の効果適用結果 (buff は発動成功時に無条件適用されるため常に成功, debuff は抵抗判定の成否による)
+// 法術の効果適用結果 (buff・status は発動成功時に無条件適用されるため常に成功, debuff は抵抗判定の成否による)
 export type SpellEffectResult =
   | { kind: 'buff', target: SpellBuffTarget }
+  | { kind: 'status', target: StatusEffectTarget }
   | { kind: 'debuff', target: StatusEffectTarget, applied: boolean }
 
 // 法術の判定結果 (発動した術の名称と, 発動成功時に適用された効果の一覧を持つ)

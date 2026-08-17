@@ -260,7 +260,9 @@ export class ActionEffects {
 
   // 術の効果を1つ適用し, 結果を返す
   // buff: 無条件で適用する (発動判定自体は既に成功している)
-  // debuff: 対象自身の抵抗判定 (MRE) に失敗した場合のみ適用する. duration が 'margin' なら失敗度, 数値ならその値をそのままターン数とする
+  // status: 無条件で適用する (抵抗判定を伴わない StatusEffects への直接付与)
+  // debuff: 対象自身の抵抗判定 (MRE, resistMod があれば加算した上で) に失敗した場合のみ適用する
+  //         duration が 'margin' なら失敗度, 数値ならその値をそのままターン数とする
   private applySpellEffect(target: Unit, effect: SpellEffect): SpellEffectResult {
     if (effect.kind === 'buff') {
       if (effect.target === 'level') target.statusBuff.addLevelBuff()
@@ -270,8 +272,13 @@ export class ActionEffects {
       return { kind: 'buff', target: effect.target }
     }
 
+    if (effect.kind === 'status') {
+      target.statusEffects[effect.target] = effect.duration
+      return { kind: 'status', target: effect.target }
+    }
+
     // effect.kind === 'debuff'
-    const resistJudge = judgeResist(target)
+    const resistJudge = judgeResist(target, effect.resistMod ?? 0)
     const applied = !resistJudge.success
     if (applied) {
       target.statusEffects[effect.target] = effect.duration === 'margin' ? -resistJudge.score : effect.duration

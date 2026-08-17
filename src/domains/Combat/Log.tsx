@@ -243,6 +243,8 @@ export class CombatLog {
         spellJudge.effectResults.forEach(result => {
           if (result.kind === 'buff') {
             messages.push(<>{`${target} の ${SPELL_BUFF_LABELS[result.target]} が上昇した!`}</>)
+          } else if (result.kind === 'status') {
+            messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} の効果を得た!`}</>)
           } else if (result.applied) {
             messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} 状態になった!`}</>)
           } else {

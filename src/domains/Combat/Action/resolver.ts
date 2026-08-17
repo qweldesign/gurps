@@ -75,8 +75,9 @@ export function judgeSpell(actor: Unit, element: SpellElement, spellId: number):
 }
 
 // 術のデバフ効果に対する抵抗判定を返す (対象自身の精神抵抗値 (MRE) を用いる. 成功度がそのまま失敗度ターン数の元になる)
-export function judgeResist(target: Unit): Score {
-  return score(target.defense.mre)
+// mod: 術によっては抵抗判定に修正がかかる (例: 「痛覚鈍麻」「金貨」の -2. 未指定は 0)
+export function judgeResist(target: Unit, mod: number = 0): Score {
+  return score(target.defense.mre + mod)
 }
 
 // 朦朧状態からの回復判定を返す (成功: 回復, 失敗: 朦朧状態の継続)
