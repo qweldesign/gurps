@@ -6,7 +6,7 @@ export class CombatUnitHealth {
   private self: Unit
   public maxHp: number
   private _injury: number // 負傷 (HPの減少)
-  public stunned: boolean // 朦朧状態
+  private _stunned: boolean // 朦朧状態
   public unconscious: boolean // 気絶
   public dead: boolean // 死亡
   public confused: boolean // 精神朦朧
@@ -22,7 +22,7 @@ export class CombatUnitHealth {
     this.self = self
     this.maxHp = maxHp
     this._injury = 0
-    this.stunned = false
+    this._stunned = false
     this.unconscious = false
     this.dead = false
     this.confused = false
@@ -55,6 +55,16 @@ export class CombatUnitHealth {
 
   get injury() {
     return this._injury
+  }
+
+  // 朦朧状態への代入 (新たに true になろうとする代入のみ, 痛覚鈍麻状態の間はブロックする. false への代入 (回復) は常に通す)
+  set stunned(value: boolean) {
+    if (value && this.self.statusEffects.resistant) return
+    this._stunned = value
+  }
+
+  get stunned() {
+    return this._stunned
   }
 
   // Hp
