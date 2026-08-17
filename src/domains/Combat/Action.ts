@@ -40,8 +40,11 @@ export class CombatAction {
     })
 
     // 朦朧状態の場合は「回復」を自動実行する
+    // 火だるま状態の場合は「消火」を自動実行する (両方に該当する場合は「回復」を優先し,「消火」は朦朧から回復した後のターンに持ち越す)
     if (this.actor.health.stunned) {
       this.execute({ key: 'recovery', options: {}, targets: [] })
+    } else if (this.actor.health.burning) {
+      this.execute({ key: 'extinguish', options: {}, targets: [] })
     }
   }
 
@@ -150,6 +153,10 @@ export class CombatAction {
 
       case 'recovery':
         results = this.effects.recovery()
+        break
+
+      case 'extinguish':
+        results = this.effects.extinguish()
         break
 
       default: // case 'wait':

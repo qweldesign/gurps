@@ -5,7 +5,7 @@ import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
 import { type SpellElement, type SpellBuffTarget, type StatusEffectTarget } from '../Spells'
 
-export const ACTION_KEYS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'cast', 'spell', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
+export const ACTION_KEYS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'cast', 'spell', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'extinguish', 'wait'] as const
 
 export const ACTION_LABELS: Record<ActionKey, string> = {
   ready: '準備',
@@ -20,6 +20,7 @@ export const ACTION_LABELS: Record<ActionKey, string> = {
   changeWeapon: '装備変更',
   changePosture: '姿勢変更',
   recovery: '回復',
+  extinguish: '消火', // 火だるま状態のユニットのターン開始時に自動実行される (「回復」と同様, プレイヤーが選択する行動ではない)
   wait: '待機'
 } as const
 
@@ -94,6 +95,7 @@ export type ActionRequest =
   | { key: 'changeWeapon', options: { weaponSlotKey: WeaponSlotKey }, targets: [] }
   | { key: 'changePosture', options: { posture: Posture }, targets: [] }
   | { key: 'recovery', options: {}, targets: [] }
+  | { key: 'extinguish', options: {}, targets: [] }
   | { key: 'wait', options: {}, targets: [] }
 
 // 防御種別

@@ -333,7 +333,17 @@ export class ActionEffects {
     }
 
     const dmgJudge = rollSpellDmg(effect.dice, effect.dmgType, aim, target, isMetal)
-    results.push(...this.resolveDamage(dmgJudge, aim, effect.dmgType, target))
+    const dmgResults = this.resolveDamage(dmgJudge, aim, effect.dmgType, target)
+    results.push(...dmgResults)
+
+    // 燃え上がり (「火球」「焼殺」用. DRを引いたダメージが4点以上で火だるま状態になる. 水舞のDRバフ (水の鎧) を纏っている間は免れる)
+    if (effect.burnOnDmg) {
+      const appliedDmg = dmgResults.find(result => result.type === 'dmg')?.judge.roll ?? 0
+      const hasWaterArmor = target.statusBuff.dr > 0
+      if (appliedDmg >= 4 && !hasWaterArmor) {
+        target.health.burning = true
+      }
+    }
 
     return results
   }
@@ -396,5 +406,11 @@ export class ActionEffects {
       this.state.actor.health.stunned = false // 回復
     }
     return [{ type: 'recovery', judge: recoveryJudge }]
+  }
+
+  // 火だるま状態からの「消火」実行 (burning な状態のターン開始時に自動実行される. 判定は無く, 行動を消費して無条件に鎮火する)
+  extinguish(): ActionResult[] {
+    this.state.actor.health.burning = false
+    return []
   }
 }

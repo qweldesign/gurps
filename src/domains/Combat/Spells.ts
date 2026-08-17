@@ -21,10 +21,10 @@ const WOOD_SPELL: Spell[] = [
 const FIRE_SPELL: Spell[] = [
   { id: 0, label: 'ヒロイズム', spellType: 'assist', spellCast: 1, effects: [{ kind: 'buff', target: 'level' }], targetScope: 'ally' },
   { id: 1, label: '閃光', spellType: 'range', spellCast: 1 },
-  { id: 2, label: '火球', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 0 }], targetScope: 'enemy' },
+  { id: 2, label: '火球', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 0, burnOnDmg: true }], targetScope: 'enemy' },
   { id: 3, label: '炎の嵐', spellType: 'range', spellCast: 2 },
   { id: 4, label: '火の鳥', spellType: 'range', spellCast: 3 },
-  { id: 5, label: '焼殺', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0 }], targetScope: 'enemy' }
+  { id: 5, label: '焼殺', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0, burnOnDmg: true }], targetScope: 'enemy' }
 ] as const
 
 const EARTH_SPELL: Spell[] = [
@@ -98,11 +98,13 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // aim: 未指定なら 'body' (通常の射撃呪文). allowParry: 未指定なら true. 足首を狙う術など「受け」による回避が許されない場合のみ false を指定する
 // metalPenalty: true の場合, 対象の (aim部位に対応する) 防具が金属製 (SDR > 2, チェインメイル以上) なら,
 // 回避判定に一律 -2 の修正を与え, かつダメージ計算でDRを無視する (例: 「召雷」)
+// burnOnDmg: true の場合, DRを引いたダメージが4点以上で対象を火だるま状態 (Health.burning) にする (例: 「火球」「焼殺」)
+// 水舞のDRバフ (水の鎧) を纏っている対象は免れる. 火だるま状態のユニットは次の自ターン開始時に自動で「消火」を行う (行動を消費する)
 export type SpellEffect =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget, duration: number }
   | { kind: 'debuff', target: StatusEffectTarget, duration: number | 'margin', resistMod?: number }
-  | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean }
+  | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean, burnOnDmg?: boolean }
   | { kind: 'trip', mod?: number, aim?: Aim, allowParry?: boolean }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)

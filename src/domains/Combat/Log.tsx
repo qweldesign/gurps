@@ -120,6 +120,10 @@ export class CombatLog {
         messages.push(<>{`${actor} は ${SPELL_ELEMENT_LABELS[request.options.element]} の呪文に集中している`}</>)
         break
 
+      case 'extinguish':
+        messages.push(<>{`${actor} は 燃えている体を地面に転がして消火した!`}</>)
+        break
+
       default: // case 'attack': case 'feint': case 'shoot': case 'snipe': case 'recovery': case 'spell':
         break
     }
