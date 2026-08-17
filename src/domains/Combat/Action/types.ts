@@ -3,7 +3,7 @@
 import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
-import { type SpellElement } from '../Spells'
+import { type SpellElement, type SpellBuffTarget, type StatusEffectTarget } from '../Spells'
 
 export const ACTION_KEYS = ['ready', 'attack', 'feint', 'shoot', 'snipe', 'cast', 'spell', 'defense', 'move', 'changeWeapon', 'changePosture', 'recovery', 'wait'] as const
 
@@ -120,9 +120,15 @@ export type FeintResult = Score & {
   target: Unit
 }
 
-// 法術の判定結果 (発動した術の名称を持つ)
+// 法術の効果適用結果 (buff は発動成功時に無条件適用されるため常に成功, debuff は抵抗判定の成否による)
+export type SpellEffectResult =
+  | { kind: 'buff', target: SpellBuffTarget }
+  | { kind: 'debuff', target: StatusEffectTarget, applied: boolean }
+
+// 法術の判定結果 (発動した術の名称と, 発動成功時に適用された効果の一覧を持つ)
 export type SpellResult = Judge & {
   spell: string
+  effectResults: SpellEffectResult[]
 }
 
 // 頭・四肢の故障結果 (判定は伴わず, 部位のみを持つ)

@@ -22,6 +22,14 @@ function Action({ store }: { store: Store }) {
   // 攻撃実行前確認パレット用の選択中ターゲット
   const target = actionTargets[0]
 
+  // 法術の対象選択パレット用の対象プール (術の targetScope に応じて出し分ける)
+  const spellTargetPool = actionOptions.element !== undefined && actionOptions.spellId !== undefined
+    ? (() => {
+        const scope = SPELL_LIST[actionOptions.element][actionOptions.spellId].targetScope
+        return scope === 'all' ? store.target.all : scope === 'enemy' ? store.target.enemies : store.target.allies
+      })()
+    : []
+
   // execute
   const execute = async () => {
     const request = { key: actionKey, options: actionOptions, targets: actionTargets } as ActionRequest
@@ -244,8 +252,8 @@ function Action({ store }: { store: Store }) {
             disabled={spell.id >= store.actor.spells[element] - 10 || store.actor.spellCast[element] < spell.spellCast}
             onClick={() => {
               setActionOptions({ element, spellId: spell.id })
-              if (spell.effect?.kind === 'buff') {
-                // バフ系の術は対象 (自身 or 味方) の選択を要するため, ターゲットパレットへ進む
+              if (spell.targetScope) {
+                // 対象範囲が指定された術は対象選択を要するため, ターゲットパレットへ進む
                 setActionPalette('target')
                 setTargetPalette('spell')
               } else {
@@ -365,7 +373,7 @@ function Action({ store }: { store: Store }) {
         )}
         {targetPalette === 'spell' && (
           <>
-            {store.target.allies.map(target => ( // 味方 (自身を含む) から選択する
+            {spellTargetPool.map(target => ( // 術の targetScope に応じたプール (ally/enemy/all) から選択する
               <button
                 key={target.combatId}
                 onClick={() => { setActionPalette('confirmSpell'); setActionTargets([target]); }} // ターゲットをセットし, 法術確認パレットへ進む

@@ -1,7 +1,7 @@
 // Combat/Action/resolver.ts
 
 import { type CombatUnit as Unit } from '../Unit'
-import { judge, roll, score, type Judge } from '../Dice'
+import { judge, roll, score, type Judge, type Score } from '../Dice'
 import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from './types'
 import { SPELL_LIST, type SpellElement } from '../Spells'
 
@@ -68,10 +68,15 @@ export function judgeCast(actor: Unit, element: SpellElement): Judge | null {
   return judge(actor.spells[element] - 6)
 }
 
-// 「法術」の判定結果を返す (発動する術の名称を含む)
-export function judgeSpell(actor: Unit, element: SpellElement, spellId: number): SpellResult {
+// 「法術」の判定結果を返す (発動する術の名称を含む. 効果の適用結果は effects.ts 側で埋める)
+export function judgeSpell(actor: Unit, element: SpellElement, spellId: number): Omit<SpellResult, 'effectResults'> {
   const spell = SPELL_LIST[element][spellId].label
   return { spell, ...judge(actor.spells[element]) }
+}
+
+// 術のデバフ効果に対する抵抗判定を返す (対象自身の精神抵抗値 (MRE) を用いる. 成功度がそのまま失敗度ターン数の元になる)
+export function judgeResist(target: Unit): Score {
+  return score(target.defense.mre)
 }
 
 // 朦朧状態からの回復判定を返す (成功: 回復, 失敗: 朦朧状態の継続)

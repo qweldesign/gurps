@@ -4,7 +4,7 @@ import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
 import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult } from './Action'
-import { SPELL_ELEMENT_LABELS, SPELL_LIST, SPELL_BUFF_LABELS } from './Spells'
+import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, STATUS_EFFECT_LABELS } from './Spells'
 
 let count = 0
 
@@ -232,18 +232,23 @@ export class CombatLog {
         })
         break
 
-      case 'spell': { // 法術の発動判定結果ログ (成功時のみ, 対応する効果があればその適用結果も表示する)
+      case 'spell': { // 法術の発動判定結果ログ (成功時のみ, 適用された効果の結果も表示する)
         const spellJudge = (results[0].judge as SpellResult)
         if (!spellJudge.success) {
           messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
           break
         }
         messages.push(<>{`${actor} の ${spellJudge.spell} 発動!!`}</>)
-        const effect = SPELL_LIST[request.options.element][request.options.spellId].effect
-        if (effect?.kind === 'buff') {
-          const target = request.targets[0]
-          messages.push(<>{`${target.name} の ${SPELL_BUFF_LABELS[effect.target]} が上昇した!`}</>)
-        }
+        const target = request.targets[0].name
+        spellJudge.effectResults.forEach(result => {
+          if (result.kind === 'buff') {
+            messages.push(<>{`${target} の ${SPELL_BUFF_LABELS[result.target]} が上昇した!`}</>)
+          } else if (result.applied) {
+            messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} 状態になった!`}</>)
+          } else {
+            messages.push(<>{`${target} は抵抗した!`}</>)
+          }
+        })
         break
       }
 
