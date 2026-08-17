@@ -69,6 +69,7 @@ export class CombatUnitAttack {
   get target(): number {
     let target = this.model.level
     target += POSTURE_MODS[this.self.posture].attackMod // 姿勢による修正
+    target += this.self.statusBuff.level // 命中UPバフ (ヒロイズム)
     return Math.max(target, 4)
   }
 
@@ -87,7 +88,7 @@ export class CombatUnitAttack {
     const dmgType = this.model.dmgType
     let count = this.model.dmgDice
     count -= fullPower === 'dmg' ? 1 : 0
-    let mod = this.model.dmgMod - dr
+    let mod = this.model.dmgMod - dr + this.self.statusBuff.dmg // 攻撃UPバフ (ベルセルク)
     mod += fullPower === 'dmg' ? 6 : 0
     const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
     return Math.max(0, Math.floor((count * 3.5 + mod) * rate))

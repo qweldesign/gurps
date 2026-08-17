@@ -47,7 +47,7 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
   const dr = target.defense.getDR(AIM_OPTIONS[aim].group, attack.dmgType)
   let count = attack.dmgDice
   count -= fullPower === 'dmg' ? 1 : 0 // 全力攻撃オプション「ダメージ安定」
-  let mod = attack.dmgMod - dr
+  let mod = attack.dmgMod - dr + actor.statusBuff.dmg // 攻撃UPバフ (ベルセルク)
   mod += fullPower === 'dmg' ? 6 : 0 // 全力攻撃オプション「ダメージ安定」
   const rate = aim === 'neck' || aim === 'stomach'
     ? (attack.dmgType === 0 ? 1.5 : attack.dmgType === 1 ? 2 : 3)

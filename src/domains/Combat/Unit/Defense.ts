@@ -66,7 +66,7 @@ export class CombatUnitDefense {
   }
 
   get parryTarget() {
-    let target = this._parryTarget
+    let target = this._parryTarget + this.self.statusBuff.ev // 回避UPバフ (ヘイスト)
     if (this.self.posture === 'prone') {
       target -= 4 // 転倒状態による修正
     } else {
@@ -77,7 +77,7 @@ export class CombatUnitDefense {
   }
 
   get blockTarget() {
-    let target = this._blockTarget
+    let target = this._blockTarget + this.self.statusBuff.ev // 回避UPバフ (ヘイスト)
     if (this.self.posture === 'prone') {
       target -= 4 // 転倒状態による修正
     } else {
@@ -88,7 +88,7 @@ export class CombatUnitDefense {
   }
 
   get dodgeTarget() {
-    let target = this._dodgeTarget
+    let target = this._dodgeTarget + this.self.statusBuff.ev // 回避UPバフ (ヘイスト)
     if (this.self.posture === 'prone') {
       target -= 4 // 転倒状態による修正
     } else {
@@ -208,6 +208,7 @@ export class CombatUnitDefense {
   // 防御キーとダメージ型を指定してダメージ抵抗を取得
   getDR(key: ArmorSlotKey = 'body', dmgType: number = 0) {
     const model = this.getModelByKey(key)
-    return dmgType === 2 ? model.tdr : model.sdr
+    const base = dmgType === 2 ? model.tdr : model.sdr
+    return base + this.self.statusBuff.dr // 防御UPバフ (水舞)
   }
 }
