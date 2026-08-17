@@ -7,6 +7,8 @@ import Summary from './Combat/Summary'
 import Timeline from './Combat/Timeline'
 import { SampleCharacter } from '../domains/Sample/Character'
 import { CombatState as State } from '../domains/Combat/State'
+import DevProgress from './DevProgress'
+import { SPELLS_DEV_PROGRESS } from '../devProgress/spells'
 
 type QueueItem = {
   node: ReactNode
@@ -107,34 +109,39 @@ function Combat() {
   }, [])
 
   return (
-    <div className="p-6">
-      <div className="table-wrapper">
-        {stateRef.current && (
-          <div className="row justify-center min-w-lg lg:min-w-5xl">
-            <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
-              <h3 className="m-0 border-0 font-serif text-sm">Formation</h3>
-              {stateRef.current.formation && (
-                <Formation store={stateRef.current.formation} />
-              )}
-            </div>
-            <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
-              <h3 className="m-0 border-0 font-serif text-sm">Summary</h3>
-              <Summary state={stateRef.current} />
-            </div>
-            <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
-              <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
-              {stateRef.current.action && (
-                <Action store={stateRef.current.action} />
-              )}
-            </div>
-            <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
-              <h3 className="m-0 border-0 font-serif text-sm">Log</h3>
-              <Timeline ref={timelineRef} messages={messages} />
-            </div>
-          </div> 
-        )}
+    <>
+      <div className="p-6">
+        <div className="table-wrapper">
+          {stateRef.current && (
+            <div className="row justify-center min-w-lg lg:min-w-5xl">
+              <div id="formation" className="relative order-1 w-lg h-48 p-3 bg-white/15">
+                <h3 className="m-0 border-0 font-serif text-sm">Formation</h3>
+                {stateRef.current.formation && (
+                  <Formation store={stateRef.current.formation} />
+                )}
+              </div>
+              <div id="summary" className="relative order-2 lg:order-3 w-lg h-96 p-3 bg-white/30">
+                <h3 className="m-0 border-0 font-serif text-sm">Summary</h3>
+                <Summary state={stateRef.current} />
+              </div>
+              <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
+                <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
+                {stateRef.current.action && (
+                  <Action store={stateRef.current.action} />
+                )}
+              </div>
+              <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
+                <h3 className="m-0 border-0 font-serif text-sm">Log</h3>
+                <Timeline ref={timelineRef} messages={messages} />
+              </div>
+            </div> 
+          )}
+        </div>
       </div>
-    </div>
+      <div className="mt-24 px-6">
+        <DevProgress tasks={SPELLS_DEV_PROGRESS} />
+      </div>
+    </>
   )
 }
 

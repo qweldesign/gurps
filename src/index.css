@@ -285,6 +285,10 @@
     @apply px-3
   }
 
+  .progress.w-1\/1 {
+    @apply w-1/1 bg-emerald-400/25 -z-1;
+  }
+
   .cover {
     @apply fixed inset-0 -z-10 w-1/1 h-1/1;
   }
