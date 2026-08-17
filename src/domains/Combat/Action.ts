@@ -127,7 +127,7 @@ export class CombatAction {
         break
 
       case 'spell':
-        results = this.effects.spell(action.options.element, action.options.spellId)
+        results = this.effects.spell(action.options.element, action.options.spellId, action.targets[0])
         break
 
       case 'defense':

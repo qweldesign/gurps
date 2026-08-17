@@ -78,8 +78,9 @@ export type ActionOptions = {
 
 // 行動キーとオプションの組み合わせ
 // targets は「攻撃」等, ターゲット選択を伴う行動のみ空でない配列になる
-// 「集中」「法術」は現状 (効果未実装, 判定ログのみ) ターゲットを取らない. 系統ごとの効果 (assist/resist/shoot/range/recover/defense/other) を
-// 実装する際に, shoot 系統の術など対象を要するものが出てくるので, その段階で targets: [Unit] へ拡張する
+// 「集中」は詠唱時間を蓄積するだけの行動のためターゲットを取らない
+// 「法術」はバフ系のみ対象 (自身 or 味方) を要するため targets: [Unit] を持つ. 対象を持たない術は暫定的に自身を対象とする
+// (shoot/range 系統の術など, 敵を対象に取るものを実装する段階で, 対象選択の分岐をさらに広げる)
 export type ActionRequest =
   | { key: 'ready', options: {}, targets: [] }
   | { key: 'attack', options: { aim: Aim, fullPower: FullPower }, targets: [Unit] }
@@ -87,7 +88,7 @@ export type ActionRequest =
   | { key: 'shoot', options: { aim: Aim }, targets: [Unit] }
   | { key: 'snipe', options: {}, targets: [Unit] }
   | { key: 'cast', options: { element: SpellElement }, targets: [] }
-  | { key: 'spell', options: { element: SpellElement, spellId: number }, targets: [] }
+  | { key: 'spell', options: { element: SpellElement, spellId: number }, targets: [Unit] }
   | { key: 'defense', options: {}, targets: [] }
   | { key: 'move', options: { position: Position }, targets: [] }
   | { key: 'changeWeapon', options: { weaponSlotKey: WeaponSlotKey }, targets: [] }

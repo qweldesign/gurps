@@ -5,7 +5,7 @@ import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { type Aim, type FullPower, type ActionResult, type DefenseResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeCast, judgeSpell, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
-import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
+import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -248,10 +248,28 @@ export class ActionEffects {
   }
 
   //「法術」実行 (蓄積した詠唱時間を消費して発動する. 全ての系統の詠唱時間をリセットする)
-  spell(element: SpellElement, spellId: number): ActionResult[] {
+  // 発動判定に成功した場合のみ, 術に対応する効果を target (バフ系: 自身 or 選択した味方) に適用する
+  spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
-    return [{ type: 'spell', judge: judgeSpell(actor, element, spellId) }]
+    const spellJudge = judgeSpell(actor, element, spellId)
+    if (spellJudge.success) {
+      this.applySpellEffect(target, SPELL_LIST[element][spellId].effect)
+    }
+    return [{ type: 'spell', judge: spellJudge }]
+  }
+
+  // 術の効果適用 (未対応の効果種別は何もしない. 今後 dmg/debuff/recover 等を追加予定)
+  private applySpellEffect(target: Unit, effect?: SpellEffect) {
+    if (!effect) return
+    switch (effect.kind) {
+      case 'buff':
+        if (effect.target === 'level') target.statusBuff.addLevelBuff()
+        else if (effect.target === 'dmg') target.statusBuff.addDmgBuff()
+        else if (effect.target === 'ev') target.statusBuff.addEvBuff()
+        else if (effect.target === 'dr') target.statusBuff.addDrBuff()
+        break
+    }
   }
 
   //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)

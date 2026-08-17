@@ -9,7 +9,7 @@ export const SPELL_ELEMENT_LABELS: Record<string, ParameterKey> = {
 } as const
 
 const WOOD_SPELL: Spell[] = [
-  { id: 0, label: 'ヘイスト', spellType: 'assist', spellCast: 1 },
+  { id: 0, label: 'ヘイスト', spellType: 'assist', spellCast: 1, effect: { kind: 'buff', target: 'ev' } },
   { id: 1, label: '茨の呪縛', spellType: 'shoot', spellCast: 1 },
   { id: 2, label: '風の刃', spellType: 'shoot', spellCast: 2 },
   { id: 3, label: 'サイレンス', spellType: 'resist', spellCast: 2 },
@@ -18,7 +18,7 @@ const WOOD_SPELL: Spell[] = [
 ] as const
 
 const FIRE_SPELL: Spell[] = [
-  { id: 0, label: 'ヒロイズム', spellType: 'assist', spellCast: 1 },
+  { id: 0, label: 'ヒロイズム', spellType: 'assist', spellCast: 1, effect: { kind: 'buff', target: 'level' } },
   { id: 1, label: '閃光', spellType: 'range', spellCast: 1 },
   { id: 2, label: '火球', spellType: 'shoot', spellCast: 2 },
   { id: 3, label: '炎の嵐', spellType: 'range', spellCast: 2 },
@@ -27,7 +27,7 @@ const FIRE_SPELL: Spell[] = [
 ] as const
 
 const EARTH_SPELL: Spell[] = [
-  { id: 0, label: 'ベルセルク', spellType: 'resist', spellCast: 1 },
+  { id: 0, label: 'ベルセルク', spellType: 'resist', spellCast: 1, effect: { kind: 'buff', target: 'dmg' } },
   { id: 1, label: 'アースハンド', spellType: 'shoot', spellCast: 1 },
   { id: 2, label: '大地の癒し', spellType: 'recover', spellCast: 2 },
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2 },
@@ -47,7 +47,7 @@ const METAL_SPELL: Spell[] = [
 const WATER_SPELL: Spell[] = [
   { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1 },
   { id: 1, label: 'ぼんやり', spellType: 'resist', spellCast: 1 },
-  { id: 2, label: '水舞', spellType: 'assist', spellCast: 2 },
+  { id: 2, label: '水舞', spellType: 'assist', spellCast: 2, effect: { kind: 'buff', target: 'dr' } },
   { id: 3, label: '濃霧', spellType: 'other', spellCast: 2 },
   { id: 4, label: '時間遡行', spellType: 'defense', spellCast: 3 },
   { id: 5, label: '吹雪', spellType: 'range', spellCast: 3 }
@@ -70,10 +70,23 @@ export type Spells = Record<SpellElement, number>
 // 型分類
 type SpellType = 'assist' | 'resist' | 'shoot' | 'range' | 'recover' | 'defense' | 'other'
 
+// バフ効果の対象 (StatusBuffの対応する加算メソッドに対応)
+export type SpellBuffTarget = 'level' | 'dmg' | 'ev' | 'dr'
+
+// バフ効果のログ表示用ラベル
+export const SPELL_BUFF_LABELS: Record<SpellBuffTarget, string> = {
+  level: '命中', dmg: '攻撃', ev: '回避', dr: '防御'
+} as const
+
+// 術の機械的効果 (対応するもののみ定義する. 未定義の術は今のところ演出のみ, もしくはGM裁定に委ねる)
+export type SpellEffect =
+  | { kind: 'buff', target: SpellBuffTarget }
+
 // 法術
 type Spell = {
   id: number
   label: string
   spellType: SpellType
   spellCast: number
+  effect?: SpellEffect
 }

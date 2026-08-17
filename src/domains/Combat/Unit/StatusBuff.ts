@@ -27,6 +27,26 @@ export class CombatUnitStatusBuff {
     this.drBuff = Math.max(this.drBuff - 1, 0)
   }
 
+  // ヒロイズムの付与 (10ターン, +3まで累積)
+  addLevelBuff() {
+    this.levelBuff = Math.min(this.levelBuff + 10, 30)
+  }
+
+  // ベルセルクの付与 (10ターン, +3まで累積)
+  addDmgBuff() {
+    this.dmgBuff = Math.min(this.dmgBuff + 10, 30)
+  }
+
+  // ヘイストの付与 (10ターン, +3まで累積)
+  addEvBuff() {
+    this.evBuff = Math.min(this.evBuff + 10, 30)
+  }
+
+  // 水舞の付与 (10ターン, 累積しない)
+  addDrBuff() {
+    this.drBuff = 10
+  }
+
   get level() {
     // 残ターン数の10分の1 (端数切り上げ) が実際の効果
     return Math.ceil(this.levelBuff / 10)

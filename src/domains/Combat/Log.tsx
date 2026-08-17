@@ -4,7 +4,7 @@ import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
 import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult } from './Action'
-import { SPELL_ELEMENT_LABELS } from './Spells'
+import { SPELL_ELEMENT_LABELS, SPELL_LIST, SPELL_BUFF_LABELS } from './Spells'
 
 let count = 0
 
@@ -41,8 +41,10 @@ export class CombatLog {
       case 'cast':
         return `${ACTION_LABELS[request.key]}:${SPELL_ELEMENT_LABELS[request.options.element]}(${this.actor.spellCast[request.options.element]})`
 
-      case 'spell':
-        return (results[0].judge as SpellResult).spell
+      case 'spell': {
+        const spellJudge = results[0].judge as SpellResult
+        return spellJudge.success ? spellJudge.spell : `${spellJudge.spell}(不発)`
+      }
 
       case 'move':
         return `${ACTION_LABELS[request.key]}:${POSITION_LABELS[request.options.position]}`
@@ -118,11 +120,7 @@ export class CombatLog {
         messages.push(<>{`${actor} は ${SPELL_ELEMENT_LABELS[request.options.element]} の呪文に集中している`}</>)
         break
 
-      case 'spell':
-        messages.push(<>{`${actor} の ${(results[0].judge as SpellResult).spell} 発動!!`}</>)
-        break
-
-      default: // case 'attack': case 'feint': case 'shoot': case 'snipe': case 'recovery':
+      default: // case 'attack': case 'feint': case 'shoot': case 'snipe': case 'recovery': case 'spell':
         break
     }
     messages.push(<>&nbsp;</>)
@@ -234,7 +232,22 @@ export class CombatLog {
         })
         break
 
-      default: // case 'ready': case 'move': case 'changeWeapon': case 'changePosture': case 'wait': case 'spell':
+      case 'spell': { // 法術の発動判定結果ログ (成功時のみ, 対応する効果があればその適用結果も表示する)
+        const spellJudge = (results[0].judge as SpellResult)
+        if (!spellJudge.success) {
+          messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
+          break
+        }
+        messages.push(<>{`${actor} の ${spellJudge.spell} 発動!!`}</>)
+        const effect = SPELL_LIST[request.options.element][request.options.spellId].effect
+        if (effect?.kind === 'buff') {
+          const target = request.targets[0]
+          messages.push(<>{`${target.name} の ${SPELL_BUFF_LABELS[effect.target]} が上昇した!`}</>)
+        }
+        break
+      }
+
+      default: // case 'ready': case 'move': case 'changeWeapon': case 'changePosture': case 'wait':
         break
     }
     return messages

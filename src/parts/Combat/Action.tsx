@@ -8,7 +8,7 @@ import { type ActionKey, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, A
 
 type ActionPalette = 'main' | 'confirmReady' | 'confirmAttack' | 'confirmFeint' | 'confirmSpell' | 'confirmDefense' | 'attackOption' | 'aim' | 'elements' | 'spell' | 'move' | 'changeWeapon' | 'changePosture' | 'target' | 'hidden'
 
-type TargetPalette = 'attack' | 'feint' | 'shoot' | 'snipe' | 'all'
+type TargetPalette = 'attack' | 'feint' | 'shoot' | 'snipe' | 'spell' | 'all'
 
 function Action({ store }: { store: Store }) {
   // 状態管理
@@ -159,17 +159,18 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmSpell'}>
-        {actionOptions.element !== undefined && actionOptions.spellId !== undefined && (
+        {actionOptions.element !== undefined && actionOptions.spellId !== undefined && target && (
           <div className="confirm__grid">
             <div>{store.actor.name}</div>
             <div className="text-left">{SPELL_ELEMENT_LABELS[actionOptions.element]}: {SPELL_LIST[actionOptions.element][actionOptions.spellId].label}</div>
+            <div>対象: {target.name}</div>
           </div>
         )}
         <button
           onClick={() => { setIsExecuted(true); }} // 実行
         >実行</button>
         <button
-          onClick={() => { setActionPalette('spell'); setActionOptions({}); }} // オプションをリセットし, 法術選択パレットへ戻る
+          onClick={() => { setActionPalette('spell'); setActionOptions({}); setActionTargets([]); }} // オプション・ターゲットをリセットし, 法術選択パレットへ戻る
         >戻る</button>
       </div>
       <div className="actions confirm" data-disable={actionPalette !== 'confirmDefense'}>
@@ -241,7 +242,18 @@ function Action({ store }: { store: Store }) {
             className="is-small"
             key={`${element}:${spell.id}`}
             disabled={spell.id >= store.actor.spells[element] - 10 || store.actor.spellCast[element] < spell.spellCast}
-            onClick={() => { setActionPalette('confirmSpell'); setActionOptions({ element, spellId: spell.id }); }} // 確認パレットへ進む
+            onClick={() => {
+              setActionOptions({ element, spellId: spell.id })
+              if (spell.effect?.kind === 'buff') {
+                // バフ系の術は対象 (自身 or 味方) の選択を要するため, ターゲットパレットへ進む
+                setActionPalette('target')
+                setTargetPalette('spell')
+              } else {
+                // 対象を要さない術は暫定的に自身を対象とし, 確認パレットへ進む
+                setActionTargets([store.actor])
+                setActionPalette('confirmSpell')
+              }
+            }}
           >{spell.label}</button>
         )))}
         <button
@@ -348,6 +360,19 @@ function Action({ store }: { store: Store }) {
             ))}
             <button
               onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
+            >戻る</button>
+          </>
+        )}
+        {targetPalette === 'spell' && (
+          <>
+            {store.target.allies.map(target => ( // 味方 (自身を含む) から選択する
+              <button
+                key={target.combatId}
+                onClick={() => { setActionPalette('confirmSpell'); setActionTargets([target]); }} // ターゲットをセットし, 法術確認パレットへ進む
+              >{target.name}</button>
+            ))}
+            <button
+              onClick={() => { setActionPalette('spell'); setActionOptions({}); }} // オプションをリセットし, 法術選択パレットへ戻る
             >戻る</button>
           </>
         )}
