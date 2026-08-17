@@ -31,8 +31,8 @@ function Combat() {
   const initModels = () => {
     const r1 = Math.floor(Math.random() * 16)
     const r2 = Math.ceil(Math.random() * 15)
-    const pcs = createSamples(10, 1, 0, r1, 4)
-    const npcs = createSamples(10, 1, 4, (r1 + r2) % 16, 4)
+    const pcs = createSamples(24, 1, 0, r1, 4)
+    const npcs = createSamples(24, 1, 4, (r1 + r2) % 16, 4)
     const units = pcs.concat(npcs)
     return units.map(unit => unit.combatUnitModel)
   }
