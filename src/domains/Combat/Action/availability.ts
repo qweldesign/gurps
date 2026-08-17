@@ -19,18 +19,20 @@ export class ActionAvailability {
   }
 
   // 「攻撃」「特殊攻撃」共通の基本条件
-  // 武器が準備状態, 射撃武器ではない, 自身が前方に配置されていることが条件
+  // 射撃武器ではない, かつ自身が前方に配置されていることが条件 (武器の準備状態はここに含めない)
   private canAttackBase(): boolean {
     const actor = this.state.actor
-    return actor.attack.ready === 0 && !actor.attack.model.isMissile && actor.position !== 'back'
+    return !actor.attack.model.isMissile && actor.position !== 'back'
   }
 
-  // 「攻撃」: 基本条件 + 狂戦士状態ではないこと
+  // 「攻撃」: 基本条件 + 武器が準備状態であること + 狂戦士状態ではないこと
   canAttack(): boolean {
-    return this.canAttackBase() && !this.state.actor.statusEffects.berserk
+    const actor = this.state.actor
+    return this.canAttackBase() && actor.attack.ready === 0 && !actor.statusEffects.berserk
   }
 
-  // 「特殊攻撃」: 基本条件のみ (狂戦士状態でも全力攻撃は選択・強制される)
+  // 「特殊攻撃」: 基本条件のみ (武器の準備状態・狂戦士状態のどちらも問わない)
+  // 非準備状態の場合は「準備即攻撃」のみ, 狂戦士状態の場合は全力攻撃が強制される, という形で Action.tsx 側が出し分ける
   canFullAttack(): boolean {
     return this.canAttackBase()
   }

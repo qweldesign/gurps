@@ -30,14 +30,15 @@ export const POSITION_LABELS: Record<Position, string> = {
   right: '右翼'
 } as const
 
-export const FULL_POWER_KEYS = ['none', 'dmg', 'level', 'feint', 'double'] as const
+export const FULL_POWER_KEYS = ['none', 'dmg', 'level', 'feint', 'double', 'ready'] as const
 
 export const FULL_POWER_OPTIONS: Record<FullPower, { label: string }> = {
   none: { label: '通常攻撃' },
   dmg: { label: 'ダメージ安定' },
   level: { label: '技能値+4' },
   feint: { label: '牽制即攻撃' },
-  double: { label: '2回攻撃' }
+  double: { label: '2回攻撃' },
+  ready: { label: '準備即攻撃' } // 引き戻しが必要な武器で,「2回攻撃」の代わりに選択できる (非準備状態のまま全力攻撃を行う)
 } as const
 
 export const AIM_KEYS = ['head', 'ear', 'eye', 'body', 'neck', 'stomach', 'arm', 'hand', 'leg', 'foot'] as const

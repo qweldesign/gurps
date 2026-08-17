@@ -185,18 +185,27 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'attackOption'}>
-        {FULL_POWER_KEYS.map(key => key !== 'none' && (
+        {!store.availability.ready && FULL_POWER_KEYS.map(key => key !== 'none' && key !== 'ready' && (
           <button
             className="is-large"
             key={key}
             onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: key }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
           >{FULL_POWER_OPTIONS[key].label}</button>
         ))}
-        <button
-          className="is-large"
-          disabled={!store.availability.attack} // 部位狙いは fullPower: 'none' (通常攻撃) 相当のため, 狂戦士状態では選択不可 (全力攻撃が強制される)
-          onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
-        >部位狙い</button>
+        {!store.availability.ready && (
+          <button
+            className="is-large"
+            disabled={!store.availability.attack} // 部位狙いは fullPower: 'none' (通常攻撃) 相当のため, 狂戦士状態では選択不可 (全力攻撃が強制される)
+            onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >部位狙い</button>
+        )}
+        {store.availability.ready && (
+          // 武器が非準備状態の場合,「2回攻撃」等の代わりに「準備即攻撃」のみ選択可能 (非準備状態のまま全力攻撃で攻撃する)
+          <button
+            className="is-large"
+            onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'ready' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
+          >{FULL_POWER_OPTIONS.ready.label}</button>
+        )}
         <button
           onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>
