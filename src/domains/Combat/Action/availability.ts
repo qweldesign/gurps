@@ -18,11 +18,21 @@ export class ActionAvailability {
     return this.state.actor.attack.ready > 0
   }
 
-  //「攻撃」実行可否取得
-  // 武器が準備状態, 射撃武器ではない, 自身が前方に配置されている, かつ狂戦士状態ではないことが条件 (暫定)
-  canAttack(): boolean {
+  // 「攻撃」「特殊攻撃」共通の基本条件
+  // 武器が準備状態, 射撃武器ではない, 自身が前方に配置されていることが条件
+  private canAttackBase(): boolean {
     const actor = this.state.actor
-    return actor.attack.ready === 0 && !actor.attack.model.isMissile && actor.position !== 'back' && !actor.statusEffects.berserk
+    return actor.attack.ready === 0 && !actor.attack.model.isMissile && actor.position !== 'back'
+  }
+
+  // 「攻撃」: 基本条件 + 狂戦士状態ではないこと
+  canAttack(): boolean {
+    return this.canAttackBase() && !this.state.actor.statusEffects.berserk
+  }
+
+  // 「特殊攻撃」: 基本条件のみ (狂戦士状態でも全力攻撃は選択・強制される)
+  canFullAttack(): boolean {
+    return this.canAttackBase()
   }
 
   //「脚・足首狙い」実行可否取得

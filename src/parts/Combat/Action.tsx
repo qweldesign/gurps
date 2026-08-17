@@ -72,7 +72,7 @@ function Action({ store }: { store: Store }) {
           onClick={() => { setActionPalette('target'); setTargetPalette('feint'); setActionKey('feint'); }} // ターゲットパレットへ進む
         >牽制</button>
         <button
-          disabled={!store.availability.attack}
+          disabled={!store.availability.fullAttack}
           onClick={() => { setActionPalette('attackOption'); setTargetPalette('attack'); setActionKey('attack'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // デフォルトオプションをセットし, 攻撃オプションパレットへ進む
         >特殊攻撃</button>
         <button
@@ -194,6 +194,7 @@ function Action({ store }: { store: Store }) {
         ))}
         <button
           className="is-large"
+          disabled={!store.availability.attack} // 部位狙いは fullPower: 'none' (通常攻撃) 相当のため, 狂戦士状態では選択不可 (全力攻撃が強制される)
           onClick={() => { setActionPalette('aim'); setActionOptions({ aim: 'body', fullPower: 'none' }); }} // 攻撃オプションをセットし, 部位狙いパレットへ進む
         >部位狙い</button>
         <button
