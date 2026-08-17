@@ -89,6 +89,6 @@ export class CombatUnitAttack {
     let mod = this.model.dmgMod - dr
     mod += fullPower === 'dmg' ? 6 : 0
     const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
-    return Math.floor((count * 3.5 + mod) * rate)
+    return Math.max(0, Math.floor((count * 3.5 + mod) * rate))
   }
 }
