@@ -13,16 +13,16 @@ export class ActionAvailability {
   }
 
   //「準備」実行可否取得
-  // 武器が非準備状態であることが条件
+  // 武器が非準備状態であること, かつ幻惑状態ではないことが条件
   canReady(): boolean {
-    return this.state.actor.attack.ready > 0
+    return this.state.actor.attack.ready > 0 && !this.state.actor.statusEffects.dazed
   }
 
   // 「攻撃」「特殊攻撃」共通の基本条件
-  // 射撃武器ではない, かつ自身が前方に配置されていることが条件 (武器の準備状態はここに含めない)
+  // 射撃武器ではない, 自身が前方に配置されている, かつ幻惑状態ではないことが条件 (武器の準備状態はここに含めない)
   private canAttackBase(): boolean {
     const actor = this.state.actor
-    return !actor.attack.model.isMissile && actor.position !== 'back'
+    return !actor.attack.model.isMissile && actor.position !== 'back' && !actor.statusEffects.dazed
   }
 
   // 「攻撃」: 基本条件 + 武器が準備状態であること + 狂戦士状態ではないこと
@@ -51,9 +51,10 @@ export class ActionAvailability {
   }
 
   //「射撃」実行可否取得
-  // 武器が準備状態, かつ射撃武器を構えていることが条件
+  // 武器が準備状態, 射撃武器を構えている, かつ幻惑状態ではないことが条件
   canShoot(): boolean {
-    return this.state.actor.attack.ready === 0 && this.state.actor.attack.model.isMissile
+    const actor = this.state.actor
+    return actor.attack.ready === 0 && actor.attack.model.isMissile && !actor.statusEffects.dazed
   }
 
   //「狙い」実行可否取得
@@ -63,31 +64,32 @@ export class ActionAvailability {
   }
 
   //「集中」実行可否取得
-  // 該当する系統の術の技能値が11以上であることが条件
+  // 該当する系統の術の技能値が11以上, かつ幻惑状態ではないことが条件
   canCast(element: SpellElement): boolean {
-    return this.state.actor.spells[element] > 10
+    return this.state.actor.spells[element] > 10 && !this.state.actor.statusEffects.dazed
   }
 
   //「法術」実行可否取得
-  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上であることが条件
+  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上, かつ幻惑状態ではないことが条件
   canSpell(element: SpellElement): boolean {
-    return this.state.actor.spellCast[element] > 0
+    return this.state.actor.spellCast[element] > 0 && !this.state.actor.statusEffects.dazed
   }
 
   //「全力防御」実行可否取得
-  // 狂戦士状態ではないことが条件
+  // 狂戦士状態ではないことが条件 (幻惑状態でも「身を守るための単純な行動」として選択できる)
   canDefense(): boolean {
     return !this.state.actor.statusEffects.berserk
   }
 
   //「移動」実行可否取得
-  // 姿勢が「膝着き」でないこと
+  // 姿勢が「膝着き」でないこと, かつ幻惑状態ではないこと
   // 後退は自身が後方に配置されていないこと, かつ狂戦士状態ではないこと
   // 前進はそこへ既にユニットが配置されていないことが, それぞれ条件となる
   canMove(position: Position): boolean {
     const actor = this.state.actor
     if (!this.state.formation) return false
     if (actor.posture === 'kneeling') return false
+    if (actor.statusEffects.dazed) return false
     if (position === 'back') {
       return this.state.formation[actor.side].back[actor.combatId] === null && !actor.statusEffects.berserk ? true : false
     } else {
@@ -96,18 +98,20 @@ export class ActionAvailability {
   }
 
   //「装備変更」実行可否取得
-  // sub, spare のいずれかに武器を持っていることが条件 (他に持ち替え先の武器が無ければ非表示)
+  // sub, spare のいずれかに武器を持っていること, かつ幻惑状態ではないことが条件 (他に持ち替え先の武器が無ければ非表示)
   canChangeWeapon(): boolean {
     const isSingle = (['sub', 'spare'] as const).every(key => this.state.actor.attack.getModelByKey(key).name === '装備無し')
-    return !isSingle
+    return !isSingle && !this.state.actor.statusEffects.dazed
   }
 
   //「姿勢変更」実行可否取得
   // 直立 → 這い は不可能
   // 這い → 膝着きのみ可能
-  // その他, 現行の姿勢以外にはいつでも変更可能
+  // その他, 現行の姿勢以外にはいつでも変更可能 (幻惑状態では一切変更不可)
   canChangePosture(posture: Posture): boolean {
-    const current = this.state.actor.posture
+    const actor = this.state.actor
+    if (actor.statusEffects.dazed) return false
+    const current = actor.posture
     if (posture === current) return false
     if (current === 'standing') return posture !== 'prone'
     if (current === 'prone') return posture === 'kneeling'
