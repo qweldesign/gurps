@@ -155,6 +155,7 @@ export type ActionResult =
   | { type: 'feint', judge: FeintResult }
   | { type: 'cast', judge: Judge }
   | { type: 'spell', judge: SpellResult }
+  | { type: 'trip', judge: Judge } // 術の転倒効果の判定結果 (「アースハンド」用. 成功: 転倒を免れる, 失敗: 転倒する)
   | { type: 'recovery', judge: Judge }
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }

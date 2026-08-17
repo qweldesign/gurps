@@ -56,6 +56,49 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
   return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
 }
 
+// 術 (直接ダメージ型/転倒効果) に対する防御判定を配列で返す
+// 「射撃の解決のように」対象が「受け」-4/「止め」-2/「よけ」のいずれかで回避判定を行う (judgeDefense と同じ優先順で解決する)
+// allowParry: false の場合,「受け」を選択肢から除外する (足首を狙う「茨の呪縛」「アースハンド」など)
+// 牽制の持ち越しは考慮しない (術者側の武器による牽制とは無関係のため)
+export function judgeSpellDefense(target: Unit, aim: Aim, allowParry: boolean = true): Array<Omit<DefenseResult, 'ready'>> {
+  const defense = target.defense
+  const maxAttempts = defense.isFullDefense ? 2 : 1
+  const results: Array<Omit<DefenseResult, 'ready'>> = []
+
+  if (defense.getCanBlock(aim)) {
+    const blockResult = { defenseType: 'block' as const, ...judge(defense.blockTarget - 2) }
+    results.push(blockResult)
+    if (blockResult.success) return results
+  }
+  if (allowParry && defense.canParry && results.length < maxAttempts) {
+    const parryResult = { defenseType: 'parry' as const, ...judge(defense.parryTarget - 4) }
+    results.push(parryResult)
+    if (parryResult.success) return results
+  }
+  if (results.length < maxAttempts) {
+    const dodgeResult = { defenseType: 'dodge' as const, ...judge(defense.dodgeTarget) }
+    results.push(dodgeResult)
+  }
+  return results
+}
+
+// 術の直接ダメージ型 (射撃呪文) の判定結果を返す
+// 武器ではなく術のダイス数・ダメージ型を用いる点のみ rollDmg と異なる (DR減算・部位狙いによる急所倍率は同様に考慮する)
+export function rollSpellDmg(dice: number, dmgType: number, aim: Aim, target: Unit): DmgResult {
+  const dr = target.defense.getDR(AIM_OPTIONS[aim].group, dmgType)
+  const mod = -dr
+  const rate = aim === 'neck' || aim === 'stomach'
+    ? (dmgType === 0 ? 1.5 : dmgType === 1 ? 2 : 3)
+    : (dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2)
+  const rolled = Math.floor(roll(dice, mod).roll * rate)
+  return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
+}
+
+// 術による転倒判定を返す (「アースハンド」用. mod は術による追加修正 (HT(生命力)-2 なら -2). 成功: 転倒を免れる, 失敗: 転倒する)
+export function judgeTrip(target: Unit, mod: number = 0): Judge {
+  return judge(target.defense.pre + mod)
+}
+
 // 牽制・狙いの判定結果を返す (成功度がそのまま target の次の防御目標値へのペナルティになる)
 // 射撃武器の場合, target の姿勢・距離による修正を含める (近接武器の場合は影響なし)
 export function judgeFeint(actor: Unit, target: Unit): FeintResult {

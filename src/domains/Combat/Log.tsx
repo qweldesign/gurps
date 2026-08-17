@@ -145,48 +145,12 @@ export class CombatLog {
               }
               break
 
-            case 'defense': {
-              const defenseTypeLabel = result.judge.defenseType === 'parry' ? '武器による受け流し'
-                : result.judge.defenseType === 'block' ? '盾による受け止め' : '回避'
-              messages.push(<>{`${target} は ${defenseTypeLabel} を試みた!`}</>)
-              messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
-              if (result.judge.success && !result.judge.ready) {
-                // 受け成功時のみ非準備状態への変化をログに表示
-                messages.push(<>{`${target} の ${request.targets[0].attack.model.name} は非準備状態になった`}</>)
-              }
-              break
-            }
-
             case 'feint': // 全力攻撃オプション「牽制即攻撃」による, 直後の攻撃に先立つ牽制の結果ログ
               this.pushFeintMessages(messages, actor, target, result.judge)
               break
 
-            case 'dmg':
-              if (result.judge.roll < 1) messages.push(<>{`ダメージは ${target} の鎧によって完全に止められた...`}</>)
-              else if (!result.judge.critical) messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
-              else messages.push(<>{`${target} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
-              break
-
-            case 'injuryOnLimb': // 部位狙いによる, 顔・四肢の故障ログ
-              this.pushInjuryOnLimbMessage(messages, target, result.judge)
-              break
-
-            case 'knockedDown': // 朦朧状態・転倒判定の結果ログ
-              if (result.judge.success) messages.push(<>{`${target} は 朦朧状態に陥った!`}</>)
-              else messages.push(<>{`${target} は 転倒した!!`}</>)
-              break
-
-            case 'fatal': // 気絶・死亡判定の結果ログ
-              if (result.judge.success) messages.push(<>{`${target} は 気絶した...`}</>)
-              else messages.push(<>{`${target} は 死亡した...`}</>)
-              break
-
-            case 'unconscious': // 気絶判定 (頭狙い) の結果ログ. 失敗 (=気絶) 時のみ結果が渡ってくる
-              if (!result.judge.success) messages.push(<>{`${target} は 気絶した!!`}</>)
-              break
-
-            case 'dead': // 即死判定 (喉狙い) の結果ログ. 失敗 (=即死) 時のみ結果が渡ってくる
-              if (!result.judge.success) messages.push(<>{`${target} は 即死した!!!`}</>)
+            default: // case 'defense': case 'dmg': case 'injuryOnLimb': case 'knockedDown': case 'fatal': case 'unconscious': case 'dead': case 'trip':
+              this.pushDamageResolutionMessage(messages, request.targets[0], result)
               break
 
             case 'readyInterrupted': // 防御を試みたことによる, 射撃武器の準備の中断
@@ -251,6 +215,10 @@ export class CombatLog {
             messages.push(<>{`${target} は抵抗した!`}</>)
           }
         })
+        // 直接ダメージ型 (射撃呪文)・転倒効果の結果ログ (防御判定以降, 攻撃・射撃と共通の形式で表示する)
+        results.slice(1).forEach(result => {
+          this.pushDamageResolutionMessage(messages, request.targets[0], result)
+        })
         break
       }
 
@@ -269,6 +237,56 @@ export class CombatLog {
       messages.push(<>{`次のターン, ${target} は防御判定に -${judge.score} の修正が課せられる!`}</>)
     } else {
       messages.push(<>{`出目は ${judge.roll}、${label}は失敗した...`}</>)
+    }
+  }
+
+  // 攻撃・射撃・術 (直接ダメージ型/転倒効果) に共通する, 防御判定以降の結果ログを1件追加する
+  private pushDamageResolutionMessage(messages: ReactNode[], target: Unit, result: ActionResult) {
+    const targetName = target.name
+    switch (result.type) {
+      case 'defense': {
+        const defenseTypeLabel = result.judge.defenseType === 'parry' ? '武器による受け流し'
+          : result.judge.defenseType === 'block' ? '盾による受け止め' : '回避'
+        messages.push(<>{`${targetName} は ${defenseTypeLabel} を試みた!`}</>)
+        messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+        if (result.judge.success && !result.judge.ready) {
+          // 受け成功時のみ非準備状態への変化をログに表示
+          messages.push(<>{`${targetName} の ${target.attack.model.name} は非準備状態になった`}</>)
+        }
+        break
+      }
+
+      case 'dmg':
+        if (result.judge.roll < 1) messages.push(<>{`ダメージは ${targetName} の鎧によって完全に止められた...`}</>)
+        else if (!result.judge.critical) messages.push(<>{`${targetName} は ${result.judge.roll} 点のダメージを受けた!!`}</>)
+        else messages.push(<>{`${targetName} は ${result.judge.roll} 点のダメージを受けた!!!`}</>)
+        break
+
+      case 'injuryOnLimb': // 部位狙いによる, 顔・四肢の故障ログ
+        this.pushInjuryOnLimbMessage(messages, targetName, result.judge)
+        break
+
+      case 'knockedDown': // 朦朧状態・転倒判定の結果ログ
+        if (result.judge.success) messages.push(<>{`${targetName} は 朦朧状態に陥った!`}</>)
+        else messages.push(<>{`${targetName} は 転倒した!!`}</>)
+        break
+
+      case 'fatal': // 気絶・死亡判定の結果ログ
+        if (result.judge.success) messages.push(<>{`${targetName} は 気絶した...`}</>)
+        else messages.push(<>{`${targetName} は 死亡した...`}</>)
+        break
+
+      case 'unconscious': // 気絶判定 (頭狙い) の結果ログ. 失敗 (=気絶) 時のみ結果が渡ってくる
+        if (!result.judge.success) messages.push(<>{`${targetName} は 気絶した!!`}</>)
+        break
+
+      case 'dead': // 即死判定 (喉狙い) の結果ログ. 失敗 (=即死) 時のみ結果が渡ってくる
+        if (!result.judge.success) messages.push(<>{`${targetName} は 即死した!!!`}</>)
+        break
+
+      case 'trip': // 術の転倒効果の結果ログ (「アースハンド」用). 成功 (転倒を免れた) 時は表示しない
+        if (!result.judge.success) messages.push(<>{`${targetName} は 転倒した!!`}</>)
+        break
     }
   }
 

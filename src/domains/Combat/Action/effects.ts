@@ -3,8 +3,8 @@
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
-import { type Aim, type FullPower, type ActionResult, type DefenseResult, type SpellEffectResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeCast, judgeSpell, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
+import { type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult } from './types'
+import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
@@ -72,6 +72,15 @@ export class ActionEffects {
 
     // ダメージ判定
     const dmgJudge = rollDmg(actor, aim, fullPower, target)
+    results.push(...this.resolveDamage(dmgJudge, aim, actor.attack.model.dmgType, target))
+
+    return results
+  }
+
+  // ダメージ判定結果を元に, HPへの反映と部位狙いの故障・朦朧・転倒・気絶・死亡までの結果を返す
+  // (「攻撃」「射撃」および術の直接ダメージ型で共通利用する. dmgType は攻撃手段 (武器/術) のダメージ型)
+  private resolveDamage(dmgJudge: DmgResult, aim: Aim, dmgType: number, target: Unit): ActionResult[] {
+    const results: ActionResult[] = []
 
     // 部位狙いによる, 頭・四肢への負傷上限と故障判定
     // (耳・目は2点, 手首・足首は最大HPの1/3, 腕・脚は最大HPの1/2を超える負傷を負えず, 超えた分は故障として扱う)
@@ -125,7 +134,7 @@ export class ActionEffects {
 
       // 気絶判定 (頭狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に気絶する)
       if (aim === 'head' && dmg >= target.health.maxHp / 2) {
-        const unconsciousJudge = judgeUnconscious(target, actor.attack.model.dmgType)
+        const unconsciousJudge = judgeUnconscious(target, dmgType)
         if (!unconsciousJudge.success) {
           results.push({ type: 'unconscious', judge: unconsciousJudge })
           target.health.unconscious = true
@@ -134,7 +143,7 @@ export class ActionEffects {
 
       // 即死判定 (喉狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に死亡する)
       if (aim === 'neck' && dmg >= target.health.maxHp / 2) {
-        const deadJudge = judgeDead(target, actor.attack.model.dmgType)
+        const deadJudge = judgeDead(target, dmgType)
         if (!deadJudge.success) {
           results.push({ type: 'dead', judge: deadJudge })
           target.health.unconscious = true
@@ -249,21 +258,37 @@ export class ActionEffects {
 
   //「法術」実行 (蓄積した詠唱時間を消費して発動する. 全ての系統の詠唱時間をリセットする)
   // 発動判定に成功した場合のみ, 術に対応する効果を target (自身 or 選択した対象) に適用する
+  // dmg (直接ダメージ型)・trip (転倒効果) は防御判定以降の一連の結果を追加の ActionResult として返す
+  // (buff/status/debuff は無条件/抵抗判定のみで完結するため, 従来通り SpellResult.effectResults に集約する)
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
     const spellJudge = judgeSpell(actor, element, spellId)
     const effects = SPELL_LIST[element][spellId].effects ?? []
-    const effectResults = spellJudge.success ? effects.map(effect => this.applySpellEffect(target, effect)) : []
-    return [{ type: 'spell', judge: { ...spellJudge, effectResults } }]
+    const effectResults: SpellEffectResult[] = []
+    const extraResults: ActionResult[] = []
+
+    if (spellJudge.success) {
+      effects.forEach(effect => {
+        if (effect.kind === 'dmg') {
+          extraResults.push(...this.spellDmgRoutine(target, effect))
+        } else if (effect.kind === 'trip') {
+          extraResults.push(...this.spellTripRoutine(target, effect))
+        } else {
+          effectResults.push(this.applySpellEffect(target, effect))
+        }
+      })
+    }
+
+    return [{ type: 'spell', judge: { ...spellJudge, effectResults } }, ...extraResults]
   }
 
-  // 術の効果を1つ適用し, 結果を返す
+  // 術の効果を1つ適用し, 結果を返す (buff/status/debuff のみを対象とする. dmg/trip は spellDmgRoutine/spellTripRoutine が個別に処理する)
   // buff: 無条件で適用する (発動判定自体は既に成功している)
   // status: 無条件で適用する (抵抗判定を伴わない StatusEffects への直接付与)
   // debuff: 対象自身の抵抗判定 (MRE, resistMod があれば加算した上で) に失敗した場合のみ適用する
   //         duration が 'margin' なら失敗度, 数値ならその値をそのままターン数とする
-  private applySpellEffect(target: Unit, effect: SpellEffect): SpellEffectResult {
+  private applySpellEffect(target: Unit, effect: Extract<SpellEffect, { kind: 'buff' } | { kind: 'status' } | { kind: 'debuff' }>): SpellEffectResult {
     if (effect.kind === 'buff') {
       if (effect.target === 'level') target.statusBuff.addLevelBuff()
       else if (effect.target === 'dmg') target.statusBuff.addDmgBuff()
@@ -284,6 +309,51 @@ export class ActionEffects {
       target.statusEffects[effect.target] = effect.duration === 'margin' ? -resistJudge.score : effect.duration
     }
     return { kind: 'debuff', target: effect.target, applied }
+  }
+
+  // 術の直接ダメージ型 (射撃呪文) 効果の判定・効果適用
+  // 発動判定 (詠唱) は既に成功しているため, 通常の攻撃・射撃と異なり命中判定を経ず, 対象の防御判定から解決する
+  private spellDmgRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'dmg' }>): ActionResult[] {
+    const results: ActionResult[] = []
+    const aim = effect.aim ?? 'body'
+    const allowParry = effect.allowParry ?? true
+
+    // 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合は防御判定自体をスキップする
+    const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    if (canDefend) {
+      const defenseJudges = judgeSpellDefense(target, aim, allowParry)
+      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      results.push(...defenseResults)
+      if (defended) return results // 防御成功時はここで処理を止める
+    }
+
+    const dmgJudge = rollSpellDmg(effect.dice, effect.dmgType, aim, target)
+    results.push(...this.resolveDamage(dmgJudge, aim, effect.dmgType, target))
+
+    return results
+  }
+
+  // 術の転倒効果の判定・効果適用 (「アースハンド」用. ダメージは無く, 防御失敗時に転倒判定のみを行う)
+  private spellTripRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'trip' }>): ActionResult[] {
+    const results: ActionResult[] = []
+    const aim = effect.aim ?? 'body'
+    const allowParry = effect.allowParry ?? true
+
+    const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    if (canDefend) {
+      const defenseJudges = judgeSpellDefense(target, aim, allowParry)
+      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      results.push(...defenseResults)
+      if (defended) return results // 防御成功時はここで処理を止める
+    }
+
+    const tripJudge = judgeTrip(target, effect.mod ?? 0)
+    results.push({ type: 'trip', judge: tripJudge })
+    if (!tripJudge.success) {
+      target.posture = 'prone' // 姿勢変更
+    }
+
+    return results
   }
 
   //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)
