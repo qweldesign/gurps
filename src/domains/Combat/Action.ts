@@ -82,10 +82,11 @@ export class CombatAction {
   }
 
   // ターゲットを結果として生成 (Formation の配置情報を元に絞り込む)
+  // 気絶・死亡したユニットは戦闘から除外扱いとし, いずれの対象プールにも含めない (「傀儡」等の例外は未実装. 実装時は専用の取得ロジックを設ける)
   get target() {
     const formation = this.state.formation
     return {
-      all: this.state.units,
+      all: this.state.units.filter(unit => !unit.health.unconscious && !unit.health.dead),
       allies: formation?.getAllies() ?? [],
       enemies: formation?.getEnemies() ?? [],
       melee: formation?.getMeleeTargets() ?? []

@@ -63,14 +63,14 @@ export class CombatFormation {
     return this.getFormation('enemy')
   }
 
-  // 味方取得
+  // 味方取得 (対象選択用. 気絶・死亡したユニットは戦闘から除外扱いとし, 対象に含めない. 「傀儡」等, これらを対象に取る術は別途専用の取得ロジックを設ける)
   getAllies(): Unit[] {
-    return this.units.filter(unit => unit.side === this.actor.side)
+    return this.units.filter(unit => unit.side === this.actor.side && !unit.health.unconscious && !unit.health.dead)
   }
 
-  // 敵取得
+  // 敵取得 (対象選択用. 気絶・死亡したユニットは戦闘から除外扱いとし, 対象に含めない. 「傀儡」等, これらを対象に取る術は別途専用の取得ロジックを設ける)
   getEnemies(): Unit[] {
-    return this.units.filter(unit => unit.side !== this.actor.side)
+    return this.units.filter(unit => unit.side !== this.actor.side && !unit.health.unconscious && !unit.health.dead)
   }
 
   // 近接攻撃対象取得
