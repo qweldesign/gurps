@@ -244,8 +244,9 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'spell'}>
-        {SPELL_ELEMENTS.map(element => SPELL_LIST[element].map(spell => (
+        {SPELL_ELEMENTS.map(element => SPELL_LIST[element].filter(spell => spell.spellType !== 'defense').map(spell => (
           // 技能値による解禁レベル未満, 詠唱時間ゼロ, 該当する術に必要な詠唱時間未満のいずれかであれば非表示
+          // spellType: 'defense' (盾・時間遡行) は防御時に自動発動する術のため, このパレットには表示しない
           <button
             className="is-small"
             key={`${element}:${spell.id}`}
