@@ -43,7 +43,7 @@ export class CombatLog {
       case 'changePosture':
         return `${ACTION_LABELS[request.key]}:${POSTURE_MODS[request.options.posture].label}`
 
-      default: // case 'ready': case 'changeWeapon': case 'recovery': case 'wait':
+      default: // case 'ready': case 'defense': case 'changeWeapon': case 'recovery': case 'wait':
         return ACTION_LABELS[request.key]
     }
   }
@@ -89,6 +89,10 @@ export class CombatLog {
     switch (request.key) {
       case 'ready':
         messages.push(<>{`${actor} は ${this.actor.attack.model.name} を構えた`}</>)
+        break
+
+      case 'defense':
+        messages.push(<>{`${actor} は 防御に専念!`}</>)
         break
 
       case 'move':
@@ -198,7 +202,7 @@ export class CombatLog {
         })
         break
 
-      default: // case 'ready': case 'move': case 'changeWeapon': case 'changePosture': case 'wait':
+      default: // case 'ready':  case 'defense':case 'move': case 'changeWeapon': case 'changePosture': case 'wait':
         break
     }
     return messages
