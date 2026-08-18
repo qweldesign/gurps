@@ -2,7 +2,7 @@
 
 export const SPELLS_DEV_PROGRESS: [string, boolean][] = [
   ['ヘイスト', true], ['茨の呪縛', true], ['風の刃', true], ['サイレンス', true], ['リストレーション', false], ['召雷', true],
-  ['ヒロイズム', true], ['閃光', false], ['火球', true], ['炎の嵐', false], ['火の鳥', false], ['焼殺', true], 
+  ['ヒロイズム', true], ['閃光', true], ['火球', true], ['炎の嵐', false], ['火の鳥', false], ['焼殺', true], 
   ['ベルセルク', true], ['アースハンド', true], ['大地の癒し', false], ['痛覚鈍麻', true], ['傀儡', false], ['瓦礫の雨', false],
   ['金縛り', true], ['杯', false], ['金貨', true], ['盾', false], ['サイレン', false], ['塔', false],
   ['生命の雫', false], ['ぼんやり', true], ['水舞', true], ['濃霧', false], ['時間遡行', false], ['吹雪', false]

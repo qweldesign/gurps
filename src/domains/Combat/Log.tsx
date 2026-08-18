@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, STATUS_EFFECT_LABELS } from './Spells'
 
 let count = 0
@@ -219,9 +219,16 @@ export class CombatLog {
             messages.push(<>{`${target} は抵抗した!`}</>)
           }
         })
-        // 直接ダメージ型 (射撃呪文)・転倒効果の結果ログ (防御判定以降, 攻撃・射撃と共通の形式で表示する)
+        // 直接ダメージ型 (射撃呪文)・転倒効果・範囲デバフの結果ログ
+        // (防御判定以降, 攻撃・射撃と共通の形式で表示する. 範囲呪文は複数対象のため, target が結果側に埋め込まれていればそちらを優先する)
         results.slice(1).forEach(result => {
-          this.pushDamageResolutionMessage(messages, request.targets[0], result)
+          if (result.type === 'flash') {
+            this.pushFlashMessage(messages, result.judge)
+          } else if (result.type === 'defense') {
+            this.pushDamageResolutionMessage(messages, result.judge.target ?? request.targets[0], result)
+          } else {
+            this.pushDamageResolutionMessage(messages, request.targets[0], result)
+          }
         })
         break
       }
@@ -230,6 +237,13 @@ export class CombatLog {
         break
     }
     return messages
+  }
+
+  // 術の範囲デバフ効果の結果ログを追加する (「閃光」用. 回避判定に失敗した対象にのみ呼ばれる)
+  private pushFlashMessage(messages: ReactNode[], judge: FlashResult) {
+    const targetName = judge.target.name
+    messages.push(<>{`${targetName} は閃光に目がくらんだ!`}</>)
+    messages.push(<>{`次のターンの終わりまで 命中-4, 回避-2の修正を課される!`}</>)
   }
 
   // 牽制・狙いの判定結果ログを追加する (「牽制」「狙い」単体実行と, 全力攻撃オプション「牽制即攻撃」の両方から利用される)

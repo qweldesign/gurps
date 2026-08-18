@@ -73,6 +73,7 @@ export class CombatUnitDefense {
       target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
       target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
     }
+    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
     return target
   }
 
@@ -84,6 +85,7 @@ export class CombatUnitDefense {
       target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
       target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
     }
+    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
     return target
   }
 
@@ -95,6 +97,7 @@ export class CombatUnitDefense {
       target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
       target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
     }
+    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
     return target
   }
 

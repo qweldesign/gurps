@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
-import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult } from './types'
+import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
@@ -173,7 +173,7 @@ export class ActionEffects {
         target.defense.blockCount++
       }
 
-      results.push({ type: 'defense', judge: { ...defenseJudge, ready } })
+      results.push({ type: 'defense', judge: { ...defenseJudge, ready, target } })
       if (defenseJudge.success) {
         defended = true
         break
@@ -260,24 +260,38 @@ export class ActionEffects {
   // 発動判定に成功した場合のみ, 術に対応する効果を target (自身 or 選択した対象) に適用する
   // dmg (直接ダメージ型)・trip (転倒効果) は防御判定以降の一連の結果を追加の ActionResult として返す
   // (buff/status/debuff は無条件/抵抗判定のみで完結するため, 従来通り SpellResult.effectResults に集約する)
+  // spellType が 'range' (範囲呪文) の場合, 対象選択を経ないため target 引数は用いず, 発動時点の敵全員に対して個別に効果を解決する
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
     const spellJudge = judgeSpell(actor, element, spellId)
-    const effects = SPELL_LIST[element][spellId].effects ?? []
+    const spellData = SPELL_LIST[element][spellId]
+    const effects = spellData.effects ?? []
     const effectResults: SpellEffectResult[] = []
     const extraResults: ActionResult[] = []
 
     if (spellJudge.success) {
-      effects.forEach(effect => {
-        if (effect.kind === 'dmg') {
-          extraResults.push(...this.spellDmgRoutine(target, effect))
-        } else if (effect.kind === 'trip') {
-          extraResults.push(...this.spellTripRoutine(target, effect))
-        } else {
-          effectResults.push(this.applySpellEffect(target, effect))
-        }
-      })
+      if (spellData.spellType === 'range') {
+        // 範囲呪文: 敵全員 (味方・術者自身は対象外) に対し, 個別に回避判定を経て効果を解決する
+        const rangeTargets = this.state.formation?.getEnemies() ?? []
+        rangeTargets.forEach(rangeTarget => {
+          effects.forEach(effect => {
+            if (effect.kind === 'flash') {
+              extraResults.push(...this.spellFlashRoutine(rangeTarget, effect))
+            }
+          })
+        })
+      } else {
+        effects.forEach(effect => {
+          if (effect.kind === 'dmg') {
+            extraResults.push(...this.spellDmgRoutine(target, effect))
+          } else if (effect.kind === 'trip') {
+            extraResults.push(...this.spellTripRoutine(target, effect))
+          } else if (effect.kind !== 'flash') {
+            effectResults.push(this.applySpellEffect(target, effect))
+          }
+        })
+      }
     }
 
     return [{ type: 'spell', judge: { ...spellJudge, effectResults } }, ...extraResults]
@@ -367,6 +381,28 @@ export class ActionEffects {
     if (!tripJudge.success) {
       target.posture = 'prone' // 姿勢変更
     }
+
+    return results
+  }
+
+  // 術の範囲デバフ効果の判定・効果適用 (「閃光」用. 範囲呪文の対象1体分. dmg/trip と同じ回避判定を経て, 失敗時のみ次ターンの終わりまで命中/回避ペナルティを課す)
+  private spellFlashRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'flash' }>): ActionResult[] {
+    const results: ActionResult[] = []
+    const aim = 'body' // 「閃光」に部位狙いの概念は無いため, 常に通常の防御目標値を用いる
+    const allowParry = effect.allowParry ?? true
+
+    const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    if (canDefend) {
+      const defenseJudges = judgeSpellDefense(target, aim, allowParry)
+      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      results.push(...defenseResults)
+      if (defended) return results // 回避に成功すれば効果を免れる
+    }
+
+    // そのターン中 (対象自身の次ターン終了時まで) の命中/回避ペナルティを付与する (StatusEffects.flashed の減衰は Attack/Defense の各目標値取得側で参照する)
+    target.statusEffects.flashed = 1
+    const flashResult: FlashResult = { roll: 0, success: false, critical: false, target }
+    results.push({ type: 'flash', judge: flashResult })
 
     return results
   }

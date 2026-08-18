@@ -112,6 +112,7 @@ export type AttackResult = Judge & {
 export type DefenseResult = Judge & {
   defenseType: DefenseType
   ready: boolean // 防御後の武器の準備状態 (「受け」のみ変化しうる. 「止め」「よけ」は常に true)
+  target?: Unit // 範囲呪文など, 単一対象前提の request.targets[0] では特定できない場合にのみ設定する (ログ表示用)
 }
 
 // ダメージ判定結果
@@ -149,6 +150,11 @@ export type AimInterruptResult = {
   source: 'snipe'
 }
 
+// 術の範囲デバフ効果の適用結果 (「閃光」用. 回避判定に失敗した対象にのみ生成される. target を直接持つ (範囲呪文は複数対象のため request.targets[0] を使えない))
+export type FlashResult = Judge & {
+  target: Unit
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -158,6 +164,7 @@ export type ActionResult =
   | { type: 'cast', judge: Judge }
   | { type: 'spell', judge: SpellResult }
   | { type: 'trip', judge: Judge } // 術の転倒効果の判定結果 (「アースハンド」用. 成功: 転倒を免れる, 失敗: 転倒する)
+  | { type: 'flash', judge: FlashResult } // 術の範囲デバフ効果の判定結果 (「閃光」用. 回避判定に失敗した対象にのみ生成される)
   | { type: 'recovery', judge: Judge }
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }

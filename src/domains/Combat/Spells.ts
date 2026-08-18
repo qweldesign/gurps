@@ -20,7 +20,7 @@ const WOOD_SPELL: Spell[] = [
 
 const FIRE_SPELL: Spell[] = [
   { id: 0, label: 'ヒロイズム', spellType: 'assist', spellCast: 1, effects: [{ kind: 'buff', target: 'level' }], targetScope: 'ally' },
-  { id: 1, label: '閃光', spellType: 'range', spellCast: 1 },
+  { id: 1, label: '閃光', spellType: 'range', spellCast: 1, effects: [{ kind: 'flash', allowParry: false }] },
   { id: 2, label: '火球', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 0, burnOnDmg: true }], targetScope: 'enemy' },
   { id: 3, label: '炎の嵐', spellType: 'range', spellCast: 2 },
   { id: 4, label: '火の鳥', spellType: 'range', spellCast: 3 },
@@ -100,12 +100,16 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // 回避判定に一律 -2 の修正を与え, かつダメージ計算でDRを無視する (例: 「召雷」)
 // burnOnDmg: true の場合, DRを引いたダメージが4点以上で対象を火だるま状態 (Health.burning) にする (例: 「火球」「焼殺」)
 // 水舞のDRバフ (水の鎧) を纏っている対象は免れる. 火だるま状態のユニットは次の自ターン開始時に自動で「消火」を行う (行動を消費する)
+// flash: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の敵全員に対して個別に dmg と同様の回避判定 ( 「受け」-4/「止め」-2/「よけ」, が false なら「受け」を除く) を行う.
+// 回避に失敗した対象のみ, そのターン中 (対象自身の次ターン終了時まで) 命中判定-4・回避判定-2のペナルティ (StatusEffects.flashed) を受ける (例: 「閃光」).
+// ペナルティの数値は状態異常自体に固定で紐づく (朦朧状態の防御-4などと同様) ため, 効果データ側では持たない
 export type SpellEffect =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget, duration: number }
   | { kind: 'debuff', target: StatusEffectTarget, duration: number | 'margin', resistMod?: number }
   | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean, burnOnDmg?: boolean }
   | { kind: 'trip', mod?: number, aim?: Aim, allowParry?: boolean }
+  | { kind: 'flash', allowParry?: boolean }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)
 export type SpellTargetScope = 'ally' | 'enemy' | 'all'

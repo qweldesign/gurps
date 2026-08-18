@@ -70,6 +70,7 @@ export class CombatUnitAttack {
     let target = this.model.level
     target += POSTURE_MODS[this.self.posture].attackMod // 姿勢による修正
     target += this.self.statusBuff.level // 命中UPバフ (ヒロイズム)
+    target += this.self.statusEffects.flashed > 0 ? -4 : 0 // 目くらみによる命中判定ペナルティ (「閃光」)
     return Math.max(target, 4)
   }
 
