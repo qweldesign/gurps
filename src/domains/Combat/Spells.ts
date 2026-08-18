@@ -22,8 +22,8 @@ const FIRE_SPELL: Spell[] = [
   { id: 0, label: 'ヒロイズム', spellType: 'assist', spellCast: 1, effects: [{ kind: 'buff', target: 'level' }], targetScope: 'ally' },
   { id: 1, label: '閃光', spellType: 'range', spellCast: 1, effects: [{ kind: 'flash', allowParry: false }] },
   { id: 2, label: '火球', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 0, burnOnDmg: true }], targetScope: 'enemy' },
-  { id: 3, label: '炎の嵐', spellType: 'range', spellCast: 2 },
-  { id: 4, label: '火の鳥', spellType: 'range', spellCast: 3 },
+  { id: 3, label: '炎の嵐', spellType: 'range', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 0, burnOnDmg: true }] },
+  { id: 4, label: '火の鳥', spellType: 'range', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 0, burnOnDmg: true }] },
   { id: 5, label: '焼殺', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0, burnOnDmg: true }], targetScope: 'enemy' }
 ] as const
 
@@ -41,7 +41,7 @@ const METAL_SPELL: Spell[] = [
   { id: 1, label: '杯', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, cureStun: true }], targetScope: 'ally' },
   { id: 2, label: '金貨', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin', resistMod: -2 }], targetScope: 'enemy' },
   { id: 3, label: '盾', spellType: 'defense', spellCast: 2 },
-  { id: 4, label: 'サイレン', spellType: 'range', spellCast: 3 },
+  { id: 4, label: 'サイレン', spellType: 'range', spellCast: 3, effects: [{ kind: 'debuffAll', target: 'berserk', duration: 1, enemyResistMod: -2, allyResistMod: 2 }] },
   { id: 5, label: '塔', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 1 }], targetScope: 'enemy' }
 ] as const
 
@@ -51,7 +51,7 @@ const WATER_SPELL: Spell[] = [
   { id: 2, label: '水舞', spellType: 'assist', spellCast: 2, effects: [{ kind: 'buff', target: 'dr' }], targetScope: 'ally' },
   { id: 3, label: '濃霧', spellType: 'other', spellCast: 2 },
   { id: 4, label: '時間遡行', spellType: 'defense', spellCast: 3 },
-  { id: 5, label: '吹雪', spellType: 'range', spellCast: 3 }
+  { id: 5, label: '吹雪', spellType: 'range', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0 }] }
 ] as const
 
 export const SPELL_LIST: Record<SpellElement, Spell[]> = {
@@ -92,8 +92,9 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // status: 発動判定成功で無条件に適用する (StatusEffects のフィールドを直接使う, 抵抗判定を伴わない状態異常/状態効果. 例: 「痛覚鈍麻」の本体効果)
 // debuff: 対象の抵抗判定 (MREを使用) に失敗した場合のみ適用する. duration が 'margin' なら抵抗判定の失敗度をそのままターン数とし,
 // 数値なら固定ターン数とする (例: ベルセルクの「そのターンのみ」は 1). resistMod は抵抗判定自体への修正 (例: 「痛覚鈍麻」「金貨」の -2. 未指定は 0)
-// dmg: 直接ダメージ型 (射撃呪文). 対象は「受け」-4/「止め」-2/「よけ」で回避判定を行い, 失敗すればダイス数・ダメージ型に応じたダメージを受ける
+// dmg: 直接ダメージ型 (射撃呪文, および範囲呪文 (spellType: 'range') での使用も可). 対象は「受け」-4/「止め」-2/「よけ」で回避判定を行い, 失敗すればダイス数・ダメージ型に応じたダメージを受ける
 // (DR減算・部位狙いによる負傷上限/故障・朦朧/転倒・気絶/死亡までの解決は, 通常の攻撃・射撃と共通のロジックを用いる)
+// spellType: 'range' で用いる場合, 対象選択を経ず, 発動時点の敵全員に対して個別に (flash と同様) 上記の回避判定・ダメージ解決を行う (例: 「炎の嵐」「火の鳥」「吹雪」)
 // trip: dmg と同じ回避判定を経た上で, ダメージの代わりに転倒判定 (mod 付き) のみを行う (「アースハンド」用)
 // aim: 未指定なら 'body' (通常の射撃呪文). allowParry: 未指定なら true. 足首を狙う術など「受け」による回避が許されない場合のみ false を指定する
 // metalPenalty: true の場合, 対象の (aim部位に対応する) 防具が金属製 (SDR > 2, チェインメイル以上) なら,
@@ -109,6 +110,10 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
 // cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
 // 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・混乱状態 (Health.confused) を解除する (例: 「リストレーション」)
+// debuffAll: 範囲呪文 (spellType: 'range') 専用のデバフ. debuff と同じく対象の抵抗判定 (MRE) に失敗した場合のみ適用するが,
+// 対象選択は行わず, 発動時点の敵味方全員 (術者自身を除く) に対して個別に抵抗判定を行う.
+// 抵抗判定への修正は術者から見て敵か味方かで異なる (enemyResistMod/allyResistMod, 未指定はそれぞれ0. 例:「サイレン」の敵-2/味方+2)
+// duration の扱いは debuff と同じ (数値なら固定ターン数, 'margin' なら抵抗判定の失敗度をそのままターン数とする)
 // spellType: 'defense' の術 (「盾」「時間遡行」) は, 通常の「法術」行動 (対象選択・即時効果) を経由せず, 対象自身が攻撃を受けた際に反応して発動する
 // 特殊な術のため, SpellEffect の kind としては定義しない (effects.ts 側に個別の反応ロジックとしてハードコードする. 例: 「盾」の spellCast.metal >= 2 判定)
 // 「盾」: 精神集中(金)が2ターン以上完了している状態で攻撃を受けると, 通常の防御試行回数とは別枠で, 術の技能値による「止め」相当の追加防御を自動発動する
@@ -123,6 +128,7 @@ export type SpellEffect =
   | { kind: 'flash', allowParry?: boolean }
   | { kind: 'heal', maxUses: number, fraction?: number, cureStun?: boolean, cureLimbInjury?: boolean }
   | { kind: 'cleanse' }
+  | { kind: 'debuffAll', target: StatusEffectTarget, duration: number | 'margin', enemyResistMod?: number, allyResistMod?: number }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)
 export type SpellTargetScope = 'ally' | 'enemy' | 'all'

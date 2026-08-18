@@ -121,7 +121,9 @@ export type ShieldResult = Judge & {
 }
 
 // ダメージ判定結果
-export type DmgResult = Judge
+export type DmgResult = Judge & {
+  target?: Unit // 範囲呪文など, 単一対象前提の request.targets[0] では特定できない場合にのみ設定する (ログ表示用. resolveDamage の対象を常に埋める)
+}
 
 // 牽制の判定結果 (成功度: 相手の防御目標値をこの分だけ下げる)
 export type FeintResult = Score & {
@@ -178,6 +180,12 @@ export type CleanseResult = {
   curedConfused: boolean
 }
 
+// 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定 (Score) に失敗した対象にのみ生成される. target を直接持つ (範囲呪文のため複数対象))
+export type DebuffAllResult = Score & {
+  target: Unit
+  statusTarget: StatusEffectTarget // 付与された状態異常 (ログのラベル表示用)
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -191,6 +199,7 @@ export type ActionResult =
   | { type: 'flash', judge: FlashResult } // 術の範囲デバフ効果の判定結果 (「閃光」用. 回避判定に失敗した対象にのみ生成される)
   | { type: 'heal', judge: HealResult } // 回復呪文の効果適用結果 (「大地の癒し」「杯」「生命の雫」用)
   | { type: 'cleanse', judge: CleanseResult } // 術の範囲浄化効果の適用結果 (「リストレーション」用. 何か1つでも治癒した対象にのみ生成される)
+  | { type: 'debuffAll', judge: DebuffAllResult } // 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定に失敗した対象にのみ生成される)
   | { type: 'recovery', judge: Judge }
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }

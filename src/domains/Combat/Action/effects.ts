@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
-import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult } from './types'
+import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, judgeShieldBlock, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
@@ -99,7 +99,7 @@ export class ActionEffects {
       dmg = Math.min(dmg, Math.floor(target.health.maxHp / 2))
     }
 
-    results.push({ type: 'dmg', judge: { ...dmgJudge, roll: dmg } })
+    results.push({ type: 'dmg', judge: { ...dmgJudge, roll: dmg, target } })
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 
     // ダメージ効果
@@ -287,14 +287,22 @@ export class ActionEffects {
 
     if (spellJudge.success) {
       if (spellData.spellType === 'range') {
-        // 範囲呪文: 対象選択を経ず, 効果の性質に応じた対象集団 (flash: 敵全員/cleanse: 味方全員・術者自身を含む) に対し個別に効果を解決する
+        // 範囲呪文: 対象選択を経ず, 効果の性質に応じた対象集団 (dmg/flash: 敵全員/cleanse: 味方全員・術者自身を含む/debuffAll: 敵味方全員・術者自身を除く) に対し個別に効果を解決する
         effects.forEach(effect => {
-          if (effect.kind === 'flash') {
+          if (effect.kind === 'dmg') {
+            const rangeTargets = this.state.formation?.getEnemies() ?? []
+            rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellDmgRoutine(rangeTarget, effect)))
+          } else if (effect.kind === 'flash') {
             const rangeTargets = this.state.formation?.getEnemies() ?? []
             rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellFlashRoutine(rangeTarget, effect)))
           } else if (effect.kind === 'cleanse') {
             const rangeTargets = this.state.formation?.getAllies() ?? []
             rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellCleanseRoutine(rangeTarget)))
+          } else if (effect.kind === 'debuffAll') {
+            const allies = this.state.formation?.getAllies().filter(unit => unit !== actor) ?? []
+            const enemies = this.state.formation?.getEnemies() ?? []
+            const rangeTargets = [...allies, ...enemies]
+            rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellDebuffAllRoutine(rangeTarget, actor, effect)))
           }
         })
       } else {
@@ -305,7 +313,7 @@ export class ActionEffects {
             extraResults.push(...this.spellTripRoutine(target, effect))
           } else if (effect.kind === 'heal') {
             extraResults.push(...this.spellHealRoutine(target, spellData.label, effect))
-          } else if (effect.kind !== 'flash' && effect.kind !== 'cleanse') {
+          } else if (effect.kind !== 'flash' && effect.kind !== 'cleanse' && effect.kind !== 'debuffAll') {
             effectResults.push(this.applySpellEffect(target, effect))
           }
         })
@@ -468,6 +476,20 @@ export class ActionEffects {
 
     const cleanseResult: CleanseResult = { target, curedStun, curedDazed, curedBerserk, curedConfused }
     return [{ type: 'cleanse', judge: cleanseResult }]
+  }
+
+  // 術の範囲デバフ効果の判定・効果適用 (「サイレン」用. 範囲呪文の対象1体分. 術者から見て敵か味方かで異なる修正の抵抗判定 (MRE) を行い, 失敗時のみ状態異常を付与する)
+  // 抵抗成功時は結果を生成しない (対象が多数になりうるため, ログの無意味な水増しを避ける. flash/cleanse と同様の扱い)
+  private spellDebuffAllRoutine(target: Unit, actor: Unit, effect: Extract<SpellEffect, { kind: 'debuffAll' }>): ActionResult[] {
+    const isAlly = target.side === actor.side
+    const mod = (isAlly ? effect.allyResistMod : effect.enemyResistMod) ?? 0
+    const resistJudge = judgeResist(target, mod)
+    if (resistJudge.success) return []
+
+    target.statusEffects[effect.target] = effect.duration === 'margin' ? -resistJudge.score : effect.duration
+
+    const debuffResult: DebuffAllResult = { ...resistJudge, target, statusTarget: effect.target }
+    return [{ type: 'debuffAll', judge: debuffResult }]
   }
 
   //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)

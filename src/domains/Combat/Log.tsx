@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, STATUS_EFFECT_LABELS } from './Spells'
 
 let count = 0
@@ -226,21 +226,34 @@ export class CombatLog {
             messages.push(<>{`${target} は抵抗した!`}</>)
           }
         })
-        // 直接ダメージ型 (射撃呪文)・転倒効果・範囲デバフ・回復・範囲浄化の結果ログ
-        // (防御判定以降, 攻撃・射撃と共通の形式で表示する. 範囲呪文は複数対象のため, target が結果側に埋め込まれていればそちらを優先する)
+        // 直接ダメージ型 (射撃呪文/範囲呪文)・転倒効果・範囲デバフ・回復・範囲浄化・盾の結果ログ
+        // (防御判定以降, 攻撃・射撃と共通の形式で表示する. 範囲呪文は複数対象のため, 結果側に target が埋め込まれていれば随時それを直近の対象として引き継ぐ
+        // (dmg は resolveDamage 側で常に埋められるため, 後続の injuryOnLimb/knockedDown/fatal/unconscious/dead は同じ対象の一連の結果として正しく引き継がれる))
+        let currentTarget = request.targets[0]
         results.slice(1).forEach(result => {
           if (result.type === 'flash') {
+            currentTarget = result.judge.target
             this.pushFlashMessage(messages, result.judge)
           } else if (result.type === 'heal') {
+            currentTarget = result.judge.target
             this.pushHealMessage(messages, result.judge)
           } else if (result.type === 'cleanse') {
+            currentTarget = result.judge.target
             this.pushCleanseMessage(messages, result.judge)
           } else if (result.type === 'shield') {
+            currentTarget = result.judge.target
             this.pushShieldMessage(messages, result.judge)
+          } else if (result.type === 'debuffAll') {
+            currentTarget = result.judge.target
+            this.pushDebuffAllMessage(messages, result.judge)
           } else if (result.type === 'defense') {
-            this.pushDamageResolutionMessage(messages, result.judge.target ?? request.targets[0], result)
+            currentTarget = result.judge.target ?? currentTarget
+            this.pushDamageResolutionMessage(messages, currentTarget, result)
+          } else if (result.type === 'dmg') {
+            currentTarget = result.judge.target ?? currentTarget
+            this.pushDamageResolutionMessage(messages, currentTarget, result)
           } else {
-            this.pushDamageResolutionMessage(messages, request.targets[0], result)
+            this.pushDamageResolutionMessage(messages, currentTarget, result)
           }
         })
         break
@@ -257,6 +270,12 @@ export class CombatLog {
     const targetName = judge.target.name
     messages.push(<>{`${targetName} は閃光に目がくらんだ!`}</>)
     messages.push(<>{`次のターンの終わりまで 命中-4, 回避-2の修正を課される!`}</>)
+  }
+
+  // 術の範囲デバフ効果の結果ログを追加する (「サイレン」用. 抵抗判定に失敗した対象にのみ呼ばれる)
+  private pushDebuffAllMessage(messages: ReactNode[], judge: DebuffAllResult) {
+    const targetName = judge.target.name
+    messages.push(<>{`${targetName} は ${STATUS_EFFECT_LABELS[judge.statusTarget]} 状態になった!`}</>)
   }
 
   // 回復呪文の結果ログを追加する (「大地の癒し」「杯」「生命の雫」用)
