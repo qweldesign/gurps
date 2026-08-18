@@ -14,7 +14,7 @@ const WOOD_SPELL: Spell[] = [
   { id: 1, label: '茨の呪縛', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'dmg', dice: 1, dmgType: 2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
   { id: 2, label: '風の刃', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 1 }], targetScope: 'enemy' },
   { id: 3, label: 'サイレンス', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'silence', duration: 'margin' }], targetScope: 'enemy' },
-  { id: 4, label: 'リストレーション', spellType: 'range', spellCast: 3 },
+  { id: 4, label: 'リストレーション', spellType: 'range', spellCast: 3, effects: [{ kind: 'cleanse' }] },
   { id: 5, label: '召雷', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 0, metalPenalty: true }], targetScope: 'enemy' }
 ] as const
 
@@ -30,7 +30,7 @@ const FIRE_SPELL: Spell[] = [
 const EARTH_SPELL: Spell[] = [
   { id: 0, label: 'ベルセルク', spellType: 'resist', spellCast: 1, effects: [{ kind: 'buff', target: 'dmg' }, { kind: 'debuff', target: 'berserk', duration: 1 }], targetScope: 'all' },
   { id: 1, label: 'アースハンド', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'trip', mod: -2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
-  { id: 2, label: '大地の癒し', spellType: 'recover', spellCast: 2 },
+  { id: 2, label: '大地の癒し', spellType: 'recover', spellCast: 2, effects: [{ kind: 'heal', maxUses: 1, fraction: 0.5, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2, effects: [{ kind: 'status', target: 'resistant', duration: 10 }, { kind: 'debuff', target: 'dazed', duration: 1, resistMod: -2 }], targetScope: 'ally' },
   { id: 4, label: '傀儡', spellType: 'other', spellCast: 1 },
   { id: 5, label: '瓦礫の雨', spellType: 'range', spellCast: 3 }
@@ -38,7 +38,7 @@ const EARTH_SPELL: Spell[] = [
 
 const METAL_SPELL: Spell[] = [
   { id: 0, label: '金縛り', spellType: 'resist', spellCast: 1, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin' }], targetScope: 'enemy' },
-  { id: 1, label: '杯', spellType: 'recover', spellCast: 1 },
+  { id: 1, label: '杯', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, cureStun: true }], targetScope: 'ally' },
   { id: 2, label: '金貨', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin', resistMod: -2 }], targetScope: 'enemy' },
   { id: 3, label: '盾', spellType: 'defense', spellCast: 2 },
   { id: 4, label: 'サイレン', spellType: 'range', spellCast: 3 },
@@ -46,7 +46,7 @@ const METAL_SPELL: Spell[] = [
 ] as const
 
 const WATER_SPELL: Spell[] = [
-  { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1 },
+  { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, fraction: 1 / 3, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 1, label: 'ぼんやり', spellType: 'resist', spellCast: 1, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin' }], targetScope: 'enemy' },
   { id: 2, label: '水舞', spellType: 'assist', spellCast: 2, effects: [{ kind: 'buff', target: 'dr' }], targetScope: 'ally' },
   { id: 3, label: '濃霧', spellType: 'other', spellCast: 2 },
@@ -103,6 +103,12 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // flash: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の敵全員に対して個別に dmg と同様の回避判定 ( 「受け」-4/「止め」-2/「よけ」, が false なら「受け」を除く) を行う.
 // 回避に失敗した対象のみ, そのターン中 (対象自身の次ターン終了時まで) 命中判定-4・回避判定-2のペナルティ (StatusEffects.flashed) を受ける (例: 「閃光」).
 // ペナルティの数値は状態異常自体に固定で紐づく (朦朧状態の防御-4などと同様) ため, 効果データ側では持たない
+// heal: 回復呪文 (spellType: 'recover') 専用. 判定・抵抗を伴わず対象 (targetScope: 'ally') に無条件で適用する.
+// fraction 指定時は最大HPに fraction を掛けた分だけ負傷を軽減する (端数切り捨て. 実際の負傷分でキャップする). 
+// cureStun/cureLimbInjury で朦朧状態・腕脚の故障 (injuryOnArm/injuryOnLeg) をそれぞれ治癒する (気絶 (unconscious) 状態からの復帰は行わない). 
+// maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
+// cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
+// 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・混乱状態 (Health.confused) を解除する (例: 「リストレーション」)
 export type SpellEffect =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget, duration: number }
@@ -110,6 +116,8 @@ export type SpellEffect =
   | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean, burnOnDmg?: boolean }
   | { kind: 'trip', mod?: number, aim?: Aim, allowParry?: boolean }
   | { kind: 'flash', allowParry?: boolean }
+  | { kind: 'heal', maxUses: number, fraction?: number, cureStun?: boolean, cureLimbInjury?: boolean }
+  | { kind: 'cleanse' }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)
 export type SpellTargetScope = 'ally' | 'enemy' | 'all'

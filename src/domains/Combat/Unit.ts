@@ -97,6 +97,7 @@ export class CombatUnit {
   public statusEffects: StatusEffects
   public spells: Spells
   public spellCast: Spells
+  public healUses: Partial<Record<string, number>> // 回復呪文の使用回数管理 (術名をキーとする. 「1戦闘につき」の上限を持つ回復呪文用)
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
@@ -117,6 +118,7 @@ export class CombatUnit {
       acc[element] = 0
       return acc
     }, {} as Spells)
+    this.healUses = {}
     this.history = null
   }
 

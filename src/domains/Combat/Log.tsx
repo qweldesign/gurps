@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, STATUS_EFFECT_LABELS } from './Spells'
 
 let count = 0
@@ -219,11 +219,15 @@ export class CombatLog {
             messages.push(<>{`${target} は抵抗した!`}</>)
           }
         })
-        // 直接ダメージ型 (射撃呪文)・転倒効果・範囲デバフの結果ログ
+        // 直接ダメージ型 (射撃呪文)・転倒効果・範囲デバフ・回復・範囲浄化の結果ログ
         // (防御判定以降, 攻撃・射撃と共通の形式で表示する. 範囲呪文は複数対象のため, target が結果側に埋め込まれていればそちらを優先する)
         results.slice(1).forEach(result => {
           if (result.type === 'flash') {
             this.pushFlashMessage(messages, result.judge)
+          } else if (result.type === 'heal') {
+            this.pushHealMessage(messages, result.judge)
+          } else if (result.type === 'cleanse') {
+            this.pushCleanseMessage(messages, result.judge)
           } else if (result.type === 'defense') {
             this.pushDamageResolutionMessage(messages, result.judge.target ?? request.targets[0], result)
           } else {
@@ -244,6 +248,29 @@ export class CombatLog {
     const targetName = judge.target.name
     messages.push(<>{`${targetName} は閃光に目がくらんだ!`}</>)
     messages.push(<>{`次のターンの終わりまで 命中-4, 回避-2の修正を課される!`}</>)
+  }
+
+  // 回復呪文の結果ログを追加する (「大地の癒し」「杯」「生命の雫」用)
+  private pushHealMessage(messages: ReactNode[], judge: HealResult) {
+    const targetName = judge.target.name
+    if (!judge.applied) {
+      messages.push(<>{`${targetName} は効果を得られなかった...`}</>)
+      return
+    }
+    if (judge.healedAmount > 0) messages.push(<>{`${targetName} の傷が癒え, ${judge.healedAmount} 点回復した!`}</>)
+    if (judge.curedStun) messages.push(<>{`${targetName} は朦朧状態から回復した!`}</>)
+    if (judge.curedLimbInjury) messages.push(<>{`${targetName} の腕・脚の故障が治癒した!`}</>)
+  }
+
+  // 術の範囲浄化効果の結果ログを追加する (「リストレーション」用. 何か1つでも治癒した対象にのみ呼ばれる)
+  private pushCleanseMessage(messages: ReactNode[], judge: CleanseResult) {
+    const targetName = judge.target.name
+    const cured: string[] = []
+    if (judge.curedStun) cured.push('朦朧状態')
+    if (judge.curedDazed) cured.push('幻惑状態')
+    if (judge.curedBerserk) cured.push('狂戦士状態')
+    if (judge.curedConfused) cured.push('混乱状態')
+    messages.push(<>{`${targetName} の ${cured.join('・')} が解除された`}</>)
   }
 
   // 牽制・狙いの判定結果ログを追加する (「牽制」「狙い」単体実行と, 全力攻撃オプション「牽制即攻撃」の両方から利用される)
