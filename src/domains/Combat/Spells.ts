@@ -109,6 +109,11 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
 // cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
 // 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・混乱状態 (Health.confused) を解除する (例: 「リストレーション」)
+// spellType: 'defense' の術 (「盾」「時間遡行」) は, 通常の「法術」行動 (対象選択・即時効果) を経由せず, 対象自身が攻撃を受けた際に反応して発動する
+// 特殊な術のため, SpellEffect の kind としては定義しない (effects.ts 側に個別の反応ロジックとしてハードコードする. 例: 「盾」の spellCast.metal >= 2 判定)
+// 「盾」: 精神集中(金)が2ターン以上完了している状態で攻撃を受けると, 通常の防御試行回数とは別枠で, 術の技能値による「止め」相当の追加防御を自動発動する
+// (最初に判定し, 成否を問わず精神集中(金)をリセットする. 物理攻撃・術による攻撃のいずれに対しても発動する)
+// 「時間遡行」は未実装 (発動条件・効果とも別途検討する)
 export type SpellEffect =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget, duration: number }

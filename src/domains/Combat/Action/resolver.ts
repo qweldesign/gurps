@@ -83,6 +83,12 @@ export function judgeSpellDefense(target: Unit, aim: Aim, allowParry: boolean = 
   return results
 }
 
+// 「盾」(金行術, spellType: 'defense') の発動判定を返す
+// 通常の「止め」と異なり盾 (装備) を用いず, 術の技能値そのもので判定する (修正は一切かからない)
+export function judgeShieldBlock(target: Unit): Judge {
+  return judge(target.spells.metal)
+}
+
 // 術の直接ダメージ型 (射撃呪文) の判定結果を返す
 // 武器ではなく術のダイス数・ダメージ型を用いる点のみ rollDmg と異なる (DR減算・部位狙いによる急所倍率は同様に考慮する)
 // ignoreDR: true の場合, DRを無視する (例: 「召雷」の金属防具)

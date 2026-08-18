@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, STATUS_EFFECT_LABELS } from './Spells'
 
 let count = 0
@@ -66,6 +66,9 @@ export class CombatLog {
       switch (result.type) {
         case 'attack':
           success = result.judge.success
+          break
+        case 'shield':
+          success = !result.judge.success
           break
         case 'defense':
           success = !result.judge.success
@@ -153,6 +156,10 @@ export class CombatLog {
               this.pushFeintMessages(messages, actor, target, result.judge)
               break
 
+            case 'shield': // 対象が「盾」を発動した場合の結果ログ (通常の防御試行回数とは別枠)
+              this.pushShieldMessage(messages, result.judge)
+              break
+
             default: // case 'defense': case 'dmg': case 'injuryOnLimb': case 'knockedDown': case 'fatal': case 'unconscious': case 'dead': case 'trip':
               this.pushDamageResolutionMessage(messages, request.targets[0], result)
               break
@@ -228,6 +235,8 @@ export class CombatLog {
             this.pushHealMessage(messages, result.judge)
           } else if (result.type === 'cleanse') {
             this.pushCleanseMessage(messages, result.judge)
+          } else if (result.type === 'shield') {
+            this.pushShieldMessage(messages, result.judge)
           } else if (result.type === 'defense') {
             this.pushDamageResolutionMessage(messages, result.judge.target ?? request.targets[0], result)
           } else {
@@ -271,6 +280,13 @@ export class CombatLog {
     if (judge.curedBerserk) cured.push('狂戦士状態')
     if (judge.curedConfused) cured.push('混乱状態')
     messages.push(<>{`${targetName} の ${cured.join('・')} が解除された`}</>)
+  }
+
+  // 「盾」の発動結果ログを追加する (金行術. 通常の防御試行回数とは別枠の追加防御として発動する)
+  private pushShieldMessage(messages: ReactNode[], judge: ShieldResult) {
+    const targetName = judge.target.name
+    messages.push(<>{`${targetName} は「盾」を発動した!`}</>)
+    messages.push(<>{`出目は ${judge.roll}、${this.getResultLabel(judge)}`}</>)
   }
 
   // 牽制・狙いの判定結果ログを追加する (「牽制」「狙い」単体実行と, 全力攻撃オプション「牽制即攻撃」の両方から利用される)

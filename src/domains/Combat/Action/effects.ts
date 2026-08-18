@@ -4,7 +4,7 @@ import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
+import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, judgeShieldBlock, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
@@ -157,9 +157,24 @@ export class ActionEffects {
 
   // 防御判定結果配列を順に適用し, 実際の防御試行回数・武器準備状態への反映とログ用結果を生成する
   // 防御を1回でも試みた場合, 対象自身の準備・狙い・精神集中への副次的な影響も合わせて解決する (resolveDefenseInterrupts)
+  // 「盾」(金行術): 精神集中(金)が2ターン以上完了しており, かつ全力攻撃選択中でなければ (= canDodge が true なら),
+  // 通常の防御試行回数 (blockCount/parryCount) とは別枠で, 術の技能値による「止め」相当の追加防御を最初に試みる
+  // (成否を問わず発動時点で精神集中(金)はリセットされる. 成功すれば通常の防御判定は行わずそこで処理を止める)
   private resolveDefenseAttempts(target: Unit, defenseJudges: Array<Omit<DefenseResult, 'ready'>>): { results: ActionResult[], defended: boolean } {
     const results: ActionResult[] = []
     let defended = false
+    let attempted = defenseJudges.length > 0
+
+    if (target.spellCast.metal >= 2 && target.defense.canDodge) {
+      const shieldJudge = judgeShieldBlock(target)
+      target.spellCast.metal = 0
+      attempted = true
+      results.push({ type: 'shield', judge: { ...shieldJudge, target } })
+      if (shieldJudge.success) {
+        results.push(...this.resolveDefenseInterrupts(target))
+        return { results, defended: true }
+      }
+    }
 
     for (const defenseJudge of defenseJudges) {
       // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
@@ -180,8 +195,8 @@ export class ActionEffects {
       }
     }
 
-    // 防御 (受け・止め・よけのいずれか) を1回でも試みたなら, 対象自身への副次的な影響を解決する (成否は問わない)
-    if (defenseJudges.length > 0) {
+    // 防御 (「盾」(金行術)・受け・止め・よけのいずれか) を1回でも試みたなら, 対象自身への副次的な影響を解決する (成否は問わない)
+    if (attempted) {
       results.push(...this.resolveDefenseInterrupts(target))
     }
 

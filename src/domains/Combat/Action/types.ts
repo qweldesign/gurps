@@ -115,6 +115,11 @@ export type DefenseResult = Judge & {
   target?: Unit // 範囲呪文など, 単一対象前提の request.targets[0] では特定できない場合にのみ設定する (ログ表示用)
 }
 
+// 「盾」の発動結果 (金行術. 通常の防御試行回数とは別枠の追加防御. target を直接持つ (防御試行回数を消費しないため, 通常の DefenseResult とは別の結果型とする))
+export type ShieldResult = Judge & {
+  target: Unit
+}
+
 // ダメージ判定結果
 export type DmgResult = Judge
 
@@ -177,6 +182,7 @@ export type CleanseResult = {
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
   | { type: 'defense', judge: DefenseResult }
+  | { type: 'shield', judge: ShieldResult } // 術「盾」の発動判定結果 (通常の防御試行回数とは別枠の追加防御. 成否を問わず精神集中(金)をリセットする)
   | { type: 'dmg', judge: DmgResult }
   | { type: 'feint', judge: FeintResult }
   | { type: 'cast', judge: Judge }
