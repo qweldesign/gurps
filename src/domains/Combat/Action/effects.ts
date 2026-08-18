@@ -54,7 +54,7 @@ export class ActionEffects {
     const actor = this.state.actor
 
     // 攻撃判定
-    const attackJudge = judgeAttack(actor, aim, fullPower, target)
+    const attackJudge = judgeAttack(actor, aim, fullPower, target, this.state.foggy)
     // 武器の準備状態を更新 (準備の要る武器の場合, 攻撃後は非準備状態になる)
     actor.attack.ready = actor.attack.model.ready
     results.push({ type: 'attack', judge: { ...attackJudge, ready: actor.attack.ready === 0 } })
@@ -236,7 +236,7 @@ export class ActionEffects {
   // isImmediate: true の場合 (全力攻撃オプション「牽制即攻撃」から呼ばれる), 同じ行動内で直後に続く攻撃から即座に適用する
   feint(target: Unit, isImmediate: boolean = false): ActionResult[] {
     const actor = this.state.actor
-    const feintJudge = judgeFeint(actor, target)
+    const feintJudge = judgeFeint(actor, target, this.state.foggy)
     if (feintJudge.success) {
       actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score, source: 'feint' }
     }
@@ -314,6 +314,10 @@ export class ActionEffects {
             extraResults.push(...this.spellTripRoutine(target, effect))
           } else if (effect.kind === 'heal') {
             extraResults.push(...this.spellHealRoutine(target, spellData.label, effect))
+          } else if (effect.kind === 'fog') {
+            // 「濃霧」: 対象を持たない戦場全体への持続効果. 一度発動すれば戦闘終了まで持続する (再発動しても変化なし)
+            this.state.foggy = true
+            effectResults.push({ kind: 'fog' })
           } else if (effect.kind !== 'flash' && effect.kind !== 'cleanse' && effect.kind !== 'debuffAll') {
             effectResults.push(this.applySpellEffect(target, effect))
           }

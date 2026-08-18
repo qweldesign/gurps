@@ -55,7 +55,7 @@ const WATER_SPELL: Spell[] = [
   { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, fraction: 1 / 3, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 1, label: 'ぼんやり', spellType: 'resist', spellCast: 1, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin' }], targetScope: 'enemy' },
   { id: 2, label: '水舞', spellType: 'assist', spellCast: 2, effects: [{ kind: 'buff', target: 'dr' }], targetScope: 'ally' },
-  { id: 3, label: '濃霧', spellType: 'other', spellCast: 2 },
+  { id: 3, label: '濃霧', spellType: 'other', spellCast: 2, effects: [{ kind: 'fog' }] },
   { id: 4, label: '時間遡行', spellType: 'defense', spellCast: 3 },
   { id: 5, label: '吹雪', spellType: 'range', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0 }] }
 ] as const
@@ -122,6 +122,9 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // 対象選択は行わず, 発動時点の敵味方全員 (術者自身を除く) に対して個別に抵抗判定を行う.
 // 抵抗判定への修正は術者から見て敵か味方かで異なる (enemyResistMod/allyResistMod, 未指定はそれぞれ0. 例:「サイレン」の敵-2/味方+2)
 // duration の扱いは debuff と同じ (数値なら固定ターン数, 'margin' なら抵抗判定の失敗度をそのままターン数とする)
+// fog: 対象を持たない, 戦場全体への持続効果 (spellType: 'other'). 判定・抵抗を伴わず, 発動判定成功で CombatState.foggy を true にする
+// (再発動しても変化なし. 一度発生すれば戦闘終了まで持続する (時間経過での減衰は無い)). 射撃武器の距離による修正 (distanceMod) を2倍にする (「濃霧」)
+// (「術」による命中判定には距離による修正の概念自体が存在しないため, 現状は影響しない)
 // spellType: 'defense' の術 (「盾」「時間遡行」) は, 通常の「法術」行動 (対象選択・即時効果) を経由せず, 対象自身が攻撃を受けた際に反応して発動する
 // 特殊な術のため, SpellEffect の kind としては定義しない (effects.ts 側に個別の反応ロジックとしてハードコードする. 例: 「盾」の spellCast.metal >= 2 判定)
 // 「盾」: 精神集中(金)が2ターン以上完了している状態で攻撃を受けると, 通常の防御試行回数とは別枠で, 術の技能値による「止め」相当の追加防御を自動発動する
@@ -137,6 +140,7 @@ export type SpellEffect =
   | { kind: 'heal', maxUses: number, fraction?: number, cureStun?: boolean, cureLimbInjury?: boolean }
   | { kind: 'cleanse' }
   | { kind: 'debuffAll', target: StatusEffectTarget, duration: number | 'margin', enemyResistMod?: number, allyResistMod?: number }
+  | { kind: 'fog' }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)
 export type SpellTargetScope = 'ally' | 'enemy' | 'all'

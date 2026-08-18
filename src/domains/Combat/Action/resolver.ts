@@ -6,8 +6,9 @@ import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseR
 import { SPELL_LIST, type SpellElement } from '../Spells'
 
 // 攻撃の判定結果を返す (武器の準備状態の更新は effects 側の責務とする. ここでは判定のみ行う)
-export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit): Omit<AttackResult, 'ready'> {
-  const attackTarget = actor.attack.getTarget(aim, fullPower, target)
+// foggy: 「濃霧」発生中か否か (射撃武器の距離による修正が倍になる)
+export function judgeAttack(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit, foggy: boolean = false): Omit<AttackResult, 'ready'> {
+  const attackTarget = actor.attack.getTarget(aim, fullPower, target, foggy)
   return { aim, fullPower, ...judge(attackTarget) }
 }
 
@@ -109,8 +110,9 @@ export function judgeTrip(target: Unit, mod: number = 0): Judge {
 
 // 牽制・狙いの判定結果を返す (成功度がそのまま target の次の防御目標値へのペナルティになる)
 // 射撃武器の場合, target の姿勢・距離による修正を含める (近接武器の場合は影響なし)
-export function judgeFeint(actor: Unit, target: Unit): FeintResult {
-  return { target, ...score(actor.attack.getTarget('body', 'none', target)) }
+// foggy: 「濃霧」発生中か否か (射撃武器の距離による修正が倍になる)
+export function judgeFeint(actor: Unit, target: Unit, foggy: boolean = false): FeintResult {
+  return { target, ...score(actor.attack.getTarget('body', 'none', target, foggy)) }
 }
 
 // 「集中」の判定結果を返す (聾または沈黙状態の場合のみ判定を要する. それ以外は判定不要 (無条件で詠唱時間が進む) につき null を返す)

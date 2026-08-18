@@ -14,6 +14,7 @@ export class CombatState {
   public logs: Log[]
   public playLog: () => Promise<void> // Combat 本体から受け取り, Action から呼び出す
   public action: Action | null
+  public foggy: boolean // 濃霧発生中か否か (戦場全体に及ぶ持続効果. 一度発生すれば戦闘終了まで持続する. 「濃霧」用)
 
   constructor(models: Model[], playLog: () => Promise<void>) {
     this.round = 1 // 1からカウント
@@ -25,6 +26,7 @@ export class CombatState {
     this.logs = []
     this.playLog = playLog
     this.action = null
+    this.foggy = false
   }
 
   get actor() {

@@ -192,4 +192,9 @@ export class CombatAction {
     await this.state.playLog() // ログの再生完了を待つ
     if (nextTurn) this.resolve()
   }
+
+  // 濃霧発生中か否か (UI側の目標値プレビュー表示用)
+  get foggy() {
+    return this.state.foggy
+  }
 }
