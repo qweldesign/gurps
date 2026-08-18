@@ -79,6 +79,12 @@ export function judgeRecovery(actor: Unit): Judge {
   return judge(actor.defense.pre)
 }
 
+// 精神集中中に防御を試みた場合の維持判定を返す (成功: 精神集中を維持する, 失敗: 精神集中が途絶える)
+// mre (精神抵抗値) -2 で判定
+export function judgeMaintainCast(target: Unit): Judge {
+  return judge(target.defense.mre - 2)
+}
+
 // 朦朧状態からの回復判定を返す (成功: 朦朧のみ, 失敗: 転倒)
 export function judgeKnockedDown(target: Unit): Judge {
   return judge(target.defense.pre)

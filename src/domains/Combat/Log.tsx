@@ -190,6 +190,20 @@ export class CombatLog {
             case 'dead': // 即死判定 (喉狙い) の結果ログ. 失敗 (=即死) 時のみ結果が渡ってくる
               if (!result.judge.success) messages.push(<>{`${target} は 即死した!!!`}</>)
               break
+
+            case 'readyInterrupted': // 防御を試みたことによる, 射撃武器の準備の中断
+              messages.push(<>{`${target} は ${result.judge.weaponName} の準備動作が中断された!`}</>)
+              break
+
+            case 'aimInterrupted': // 防御を試みたことによる,「狙い」の中断
+              messages.push(<>{`${target} は 狙いの照準が乱れた!`}</>)
+              break
+
+            case 'castInterrupted': // 防御を試みたことによる, 精神集中の維持判定
+              messages.push(<>{`${target} による精神集中の維持判定`}</>)
+              messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
+              if (!result.judge.success) messages.push(<>{`${target} の精神集中が途絶えた!`}</>)
+              break
           }
         })
         break

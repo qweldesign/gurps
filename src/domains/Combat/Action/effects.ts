@@ -3,8 +3,8 @@
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
-import { type Aim, type FullPower, type ActionResult } from './types'
-import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeCast, judgeSpell, judgeRecovery, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
+import { type Aim, type FullPower, type ActionResult, type DefenseResult } from './types'
+import { judgeAttack, judgeDefense, rollDmg, judgeFeint, judgeCast, judgeSpell, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, type SpellElement } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
@@ -65,26 +65,8 @@ export class ActionEffects {
     const canDefend = target.defense.getCanBlock(aim) || target.defense.canParry || target.defense.canDodge
     if (!attackJudge.critical && canDefend) {
       const defenseJudges = judgeDefense(actor, aim, target)
-
-      let defended = false
-      for (const defenseJudge of defenseJudges) {
-        // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
-        // 「受け」の場合のみ, 武器の準備状態も更新する (準備の要る武器の場合, 受けの後は非準備状態になる)
-        let ready = true
-        if (defenseJudge.defenseType === 'parry') {
-          target.defense.parryCount++
-          target.attack.ready = target.attack.model.ready
-          ready = target.attack.ready === 0
-        } else if (defenseJudge.defenseType === 'block') {
-          target.defense.blockCount++
-        }
-
-        results.push({ type: 'defense', judge: { ...defenseJudge, ready } })
-        if (defenseJudge.success) {
-          defended = true
-          break
-        }
-      }
+      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      results.push(...defenseResults)
       if (defended) return results // 防御成功時はここで処理を止める
     }
 
@@ -164,13 +146,75 @@ export class ActionEffects {
     return results
   }
 
+  // 防御判定結果配列を順に適用し, 実際の防御試行回数・武器準備状態への反映とログ用結果を生成する
+  // 防御を1回でも試みた場合, 対象自身の準備・狙い・精神集中への副次的な影響も合わせて解決する (resolveDefenseInterrupts)
+  private resolveDefenseAttempts(target: Unit, defenseJudges: Array<Omit<DefenseResult, 'ready'>>): { results: ActionResult[], defended: boolean } {
+    const results: ActionResult[] = []
+    let defended = false
+
+    for (const defenseJudge of defenseJudges) {
+      // 能動防御の試行回数を加算 (「受け」「止め」はターンにつき通常1回, 全力防御時は2回まで. Defense.canParry/canBlock が参照する)
+      // 「受け」の場合のみ, 武器の準備状態も更新する (準備の要る武器の場合, 受けの後は非準備状態になる)
+      let ready = true
+      if (defenseJudge.defenseType === 'parry') {
+        target.defense.parryCount++
+        target.attack.ready = target.attack.model.ready
+        ready = target.attack.ready === 0
+      } else if (defenseJudge.defenseType === 'block') {
+        target.defense.blockCount++
+      }
+
+      results.push({ type: 'defense', judge: { ...defenseJudge, ready } })
+      if (defenseJudge.success) {
+        defended = true
+        break
+      }
+    }
+
+    // 防御 (受け・止め・よけのいずれか) を1回でも試みたなら, 対象自身への副次的な影響を解決する (成否は問わない)
+    if (defenseJudges.length > 0) {
+      results.push(...this.resolveDefenseInterrupts(target))
+    }
+
+    return { results, defended }
+  }
+
+  // 防御を試みたことによる, 対象自身への副次的な影響を解決する
+  // 準備: 準備中 (ready > 0) の射撃武器を持っている場合, 判定なしで常にそのターン分の準備が巻き戻る
+  // 狙い:「狙い」由来の持ち越し (attack.feint.source === 'snipe') がある場合のみ, 判定なしで常に破棄される (「牽制」由来は対象外)
+  // 精神集中: いずれかの系統に詠唱時間を蓄積中の場合のみ, 維持判定 (IN-4 もしくは 修養-2 相当) を行う. 失敗すれば集中が途絶える
+  private resolveDefenseInterrupts(target: Unit): ActionResult[] {
+    const results: ActionResult[] = []
+
+    if (target.attack.ready > 0 && target.attack.model.isMissile) {
+      target.attack.ready = Math.min(target.attack.ready + 1, target.attack.model.ready)
+      results.push({ type: 'readyInterrupted', judge: { weaponName: target.attack.model.name } })
+    }
+
+    if (target.attack.feint?.source === 'snipe') {
+      target.attack.feint = null
+      results.push({ type: 'aimInterrupted', judge: { source: 'snipe' } })
+    }
+
+    const castingElement = SPELL_ELEMENTS.find(element => target.spellCast[element] > 0)
+    if (castingElement) {
+      const maintainJudge = judgeMaintainCast(target)
+      results.push({ type: 'castInterrupted', judge: maintainJudge })
+      if (!maintainJudge.success) {
+        target.spellCast[castingElement] = 0 // 精神集中の途絶
+      }
+    }
+
+    return results
+  }
+
   //「牽制」実行 (成功時, 次の自分の攻撃 (対象が同じ場合) まで防御目標値の低下効果を持ち越す)
   // isImmediate: true の場合 (全力攻撃オプション「牽制即攻撃」から呼ばれる), 同じ行動内で直後に続く攻撃から即座に適用する
   feint(target: Unit, isImmediate: boolean = false): ActionResult[] {
     const actor = this.state.actor
     const feintJudge = judgeFeint(actor, target)
     if (feintJudge.success) {
-      actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score }
+      actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score, source: 'feint' }
     }
     return [{ type: 'feint', judge: feintJudge }]
   }
@@ -181,8 +225,14 @@ export class ActionEffects {
   }
 
   //「狙い」実行 (「牽制」と全く同じ判定・効果処理を, 近接に限らないターゲットに対して用いる)
+  // 発生源を 'snipe' としてマークする (「狙い」由来の持ち越しのみ, 対象が防御を試みると乱れて破棄されるため)
   snipe(target: Unit): ActionResult[] {
-    return this.feint(target)
+    const results = this.feint(target)
+    const feintResult = results[0]
+    if (feintResult.type === 'feint' && feintResult.judge.success) {
+      this.state.actor.attack.feint!.source = 'snipe'
+    }
+    return results
   }
 
   //「集中」実行 (該当する系統の詠唱時間を1蓄積する. 他の系統に集中していた場合, その詠唱時間はリセットされる)

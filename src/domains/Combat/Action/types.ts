@@ -129,6 +129,16 @@ export type InjuryOnLimbResult = {
   limb: Aim
 }
 
+// 射撃武器の準備の中断結果 (判定は伴わず, 巻き戻った武器名のみを持つ)
+export type ReadyInterruptResult = {
+  weaponName: string
+}
+
+// 狙いの中断結果 (判定は伴わない.「狙い」由来の持ち越しが破棄されたことを示すのみ)
+export type AimInterruptResult = {
+  source: 'snipe'
+}
+
 // 行動実行後の判定結果の定義
 export type ActionResult =
   | { type: 'attack', judge: AttackResult }
@@ -143,3 +153,6 @@ export type ActionResult =
   | { type: 'fatal', judge: Judge }
   | { type: 'unconscious', judge: Judge }
   | { type: 'dead', judge: Judge }
+  | { type: 'readyInterrupted', judge: ReadyInterruptResult } // 防御を試みたことによる, 射撃武器の準備の中断
+  | { type: 'aimInterrupted', judge: AimInterruptResult } // 防御を試みたことによる,「狙い」の中断
+  | { type: 'castInterrupted', judge: Judge } // 防御を試みたことによる, 精神集中の維持判定

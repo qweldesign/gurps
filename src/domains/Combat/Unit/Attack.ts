@@ -9,6 +9,7 @@ export type Feint = {
   currentTurn: boolean // true: 牽制を行ったターン自身 (まだ適用されない), false: 次ターン以降 (適用可能)
   target: Unit
   score: number
+  source: 'feint' | 'snipe' // 発生源 ('feint': 牽制, 'snipe': 狙い). 「狙い」由来の持ち越しのみ, 対象が防御を試みると乱れて破棄される
 }
 
 export class CombatUnitAttack {
