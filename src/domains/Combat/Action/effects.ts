@@ -287,10 +287,11 @@ export class ActionEffects {
 
     if (spellJudge.success) {
       if (spellData.spellType === 'range') {
-        // 範囲呪文: 対象選択を経ず, 効果の性質に応じた対象集団 (dmg/flash: 敵全員/cleanse: 味方全員・術者自身を含む/debuffAll: 敵味方全員・術者自身を除く) に対し個別に効果を解決する
+        // 範囲呪文: 対象選択を経ず, 効果の性質に応じた対象集団 (dmg/flash: 敵全員 (dmg は randomTarget: true ならランダムに1体)/cleanse: 味方全員・術者自身を含む/debuffAll: 敵味方全員・術者自身を除く) に対し個別に効果を解決する
         effects.forEach(effect => {
           if (effect.kind === 'dmg') {
-            const rangeTargets = this.state.formation?.getEnemies() ?? []
+            const enemies = this.state.formation?.getEnemies() ?? []
+            const rangeTargets = effect.randomTarget ? this.pickRandomTarget(enemies) : enemies
             rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellDmgRoutine(rangeTarget, effect)))
           } else if (effect.kind === 'flash') {
             const rangeTargets = this.state.formation?.getEnemies() ?? []
@@ -458,6 +459,12 @@ export class ActionEffects {
 
     const healResult: HealResult = { target, applied: true, healedAmount, curedStun, curedLimbInjury }
     return [{ type: 'heal', judge: healResult }]
+  }
+
+  // 候補群からランダムに1体を選んで配列で返す (「瓦礫の雨」用. 候補が0体なら空配列を返す (何も起きない))
+  private pickRandomTarget(candidates: Unit[]): Unit[] {
+    if (candidates.length === 0) return []
+    return [candidates[Math.floor(Math.random() * candidates.length)]]
   }
 
   // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・混乱状態を解除する)

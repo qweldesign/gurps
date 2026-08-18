@@ -33,7 +33,13 @@ const EARTH_SPELL: Spell[] = [
   { id: 2, label: '大地の癒し', spellType: 'recover', spellCast: 2, effects: [{ kind: 'heal', maxUses: 1, fraction: 0.5, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2, effects: [{ kind: 'status', target: 'resistant', duration: 10 }, { kind: 'debuff', target: 'dazed', duration: 1, resistMod: -2 }], targetScope: 'ally' },
   { id: 4, label: '傀儡', spellType: 'other', spellCast: 1 },
-  { id: 5, label: '瓦礫の雨', spellType: 'range', spellCast: 3 }
+  {
+    id: 5, label: '瓦礫の雨', spellType: 'range', spellCast: 3, effects: [
+      { kind: 'dmg', dice: 2, dmgType: 0, randomTarget: true },
+      { kind: 'dmg', dice: 2, dmgType: 1, randomTarget: true },
+      { kind: 'dmg', dice: 2, dmgType: 2, randomTarget: true }
+    ]
+  }
 ] as const
 
 const METAL_SPELL: Spell[] = [
@@ -95,6 +101,8 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
 // dmg: 直接ダメージ型 (射撃呪文, および範囲呪文 (spellType: 'range') での使用も可). 対象は「受け」-4/「止め」-2/「よけ」で回避判定を行い, 失敗すればダイス数・ダメージ型に応じたダメージを受ける
 // (DR減算・部位狙いによる負傷上限/故障・朦朧/転倒・気絶/死亡までの解決は, 通常の攻撃・射撃と共通のロジックを用いる)
 // spellType: 'range' で用いる場合, 対象選択を経ず, 発動時点の敵全員に対して個別に (flash と同様) 上記の回避判定・ダメージ解決を行う (例: 「炎の嵐」「火の鳥」「吹雪」)
+// randomTarget: true の場合, spellType: 'range' において敵全員ではなく, 発動時点の敵からランダムに1体を選び, その対象にのみ上記の解決を行う
+// (敵が0体なら何も起きない. 効果を複数 (同じ kind: 'dmg' を複数個) 指定すれば, 各効果ごとに独立してランダムな対象を選び直す (同じ対象に重複しうる. 例:「瓦礫の雨」の3回))
 // trip: dmg と同じ回避判定を経た上で, ダメージの代わりに転倒判定 (mod 付き) のみを行う (「アースハンド」用)
 // aim: 未指定なら 'body' (通常の射撃呪文). allowParry: 未指定なら true. 足首を狙う術など「受け」による回避が許されない場合のみ false を指定する
 // metalPenalty: true の場合, 対象の (aim部位に対応する) 防具が金属製 (SDR > 2, チェインメイル以上) なら,
@@ -123,7 +131,7 @@ export type SpellEffect =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget, duration: number }
   | { kind: 'debuff', target: StatusEffectTarget, duration: number | 'margin', resistMod?: number }
-  | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean, burnOnDmg?: boolean }
+  | { kind: 'dmg', dice: number, dmgType: number, aim?: Aim, allowParry?: boolean, metalPenalty?: boolean, burnOnDmg?: boolean, randomTarget?: boolean }
   | { kind: 'trip', mod?: number, aim?: Aim, allowParry?: boolean }
   | { kind: 'flash', allowParry?: boolean }
   | { kind: 'heal', maxUses: number, fraction?: number, cureStun?: boolean, cureLimbInjury?: boolean }
