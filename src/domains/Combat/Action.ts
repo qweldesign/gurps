@@ -3,14 +3,14 @@
 import { CombatState as State } from './State'
 import { POSITION_KEYS, POSTURE_KEYS, type Posture } from './Unit'
 import { SPELL_ELEMENTS, type SpellElement } from './Spells'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type FullPower, type Aim } from './Action/types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
 import { ActionEffects } from './Action/effects'
 
 // 定数・型定義は Action/types.ts に集約する
 // 既存の呼び出し元 (Action.tsx, Log.tsx) が引き続き参照できるよう, ここから re-export する
 export { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS }
-export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, FeintResult, SpellResult, FlashResult, FullPower, Aim }
+export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, FeintResult, SpellResult, FlashResult, HealResult, CleanseResult, FullPower, Aim }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 // 行動可否判定は Action/availability.ts, 状態変更は Action/effects.ts に委譲する

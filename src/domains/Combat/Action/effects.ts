@@ -3,7 +3,7 @@
 import { CombatState as State } from '../State'
 import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
-import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult } from './types'
+import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
 
@@ -272,14 +272,15 @@ export class ActionEffects {
 
     if (spellJudge.success) {
       if (spellData.spellType === 'range') {
-        // 範囲呪文: 敵全員 (味方・術者自身は対象外) に対し, 個別に回避判定を経て効果を解決する
-        const rangeTargets = this.state.formation?.getEnemies() ?? []
-        rangeTargets.forEach(rangeTarget => {
-          effects.forEach(effect => {
-            if (effect.kind === 'flash') {
-              extraResults.push(...this.spellFlashRoutine(rangeTarget, effect))
-            }
-          })
+        // 範囲呪文: 対象選択を経ず, 効果の性質に応じた対象集団 (flash: 敵全員/cleanse: 味方全員・術者自身を含む) に対し個別に効果を解決する
+        effects.forEach(effect => {
+          if (effect.kind === 'flash') {
+            const rangeTargets = this.state.formation?.getEnemies() ?? []
+            rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellFlashRoutine(rangeTarget, effect)))
+          } else if (effect.kind === 'cleanse') {
+            const rangeTargets = this.state.formation?.getAllies() ?? []
+            rangeTargets.forEach(rangeTarget => extraResults.push(...this.spellCleanseRoutine(rangeTarget)))
+          }
         })
       } else {
         effects.forEach(effect => {
@@ -287,7 +288,9 @@ export class ActionEffects {
             extraResults.push(...this.spellDmgRoutine(target, effect))
           } else if (effect.kind === 'trip') {
             extraResults.push(...this.spellTripRoutine(target, effect))
-          } else if (effect.kind !== 'flash') {
+          } else if (effect.kind === 'heal') {
+            extraResults.push(...this.spellHealRoutine(target, spellData.label, effect))
+          } else if (effect.kind !== 'flash' && effect.kind !== 'cleanse') {
             effectResults.push(this.applySpellEffect(target, effect))
           }
         })
@@ -405,6 +408,51 @@ export class ActionEffects {
     results.push({ type: 'flash', judge: flashResult })
 
     return results
+  }
+
+  // 回復呪文の効果適用 (「大地の癒し」「杯」「生命の雫」用. 判定・抵抗は伴わず, 使用回数上限のみ確認する)
+  // 対象・術ごとの使用回数 (CombatUnit.healUses, キーは術名) が maxUses に達している場合, 発動はしたが効果を得られない
+  private spellHealRoutine(target: Unit, spellLabel: string, effect: Extract<SpellEffect, { kind: 'heal' }>): ActionResult[] {
+    const usedCount = target.healUses[spellLabel] ?? 0
+    if (usedCount >= effect.maxUses) {
+      const healResult: HealResult = { target, applied: false, healedAmount: 0, curedStun: false, curedLimbInjury: false }
+      return [{ type: 'heal', judge: healResult }]
+    }
+    target.healUses[spellLabel] = usedCount + 1
+
+    // 負傷の軽減 (実際の負傷分をキャップとする. 気絶 (unconscious) 状態からの復帰は行わない)
+    const healedAmount = effect.fraction ? Math.min(target.health.injury, Math.floor(target.health.maxHp * effect.fraction)) : 0
+    if (healedAmount > 0) target.health.injury -= healedAmount
+
+    const curedStun = effect.cureStun === true && target.health.stunned
+    if (curedStun) target.health.stunned = false
+
+    const curedLimbInjury = effect.cureLimbInjury === true && (target.health.injuryOnArm || target.health.injuryOnLeg)
+    if (effect.cureLimbInjury) {
+      target.health.injuryOnArm = false
+      target.health.injuryOnLeg = false
+    }
+
+    const healResult: HealResult = { target, applied: true, healedAmount, curedStun, curedLimbInjury }
+    return [{ type: 'heal', judge: healResult }]
+  }
+
+  // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・混乱状態を解除する)
+  // 何も治癒しなかった場合は結果を生成しない (対象が多数になりうるため, ログの無意味な水増しを避ける)
+  private spellCleanseRoutine(target: Unit): ActionResult[] {
+    const curedStun = target.health.stunned
+    const curedDazed = target.statusEffects.dazed > 0
+    const curedBerserk = target.statusEffects.berserk > 0
+    const curedConfused = target.health.confused
+    if (!curedStun && !curedDazed && !curedBerserk && !curedConfused) return []
+
+    target.health.stunned = false
+    target.statusEffects.dazed = 0
+    target.statusEffects.berserk = 0
+    target.health.confused = false
+
+    const cleanseResult: CleanseResult = { target, curedStun, curedDazed, curedBerserk, curedConfused }
+    return [{ type: 'cleanse', judge: cleanseResult }]
   }
 
   //「全力防御」実行 (次の相手のターンまで, 能動防御の試行回数上限が2回に増える. Defense.nextTurn() で isFullDefense に引き継がれる)
