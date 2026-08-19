@@ -1,11 +1,11 @@
 // Combat/Unit.ts
 
 import { type WeaponSlotKey, type ArmorSlotKey } from '../Equipments'
-import { CombatUnitAttack as Attack } from './Unit/Attack'
-import { CombatUnitDefense as Defense } from './Unit/Defense'
-import { CombatUnitHealth as Health } from './Unit/Health'
-import { CombatUnitStatusBuff as StatusBuff } from './Unit/StatusBuff'
-import { CombatUnitStatusEffects as StatusEffects } from './Unit/StatusEffects'
+import { CombatUnitAttack as Attack, type CombatUnitAttackSnapshot as AttackSnapshot } from './Unit/Attack'
+import { CombatUnitDefense as Defense, type CombatUnitDefenseSnapshot as DefenseSnapshot } from './Unit/Defense'
+import { CombatUnitHealth as Health, type CombatUnitHealthSnapshot as HealthSnapshot } from './Unit/Health'
+import { CombatUnitStatusBuff as StatusBuff, type CombatUnitStatusBuffSnapshot as StatusBuffSnapshot } from './Unit/StatusBuff'
+import { CombatUnitStatusEffects as StatusEffects, type CombatUnitStatusEffectsSnapshot as StatusEffectsSnapshot } from './Unit/StatusEffects'
 import { SPELL_ELEMENTS, type Spells } from './Spells'
 import { type CombatLog as Log } from './Log'
 
@@ -83,6 +83,19 @@ export type CombatUnitModel = {
   spells: Spells
 }
 
+// 「時間遡行」用のユニット全体のスナップショット
+export type CombatUnitSnapshot = {
+  position: Position
+  posture: Posture
+  spellCast: Spells
+  healUses: Partial<Record<string, number>>
+  attack: AttackSnapshot
+  defense: DefenseSnapshot
+  health: HealthSnapshot
+  statusBuff: StatusBuffSnapshot
+  statusEffects: StatusEffectsSnapshot
+}
+
 // 戦闘ユニットを司るクラス
 export class CombatUnit {
   public combatId: CombatId
@@ -126,5 +139,33 @@ export class CombatUnit {
   // Summary 表示用ラベル取得 (状態 → 状態異常 → バフの優先順で, 該当する最初のものを返す)
   get label(): string {
     return this.health.label || this.statusEffects.label || this.statusBuff.label
+  }
+
+  // 「時間遡行」用: 現在の可変状態のスナップショットを取得する (history は対象外. ターン開始前には更新されないため)
+  getSnapshot(): CombatUnitSnapshot {
+    return {
+      position: this.position,
+      posture: this.posture,
+      spellCast: { ...this.spellCast },
+      healUses: { ...this.healUses },
+      attack: this.attack.getSnapshot(),
+      defense: this.defense.getSnapshot(),
+      health: this.health.getSnapshot(),
+      statusBuff: this.statusBuff.getSnapshot(),
+      statusEffects: this.statusEffects.getSnapshot()
+    }
+  }
+
+  // 「時間遡行」用: スナップショットの状態へ復元する
+  restoreSnapshot(snapshot: CombatUnitSnapshot) {
+    this.position = snapshot.position
+    this.posture = snapshot.posture
+    this.spellCast = { ...snapshot.spellCast }
+    this.healUses = { ...snapshot.healUses }
+    this.attack.restoreSnapshot(snapshot.attack)
+    this.defense.restoreSnapshot(snapshot.defense)
+    this.health.restoreSnapshot(snapshot.health)
+    this.statusBuff.restoreSnapshot(snapshot.statusBuff)
+    this.statusEffects.restoreSnapshot(snapshot.statusEffects)
   }
 }

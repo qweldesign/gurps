@@ -2,6 +2,22 @@
 
 import { CombatUnit as Unit } from '../Unit'
 
+// 「時間遡行」用のスナップショット (可変な状態のみを持つ. ev/pre/mre等の固定値は含まない)
+export type CombatUnitHealthSnapshot = {
+  injury: number
+  stunned: boolean
+  unconscious: boolean
+  dead: boolean
+  confused: boolean
+  injuryOnArm: boolean
+  injuryOnLeg: boolean
+  blinded: boolean
+  deafened: boolean
+  burning: boolean
+  dazzled: boolean
+  puppeted: boolean
+}
+
 export class CombatUnitHealth {
   private self: Unit
   public maxHp: number
@@ -79,6 +95,40 @@ export class CombatUnitHealth {
     else if (ratio < 1 / 3) return 'stunned'
     else if (ratio < 2 / 3) return 'injured'
     else return 'normal'
+  }
+
+  // 「時間遡行」用: 現在の可変状態のスナップショットを取得する
+  getSnapshot(): CombatUnitHealthSnapshot {
+    return {
+      injury: this._injury,
+      stunned: this._stunned,
+      unconscious: this.unconscious,
+      dead: this.dead,
+      confused: this.confused,
+      injuryOnArm: this.injuryOnArm,
+      injuryOnLeg: this.injuryOnLeg,
+      blinded: this.blinded,
+      deafened: this.deafened,
+      burning: this.burning,
+      dazzled: this.dazzled,
+      puppeted: this.puppeted
+    }
+  }
+
+  // 「時間遡行」用: スナップショットの状態へ復元する (setter の副作用 (自動朦朧・気絶等) を経由せず, 直接値を書き戻す)
+  restoreSnapshot(snapshot: CombatUnitHealthSnapshot) {
+    this._injury = snapshot.injury
+    this._stunned = snapshot.stunned
+    this.unconscious = snapshot.unconscious
+    this.dead = snapshot.dead
+    this.confused = snapshot.confused
+    this.injuryOnArm = snapshot.injuryOnArm
+    this.injuryOnLeg = snapshot.injuryOnLeg
+    this.blinded = snapshot.blinded
+    this.deafened = snapshot.deafened
+    this.burning = snapshot.burning
+    this.dazzled = snapshot.dazzled
+    this.puppeted = snapshot.puppeted
   }
 
   // Summary 表示用ラベル取得 (深刻度が高い状態を優先して1つ返す)

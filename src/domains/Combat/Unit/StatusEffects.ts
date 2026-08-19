@@ -1,5 +1,17 @@
 // Combat/Unit/StatusEffects.ts
 
+// 「時間遡行」用のスナップショット
+export type CombatUnitStatusEffectsSnapshot = {
+  silence: number
+  resistant: number
+  poisoned: number
+  paralyzed: number
+  dazed: number
+  berserk: number
+  panic: number
+  flashed: number
+}
+
 // ターン経過で自然に減衰する, ユニットの一時的な状態異常を司るクラス
 export class CombatUnitStatusEffects {
   public silence: number // 沈黙
@@ -32,6 +44,32 @@ export class CombatUnitStatusEffects {
     this.berserk = Math.max(this.berserk - 1, 0)
     this.panic = Math.max(this.panic - 1, 0)
     this.flashed = Math.max(this.flashed - 1, 0)
+  }
+
+  // 「時間遡行」用: 現在の状態のスナップショットを取得する
+  getSnapshot(): CombatUnitStatusEffectsSnapshot {
+    return {
+      silence: this.silence,
+      resistant: this.resistant,
+      poisoned: this.poisoned,
+      paralyzed: this.paralyzed,
+      dazed: this.dazed,
+      berserk: this.berserk,
+      panic: this.panic,
+      flashed: this.flashed
+    }
+  }
+
+  // 「時間遡行」用: スナップショットの状態へ復元する
+  restoreSnapshot(snapshot: CombatUnitStatusEffectsSnapshot) {
+    this.silence = snapshot.silence
+    this.resistant = snapshot.resistant
+    this.poisoned = snapshot.poisoned
+    this.paralyzed = snapshot.paralyzed
+    this.dazed = snapshot.dazed
+    this.berserk = snapshot.berserk
+    this.panic = snapshot.panic
+    this.flashed = snapshot.flashed
   }
 
   // Summary 表示用ラベル取得 (優先度が高い状態異常を1つ返す)

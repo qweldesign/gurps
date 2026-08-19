@@ -1,9 +1,21 @@
 // Combat/State.ts
 
 import { CombatLog as Log } from './Log'
-import { type CombatUnitModel as Model, CombatUnit as Unit } from './Unit'
+import { type CombatUnitModel as Model, type CombatUnitSnapshot as UnitSnapshot, CombatUnit as Unit } from './Unit'
 import { CombatFormation as Formation } from './Formation'
 import { CombatAction as Action } from './Action'
+import { judgeTimeRegression } from './Action/resolver'
+import { SPELL_ELEMENTS } from './Spells'
+
+// 「重篤な状態」(「時間遡行」の発動条件用): 死亡・気絶・転倒・目/耳/四肢の故障のいずれか
+function isCriticalUnit(unit: Unit): boolean {
+  return unit.health.dead || unit.health.unconscious || unit.posture === 'prone' ||
+    unit.health.blinded || unit.health.deafened || unit.health.injuryOnArm || unit.health.injuryOnLeg
+}
+function isCriticalSnapshot(snapshot: UnitSnapshot): boolean {
+  return snapshot.health.dead || snapshot.health.unconscious || snapshot.posture === 'prone' ||
+    snapshot.health.blinded || snapshot.health.deafened || snapshot.health.injuryOnArm || snapshot.health.injuryOnLeg
+}
 
 // 全ての情報を集約・管理するクラス
 export class CombatState {
@@ -51,23 +63,86 @@ export class CombatState {
     // 新しいログを追加
     const newLog = new Log(this.actor)
     this.logs.unshift(newLog)
+
+    // 「時間遡行」用: 相手陣営に発動候補 (精神集中(水)が3ターン以上) がいる場合のみ, 全ユニットの状態をスナップショットする
+    // (このターンの間, 精神集中は候補側の行動によってしか増減しないため, ターン開始前に候補がいなければ発動しうる者もいない)
+    const hasOpposingCandidate = this.units.some(unit => unit.side !== this.actor.side && unit.spellCast.water >= 3)
+    const snapshot: Map<Unit, UnitSnapshot> | null = hasOpposingCandidate
+      ? new Map(this.units.map(unit => [unit, unit.getSnapshot()]))
+      : null
+
     // ターン開始ログを表示
     await this.playLog()
     // コマンドパレット初期化
     this.action = new Action(this)
     //　コマンド入力待機
-    await this.action.promise.then(() => {
-      // 牽制の持ち越し状態を更新 (自身のターン終了時点で適用可能に, 未適用なら破棄)
-      this.actor.attack.nextTurn()
-      // 行動者の能動防御 (受け・止めの試行回数, 全力防御) をリセット
-      this.actor.defense.nextTurn()
-      // 行動者の状態異常・バフの残存時間を更新
-      this.actor.statusEffects.nextTurn()
-      this.actor.statusBuff.nextTurn()
+    await this.action.promise.then(async () => {
+      const actor = this.actor
+      // 「時間遡行」の発動判定 (行動者のターンが完全に終わった直後, ターン終了処理の前に判定する)
+      const regressed = snapshot ? await this.resolveTimeRegression(actor, snapshot) : false
+
+      if (!regressed) {
+        // 牽制の持ち越し状態を更新 (自身のターン終了時点で適用可能に, 未適用なら破棄)
+        actor.attack.nextTurn()
+        // 行動者の能動防御 (受け・止めの試行回数, 全力防御) をリセット
+        actor.defense.nextTurn()
+        // 行動者の状態異常・バフの残存時間を更新
+        actor.statusEffects.nextTurn()
+        actor.statusBuff.nextTurn()
+      }
       // 自身を呼び出し, また次のターンへ進む
       this.debug()
       this.nextTurn()
     })
+  }
+
+  // 「時間遡行」(水行術, spellType: 'defense') の発動判定・巻き戻しを行う
+  // 発動条件: actor の相手陣営に精神集中(水)を3ターン以上維持している (=このターンの間に阻害されていない) 者がおり,
+  // かつ その陣営の誰か (術者自身を含む) が, このターンの間に新たに重篤な状態 (死亡・気絶・転倒・目/耳/四肢の故障) に陥った場合
+  // 候補が複数いる場合は combatId が最も若い者が発動する
+  // 成否を問わず, 発動した時点で精神集中はリセットされる. 成功した場合のみ全ユニットの状態をスナップショット時点へ巻き戻す
+  // 巻き戻しに成功した場合, そのターン (行動者自身の終了処理を含む) が丸ごと無かったことになるため, 呼び出し元は行動者の
+  // ターン終了処理 (attack/defense/statusEffects/statusBuff の nextTurn) をスキップする (戻り値 true で判別する)
+  private async resolveTimeRegression(actor: Unit, snapshot: Map<Unit, UnitSnapshot>): Promise<boolean> {
+    // 発動候補: actor の相手陣営で, このターンの間も精神集中(水)を3ターン以上維持できている (=阻害されていない) ユニット
+    // 気絶・死亡している者は (このターンでそうなった場合を含め) 行動不能のため候補から除外する
+    // (「転倒」による重篤化は既存の無条件解除ルールにより自身の集中も同時に途絶えるため, 自動的に候補から外れる.
+    //  気絶」「死亡」は一撃で意識を失う場合もあり, その場合精神集中自体は数値上残ってしまうため, ここで明示的に除外する)
+    const candidates = this.units.filter(unit => unit.side !== actor.side && unit.spellCast.water >= 3 && !unit.health.unconscious && !unit.health.dead)
+    if (candidates.length === 0) return false
+
+    // このターンの間に, 候補の陣営の誰か (術者自身を含む) が新たに重篤な状態に陥ったか
+    const candidateSide = candidates[0].side
+    const newlyCritical = this.units.some(unit => {
+      if (unit.side !== candidateSide) return false
+      const before = snapshot.get(unit)
+      if (!before || isCriticalSnapshot(before)) return false // 元々重篤だった場合は対象外 (新たに「陥った」場合のみ)
+      return isCriticalUnit(unit)
+    })
+    if (!newlyCritical) return false
+
+    // combatId が最も若い候補が発動する
+    const caster = [...candidates].sort((a, b) => a.combatId - b.combatId)[0]
+
+    // 発動 (成否を問わず, 発動時点で精神集中はリセットされる)
+    const judge = judgeTimeRegression(caster)
+    SPELL_ELEMENTS.forEach(element => { caster.spellCast[element] = 0 })
+
+    const log = this.logs[0]
+    log.receiveTimeRegression(caster, judge)
+    await this.playLog()
+
+    if (!judge.success) return false
+
+    // 巻き戻し: 全ユニットの状態をスナップショット時点へ復元する
+    this.units.forEach(unit => {
+      const before = snapshot.get(unit)
+      if (before) unit.restoreSnapshot(before)
+    })
+    // 精神集中は巻き戻し後もリセットされたままとする (復元により一旦元の値に戻るため, 改めてリセットする)
+    SPELL_ELEMENTS.forEach(element => { caster.spellCast[element] = 0 })
+
+    return true
   }
 
   debug() {

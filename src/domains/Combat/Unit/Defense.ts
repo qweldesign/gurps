@@ -4,6 +4,21 @@ import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
 import { type Aim } from '../Action/types'
 import { POSTURE_MODS, type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, CombatUnit as Unit } from '../Unit'
 
+// 「時間遡行」用のスナップショット (可変な状態のみを持つ. ev/pre/mre等の固定値は含まない)
+export type CombatUnitDefenseSnapshot = {
+  parryTarget: number
+  blockTarget: number
+  dodgeTarget: number
+  canParry: boolean
+  canBlock: boolean
+  parryCount: number
+  blockCount: number
+  isFullAttackTurn: boolean
+  isFullAttack: boolean
+  isFullDefenseTurn: boolean
+  isFullDefense: boolean
+}
+
 export class CombatUnitDefense {
   private self: Unit
   private models: DefenseModels
@@ -212,6 +227,38 @@ export class CombatUnitDefense {
     else if (key === 'arm') return this.arm
     else if (key === 'leg') return this.leg
     else return this.body
+  }
+
+  // 「時間遡行」用: 現在の可変状態のスナップショットを取得する
+  getSnapshot(): CombatUnitDefenseSnapshot {
+    return {
+      parryTarget: this._parryTarget,
+      blockTarget: this._blockTarget,
+      dodgeTarget: this._dodgeTarget,
+      canParry: this._canParry,
+      canBlock: this._canBlock,
+      parryCount: this.parryCount,
+      blockCount: this.blockCount,
+      isFullAttackTurn: this.isFullAttackTurn,
+      isFullAttack: this.isFullAttack,
+      isFullDefenseTurn: this.isFullDefenseTurn,
+      isFullDefense: this.isFullDefense
+    }
+  }
+
+  // 「時間遡行」用: スナップショットの状態へ復元する
+  restoreSnapshot(snapshot: CombatUnitDefenseSnapshot) {
+    this._parryTarget = snapshot.parryTarget
+    this._blockTarget = snapshot.blockTarget
+    this._dodgeTarget = snapshot.dodgeTarget
+    this._canParry = snapshot.canParry
+    this._canBlock = snapshot.canBlock
+    this.parryCount = snapshot.parryCount
+    this.blockCount = snapshot.blockCount
+    this.isFullAttackTurn = snapshot.isFullAttackTurn
+    this.isFullAttack = snapshot.isFullAttack
+    this.isFullDefenseTurn = snapshot.isFullDefenseTurn
+    this.isFullDefense = snapshot.isFullDefense
   }
 
   // 防御キーとダメージ型を指定してダメージ抵抗を取得

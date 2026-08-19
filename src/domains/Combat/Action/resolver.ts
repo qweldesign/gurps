@@ -90,6 +90,12 @@ export function judgeShieldBlock(target: Unit): Judge {
   return judge(target.spells.metal)
 }
 
+// 「時間遡行」(水行術, spellType: 'defense') の発動判定を返す
+// 盾と同様, 術の技能値そのもので判定する (修正は一切かからない)
+export function judgeTimeRegression(caster: Unit): Judge {
+  return judge(caster.spells.water)
+}
+
 // 術の直接ダメージ型 (射撃呪文) の判定結果を返す
 // 武器ではなく術のダイス数・ダメージ型を用いる点のみ rollDmg と異なる (DR減算・部位狙いによる急所倍率は同様に考慮する)
 // ignoreDR: true の場合, DRを無視する (例: 「召雷」の金属防具)

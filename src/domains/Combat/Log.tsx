@@ -29,6 +29,24 @@ export class CombatLog {
     this.messages.push(this.createMessages(request, results))
   }
 
+  // 「時間遡行」用: State (nextTurn) から直接呼び出される, ターン全体に対する追加のログ
+  // (特定の ActionRequest/ActionResult に紐づかないため, receiveResults とは別枠で messages に積む)
+  receiveTimeRegression(caster: Unit, judge: Judge) {
+    const messages: ReactNode[] = []
+    if (!judge.success) {
+      // 失敗時は発動判定の出目を見せず,「不発」であったことだけを示す (他の術の不発時のログと同じ体裁)
+      messages.push(<>{`${caster.name} の「時間遡行」は不発に終わった...`}</>)
+      messages.push(<>&nbsp;</>)
+      this.messages.push(messages)
+      return
+    }
+    messages.push(<>{`${caster.name} の「時間遡行」が発動!!`}</>)
+    messages.push(<>{`出目は ${judge.roll}、${this.getResultLabel(judge)}`}</>)
+    messages.push(<>{`時間が巻き戻り、${this.actor.name} の行動は無かったことになった!!`}</>)
+    messages.push(<>&nbsp;</>)
+    this.messages.push(messages)
+  }
+
   // ラベル生成 (Summary履歴用)
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {

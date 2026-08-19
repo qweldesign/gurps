@@ -12,6 +12,13 @@ export type Feint = {
   source: 'feint' | 'snipe' // 発生源 ('feint': 牽制, 'snipe': 狙い). 「狙い」由来の持ち越しのみ, 対象が防御を試みると乱れて破棄される
 }
 
+// 「時間遡行」用のスナップショット (可変な状態のみを持つ)
+export type CombatUnitAttackSnapshot = {
+  key: WeaponSlotKey
+  ready: number
+  feint: Feint | null
+}
+
 export class CombatUnitAttack {
   private self: Unit
   private models: AttackModels
@@ -102,5 +109,23 @@ export class CombatUnitAttack {
     mod += fullPower === 'dmg' ? 6 : 0
     const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
     return Math.max(0, Math.floor((count * 3.5 + mod) * rate))
+  }
+
+  // 「時間遡行」用: 現在の可変状態のスナップショットを取得する
+  // (key は changeKeyCallback の副作用 (Defense 側の目標値再計算) を伴うが, Defense 自体も個別にスナップショット・復元するため,
+  //  ここでは _key の値のみを直接保持し, 復元時もコールバックを経由せず直接書き戻す)
+  getSnapshot(): CombatUnitAttackSnapshot {
+    return {
+      key: this._key,
+      ready: this.ready,
+      feint: this.feint ? { ...this.feint } : null
+    }
+  }
+
+  // 「時間遡行」用: スナップショットの状態へ復元する
+  restoreSnapshot(snapshot: CombatUnitAttackSnapshot) {
+    this._key = snapshot.key
+    this.ready = snapshot.ready
+    this.feint = snapshot.feint ? { ...snapshot.feint } : null
   }
 }

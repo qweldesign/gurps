@@ -1,5 +1,13 @@
 // Combat/Unit/StatusBuff.ts
 
+// 「時間遡行」用のスナップショット (可変な状態のみを持つ. dmgInitBuff/evInitBuff は初期化時のみ設定される固定値のため含まない)
+export type CombatUnitStatusBuffSnapshot = {
+  levelBuff: number
+  dmgBuff: number
+  evBuff: number
+  drBuff: number
+}
+
 // 補助呪文等に由来する, ユニットの一時的なバフを司るクラス
 export class CombatUnitStatusBuff {
   private dmgInitBuff: number //「怪力」端数
@@ -65,6 +73,24 @@ export class CombatUnitStatusBuff {
   get dr() {
     // 残ターン数が残っていれば, 効果は一定
     return this.drBuff > 0 ? 1 : 0
+  }
+
+  // 「時間遡行」用: 現在の可変状態のスナップショットを取得する
+  getSnapshot(): CombatUnitStatusBuffSnapshot {
+    return {
+      levelBuff: this.levelBuff,
+      dmgBuff: this.dmgBuff,
+      evBuff: this.evBuff,
+      drBuff: this.drBuff
+    }
+  }
+
+  // 「時間遡行」用: スナップショットの状態へ復元する
+  restoreSnapshot(snapshot: CombatUnitStatusBuffSnapshot) {
+    this.levelBuff = snapshot.levelBuff
+    this.dmgBuff = snapshot.dmgBuff
+    this.evBuff = snapshot.evBuff
+    this.drBuff = snapshot.drBuff
   }
 
   // Summary 表示用ラベル取得 (該当するバフを1つ返す)
