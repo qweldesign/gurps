@@ -63,23 +63,29 @@ export class ActionEffects {
     // 防御判定 (攻撃判定がクリティカルか, 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合はスキップ)
     // 全力防御中の対象は, 最初の防御に失敗しても続けて別の防御方法を試みるため, 複数回分の結果が返ることがある
     const canDefend = target.defense.getCanBlock(aim) || target.defense.canParry || target.defense.canDodge
+    let castCanceledResults: ActionResult[] = []
     if (!attackJudge.critical && canDefend) {
       const defenseJudges = judgeDefense(actor, aim, target)
-      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
       results.push(...defenseResults)
-      if (defended) return results // 防御成功時はここで処理を止める
+      castCanceledResults = deferred
+      if (defended) {
+        results.push(...castCanceledResults) // ダメージ判定が発生しない場合はここで表示する
+        return results // 防御成功時はここで処理を止める
+      }
     }
 
     // ダメージ判定
     const dmgJudge = rollDmg(actor, aim, fullPower, target)
-    results.push(...this.resolveDamage(dmgJudge, aim, actor.attack.model.dmgType, target))
+    results.push(...this.resolveDamage(dmgJudge, aim, actor.attack.model.dmgType, target, castCanceledResults))
 
     return results
   }
 
   // ダメージ判定結果を元に, HPへの反映と部位狙いの故障・朦朧・転倒・気絶・死亡までの結果を返す
   // (「攻撃」「射撃」および術の直接ダメージ型で共通利用する. dmgType は攻撃手段 (武器/術) のダメージ型)
-  private resolveDamage(dmgJudge: DmgResult, aim: Aim, dmgType: number, target: Unit): ActionResult[] {
+  // deferredCastCanceled: 防御を試みた時点で判定済みの精神集中の維持判定結果 (あれば). ダメージ判定 (dmg) の直後に表示する
+  private resolveDamage(dmgJudge: DmgResult, aim: Aim, dmgType: number, target: Unit, deferredCastCanceled: ActionResult[] = []): ActionResult[] {
     const results: ActionResult[] = []
 
     // 部位狙いによる, 頭・四肢への負傷上限と故障判定
@@ -100,6 +106,8 @@ export class ActionEffects {
     }
 
     results.push({ type: 'dmg', judge: { ...dmgJudge, roll: dmg, target } })
+    // 防御を試みたことによる維持判定の結果は, 実際にダメージが通ったか否かによらずここで表示する (判定自体は既に防御試行時点で完了している)
+    results.push(...deferredCastCanceled)
     if (!dmgJudge.success) return results // ダメージが通らなかった時はここで処理を止める
 
     // ダメージ効果
@@ -119,6 +127,7 @@ export class ActionEffects {
       else if (aim === 'foot' || aim === 'leg') {
         target.health.injuryOnLeg = true
         target.posture = 'prone' // 姿勢変更 (杖のような支えが無ければ立ち上がれなくなるため, 強制的に「這い」にする)
+        results.push(...this.cancelCast(target)) // 転倒時と同様, 精神集中を無条件で解除する
       }
     }
 
@@ -131,6 +140,7 @@ export class ActionEffects {
         results.push({ type: 'knockedDown', judge: knockedDownJudge })
         if (!knockedDownJudge.success) {
           target.posture = 'prone' // 姿勢変更
+          results.push(...this.cancelCast(target)) // 維持判定を生き延びていても, 転倒時は無条件で解除する
         }
       }
 
@@ -169,13 +179,16 @@ export class ActionEffects {
 
   // 防御判定結果配列を順に適用し, 実際の防御試行回数・武器準備状態への反映とログ用結果を生成する
   // 防御を1回でも試みた場合, 対象自身の準備・狙い・精神集中への副次的な影響も合わせて解決する (resolveDefenseInterrupts)
+  // (精神集中の維持判定はここ (防御を試みた時点) で判定・状態反映まで行うが, ログ表示上の結果 (castCanceledResults) は
+  // ダメージ判定の後に表示したいため, results には含めず呼び出し元へ別枠で返す. 呼び出し元は damage 判定の直後にこれを追加する)
   // 「盾」(金行術): 精神集中(金)が2ターン以上完了しており, かつ全力攻撃選択中でなければ (= canDodge が true なら),
   // 通常の防御試行回数 (blockCount/parryCount) とは別枠で, 術の技能値による「止め」相当の追加防御を最初に試みる
   // (成否を問わず発動時点で精神集中(金)はリセットされる. 成功すれば通常の防御判定は行わずそこで処理を止める)
-  private resolveDefenseAttempts(target: Unit, defenseJudges: Array<Omit<DefenseResult, 'ready'>>): { results: ActionResult[], defended: boolean } {
+  private resolveDefenseAttempts(target: Unit, defenseJudges: Array<Omit<DefenseResult, 'ready'>>): { results: ActionResult[], defended: boolean, castCanceledResults: ActionResult[] } {
     const results: ActionResult[] = []
     let defended = false
     let attempted = defenseJudges.length > 0
+    let castCanceledResults: ActionResult[] = []
 
     if (target.spellCast.metal >= 2 && target.defense.canDodge) {
       const shieldJudge = judgeShieldBlock(target)
@@ -183,8 +196,9 @@ export class ActionEffects {
       attempted = true
       results.push({ type: 'shield', judge: { ...shieldJudge, target } })
       if (shieldJudge.success) {
-        results.push(...this.resolveDefenseInterrupts(target))
-        return { results, defended: true }
+        const interrupts = this.resolveDefenseInterrupts(target)
+        results.push(...interrupts.results)
+        return { results, defended: true, castCanceledResults: interrupts.castCanceledResults }
       }
     }
 
@@ -209,17 +223,20 @@ export class ActionEffects {
 
     // 防御 (「盾」(金行術)・受け・止め・よけのいずれか) を1回でも試みたなら, 対象自身への副次的な影響を解決する (成否は問わない)
     if (attempted) {
-      results.push(...this.resolveDefenseInterrupts(target))
+      const interrupts = this.resolveDefenseInterrupts(target)
+      results.push(...interrupts.results)
+      castCanceledResults = interrupts.castCanceledResults
     }
 
-    return { results, defended }
+    return { results, defended, castCanceledResults }
   }
 
   // 防御を試みたことによる, 対象自身への副次的な影響を解決する
   // 準備: 準備中 (ready > 0) の射撃武器を持っている場合, 判定なしで常にそのターン分の準備が巻き戻る
   // 狙い:「狙い」由来の持ち越し (attack.feint.source === 'snipe') がある場合のみ, 判定なしで常に破棄される (「牽制」由来は対象外)
   // 精神集中: いずれかの系統に詠唱時間を蓄積中の場合のみ, 維持判定 (IN-4 もしくは 修養-2 相当) を行う. 失敗すれば集中が途絶える
-  private resolveDefenseInterrupts(target: Unit): ActionResult[] {
+  //           (結果は castCanceledResults として別枠で返す. ログとしての表示位置は呼び出し元がダメージ判定の後に配置する)
+  private resolveDefenseInterrupts(target: Unit): { results: ActionResult[], castCanceledResults: ActionResult[] } {
     const results: ActionResult[] = []
 
     if (target.attack.ready > 0 && target.attack.model.isMissile) {
@@ -232,16 +249,19 @@ export class ActionEffects {
       results.push({ type: 'aimInterrupted', judge: { source: 'snipe' } })
     }
 
-    const castingElement = SPELL_ELEMENTS.find(element => target.spellCast[element] > 0)
-    if (castingElement) {
-      const maintainJudge = judgeMaintainCast(target)
-      results.push({ type: 'castInterrupted', judge: maintainJudge })
-      if (!maintainJudge.success) {
-        target.spellCast[castingElement] = 0 // 精神集中の途絶
-      }
-    }
+    const castCanceledResults = this.maintainCastOnDefense(target)
 
-    return results
+    return { results, castCanceledResults }
+  }
+
+  // 精神集中中に防御を試みたことによる維持判定 (継続中の系統がある場合のみ判定する)
+  // 成功時は何も起こらない. 失敗時は cancelCast と同じ扱い (無条件解除・同じログ) にする
+  private maintainCastOnDefense(target: Unit): ActionResult[] {
+    const castingElement = SPELL_ELEMENTS.find(element => target.spellCast[element] > 0)
+    if (!castingElement) return []
+    const maintainJudge = judgeMaintainCast(target)
+    if (maintainJudge.success) return []
+    return this.cancelCast(target)
   }
 
   //「牽制」実行 (成功時, 次の自分の攻撃 (対象が同じ場合) まで防御目標値の低下効果を持ち越す)
@@ -382,15 +402,20 @@ export class ActionEffects {
 
     // 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合は防御判定自体をスキップする
     const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    let castCanceledResults: ActionResult[] = []
     if (canDefend) {
       const defenseJudges = judgeSpellDefense(target, aim, allowParry, extraMod)
-      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
       results.push(...defenseResults)
-      if (defended) return results // 防御成功時はここで処理を止める
+      castCanceledResults = deferred
+      if (defended) {
+        results.push(...castCanceledResults) // ダメージ判定が発生しない場合はここで表示する
+        return results // 防御成功時はここで処理を止める
+      }
     }
 
     const dmgJudge = rollSpellDmg(effect.dice, effect.dmgType, aim, target, isMetal)
-    const dmgResults = this.resolveDamage(dmgJudge, aim, effect.dmgType, target)
+    const dmgResults = this.resolveDamage(dmgJudge, aim, effect.dmgType, target, castCanceledResults)
     results.push(...dmgResults)
 
     // 燃え上がり (「火球」「焼殺」用. DRを引いたダメージが4点以上で火だるま状態になる. 水舞のDRバフ (水の鎧) を纏っている間は免れる)
@@ -412,20 +437,44 @@ export class ActionEffects {
     const allowParry = effect.allowParry ?? true
 
     const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    let castCanceledResults: ActionResult[] = []
     if (canDefend) {
       const defenseJudges = judgeSpellDefense(target, aim, allowParry)
-      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
       results.push(...defenseResults)
-      if (defended) return results // 防御成功時はここで処理を止める
+      castCanceledResults = deferred
+      if (defended) {
+        results.push(...castCanceledResults) // ダメージ判定に相当する箇所が無いため, ここで表示する
+        return results // 防御成功時はここで処理を止める
+      }
     }
 
     const tripJudge = judgeTrip(target, effect.mod ?? 0)
     results.push({ type: 'trip', judge: tripJudge })
+    // 防御を試みたことによる維持判定の結果は, ダメージ判定に相当する箇所が無いため, 転倒判定の直後に表示する
+    results.push(...castCanceledResults)
     if (!tripJudge.success) {
       target.posture = 'prone' // 姿勢変更
+      results.push(...this.cancelCast(target)) // 維持判定を生き延びていても, 転倒時は無条件で解除する
     }
 
     return results
+  }
+
+  // 精神集中の強制解除 (判定を伴わず無条件で解除する. 継続中の系統がなければ何もしない)
+  // 呼び出し元: 転倒 (攻撃/アースハンド由来を問わず, 維持判定を生き延びていても転倒時は無条件で解除する), 維持判定失敗時 (maintainCastOnDefense)
+  private cancelCast(target: Unit): ActionResult[] {
+    const castingElement = SPELL_ELEMENTS.find(element => target.spellCast[element] > 0)
+    if (!castingElement) return []
+    target.spellCast[castingElement] = 0
+    return [{ type: 'castCanceled', judge: { target, element: castingElement } }]
+  }
+
+  //「集中」「法術」以外のコマンドを実行した場合, 継続中の精神集中を破棄する
+  // (「法術」は集中を消費して発動する行動そのものであり,「集中」との切替は cast() 側で扱うためどちらも対象外とする)
+  // プレイヤー自身の選択による中断のため, ログは出さない (無条件でリセットするのみ)
+  cancelCastByOtherAction(): void {
+    SPELL_ELEMENTS.forEach(element => { this.state.actor.spellCast[element] = 0 })
   }
 
   // 術の範囲デバフ効果の判定・効果適用 (「閃光」用. 範囲呪文の対象1体分. dmg/trip と同じ回避判定を経て, 失敗時のみ次ターンの終わりまで命中/回避ペナルティを課す)
@@ -435,17 +484,24 @@ export class ActionEffects {
     const allowParry = effect.allowParry ?? true
 
     const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    let castCanceledResults: ActionResult[] = []
     if (canDefend) {
       const defenseJudges = judgeSpellDefense(target, aim, allowParry)
-      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
       results.push(...defenseResults)
-      if (defended) return results // 回避に成功すれば効果を免れる
+      castCanceledResults = deferred
+      if (defended) {
+        results.push(...castCanceledResults) // ダメージ判定に相当する箇所が無いため, ここで表示する
+        return results // 回避に成功すれば効果を免れる
+      }
     }
 
     // そのターン中 (対象自身の次ターン終了時まで) の命中/回避ペナルティを付与する (StatusEffects.flashed の減衰は Attack/Defense の各目標値取得側で参照する)
     target.statusEffects.flashed = 1
     const flashResult: FlashResult = { roll: 0, success: false, critical: false, target }
     results.push({ type: 'flash', judge: flashResult })
+    // 防御を試みたことによる維持判定の結果は, ダメージ判定に相当する箇所が無いため, ここで表示する
+    results.push(...castCanceledResults)
 
     return results
   }

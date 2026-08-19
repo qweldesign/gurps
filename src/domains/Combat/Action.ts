@@ -3,14 +3,14 @@
 import { CombatState as State } from './State'
 import { POSITION_KEYS, POSTURE_KEYS, type Posture } from './Unit'
 import { SPELL_ELEMENTS, type SpellElement } from './Spells'
-import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult, type FullPower, type Aim } from './Action/types'
+import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type CastCanceledResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
 import { ActionEffects } from './Action/effects'
 
 // 定数・型定義は Action/types.ts に集約する
 // 既存の呼び出し元 (Action.tsx, Log.tsx) が引き続き参照できるよう, ここから re-export する
 export { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS }
-export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, ShieldResult, FeintResult, SpellResult, FlashResult, HealResult, CleanseResult, DebuffAllResult, FullPower, Aim }
+export type { ActionKey, ActionOptions, ActionRequest, ActionResult, InjuryOnLimbResult, ShieldResult, FeintResult, SpellResult, CastCanceledResult, FlashResult, HealResult, CleanseResult, DebuffAllResult, FullPower, Aim }
 
 // 行動の管理を司るクラス / Actionコンポーネントに対応
 // 行動可否判定は Action/availability.ts, 状態変更は Action/effects.ts に委譲する
@@ -103,39 +103,43 @@ export class CombatAction {
     // コマンド実行前の姿勢 (「姿勢変更」のターン終了判定に用いる)
     const prevPosture = this.actor.posture
 
+    // 「集中」「法術」以外のコマンドを実行した場合, 継続中の精神集中を破棄する (「法術」は集中を消費する行動そのものなので対象外)
+    // プレイヤー自身の選択による中断のため, ログには残さない (状態のリセットのみ行う)
+    if (action.key !== 'cast' && action.key !== 'spell') this.effects.cancelCastByOtherAction()
+    const results: ActionResult[] = []
+
     // 行動実行
-    let results: ActionResult[] = []
     switch (action.key) {
       case 'ready':
-        results = this.effects.ready()
+        results.push(...this.effects.ready())
         break
 
       case 'attack':
-        results = this.effects.attack(action.options.aim, action.options.fullPower, action.targets[0])
+        results.push(...this.effects.attack(action.options.aim, action.options.fullPower, action.targets[0]))
         break
 
       case 'feint':
-        results = this.effects.feint(action.targets[0])
+        results.push(...this.effects.feint(action.targets[0]))
         break
 
       case 'shoot':
-        results = this.effects.shoot(action.options.aim, action.targets[0])
+        results.push(...this.effects.shoot(action.options.aim, action.targets[0]))
         break
 
       case 'snipe':
-        results = this.effects.snipe(action.targets[0])
+        results.push(...this.effects.snipe(action.targets[0]))
         break
 
       case 'cast':
-        results = this.effects.cast(action.options.element)
+        results.push(...this.effects.cast(action.options.element))
         break
 
       case 'spell':
-        results = this.effects.spell(action.options.element, action.options.spellId, action.targets[0])
+        results.push(...this.effects.spell(action.options.element, action.options.spellId, action.targets[0]))
         break
 
       case 'defense':
-        results = this.effects.defense()
+        results.push(...this.effects.defense())
         break
 
       case 'move':
@@ -143,21 +147,21 @@ export class CombatAction {
         break
 
       case 'changeWeapon':
-        results = this.effects.changeWeapon(action.options.weaponSlotKey)
+        results.push(...this.effects.changeWeapon(action.options.weaponSlotKey))
         this.hasChangedWeapon = true // 1ターンに1度まで
         break
 
       case 'changePosture':
-        results = this.effects.changePosture(action.options.posture)
+        results.push(...this.effects.changePosture(action.options.posture))
         this.hasChangedPosture = true // 1ターンに1度まで
         break
 
       case 'recovery':
-        results = this.effects.recovery()
+        results.push(...this.effects.recovery())
         break
 
       case 'extinguish':
-        results = this.effects.extinguish()
+        results.push(...this.effects.extinguish())
         break
 
       default: // case 'wait':
@@ -170,8 +174,8 @@ export class CombatAction {
 
     // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時・法術発動時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
-    const firstResult = results[0]
-    if (action.key === 'recovery' && firstResult?.type === 'recovery' && firstResult.judge.success) {
+    const recoveryResult = results.find(result => result.type === 'recovery')
+    if (action.key === 'recovery' && recoveryResult?.judge.success) {
       this.unlocked = true
       nextTurn = false
     }

@@ -64,15 +64,17 @@ export class ActionAvailability {
   }
 
   //「集中」実行可否取得
-  // 該当する系統の術の技能値が11以上, かつ幻惑状態ではないことが条件
+  // 該当する系統の術の技能値が11以上, かつ幻惑状態ではないこと, かつ「這い」の姿勢ではないことが条件
   canCast(element: SpellElement): boolean {
-    return this.state.actor.spells[element] > 10 && !this.state.actor.statusEffects.dazed
+    const actor = this.state.actor
+    return actor.spells[element] > 10 && !actor.statusEffects.dazed && actor.posture !== 'prone'
   }
 
   //「法術」実行可否取得
-  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上, かつ幻惑状態ではないことが条件
+  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上, 幻惑状態ではないこと, かつ「這い」の姿勢ではないことが条件
   canSpell(element: SpellElement): boolean {
-    return this.state.actor.spellCast[element] > 0 && !this.state.actor.statusEffects.dazed
+    const actor = this.state.actor
+    return actor.spellCast[element] > 0 && !actor.statusEffects.dazed && actor.posture !== 'prone'
   }
 
   //「全力防御」実行可否取得

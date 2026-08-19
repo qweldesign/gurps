@@ -3,7 +3,7 @@
 import { type ReactNode } from 'react'
 import { POSTURE_MODS, CombatUnit as Unit } from './Unit'
 import { type Judge } from './Dice'
-import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult } from './Action'
+import { ACTION_LABELS, POSITION_LABELS, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type CastCanceledResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult } from './Action'
 import { SPELL_ELEMENT_LABELS, SPELL_BUFF_LABELS, STATUS_EFFECT_LABELS } from './Spells'
 
 let count = 0
@@ -164,7 +164,7 @@ export class CombatLog {
               this.pushShieldMessage(messages, result.judge)
               break
 
-            default: // case 'defense': case 'dmg': case 'injuryOnLimb': case 'knockedDown': case 'fatal': case 'unconscious': case 'dead': case 'trip':
+            default: // case 'defense': case 'dmg': case 'castCanceled': case 'injuryOnLimb': case 'knockedDown': case 'fatal': case 'unconscious': case 'dead': case 'trip':
               this.pushDamageResolutionMessage(messages, request.targets[0], result)
               break
 
@@ -174,12 +174,6 @@ export class CombatLog {
 
             case 'aimInterrupted': // 防御を試みたことによる,「狙い」の中断
               messages.push(<>{`${target} は 狙いの照準が乱れた!`}</>)
-              break
-
-            case 'castInterrupted': // 防御を試みたことによる, 精神集中の維持判定
-              messages.push(<>{`${target} による精神集中の維持判定`}</>)
-              messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
-              if (!result.judge.success) messages.push(<>{`${target} の精神集中が途絶えた!`}</>)
               break
           }
         })
@@ -373,7 +367,16 @@ export class CombatLog {
       case 'trip': // 術の転倒効果の結果ログ (「アースハンド」用). 成功 (転倒を免れた) 時は表示しない
         if (!result.judge.success) messages.push(<>{`${targetName} は 転倒した!!`}</>)
         break
+
+      case 'castCanceled': // 精神集中の強制解除ログ (継続中の系統があった場合のみ渡ってくる. judge.target で対象を直接特定する)
+        this.pushCastCanceledMessage(messages, result.judge)
+        break
     }
+  }
+
+  // 精神集中の強制解除ログを追加する (転倒・防御を試みた際の維持判定失敗のいずれの由来でも共通のログで表示する)
+  private pushCastCanceledMessage(messages: ReactNode[], judge: CastCanceledResult) {
+    messages.push(<>{`${judge.target.name} の ${SPELL_ELEMENT_LABELS[judge.element]} による精神集中が途切れた!!`}</>)
   }
 
   // 部位狙いによる, 顔・四肢の故障ログを追加する

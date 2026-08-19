@@ -144,6 +144,15 @@ export type SpellResult = Judge & {
   effectResults: SpellEffectResult[]
 }
 
+// 精神集中の強制解除結果 (「集中」を継続していた場合のみ生成される)
+// 呼び出し元によって判定を伴う場合 (防御を試みた際の維持判定失敗) と伴わない場合 (転倒時) がある
+// (「集中」「法術」以外のコマンド実行による中断はプレイヤー自身の選択のためログを出さず, この結果自体を生成しない)
+// target を直接持つ (対象自身が起点だが, 文脈に依存せず特定できるよう明示的に持たせる)
+export type CastCanceledResult = {
+  target: Unit
+  element: SpellElement
+}
+
 // 頭・四肢の故障結果 (判定は伴わず, 部位のみを持つ)
 export type InjuryOnLimbResult = {
   limb: Aim
@@ -203,6 +212,7 @@ export type ActionResult =
   | { type: 'cleanse', judge: CleanseResult } // 術の範囲浄化効果の適用結果 (「リストレーション」用. 何か1つでも治癒した対象にのみ生成される)
   | { type: 'debuffAll', judge: DebuffAllResult } // 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定に失敗した対象にのみ生成される)
   | { type: 'recovery', judge: Judge }
+  | { type: 'castCanceled', judge: CastCanceledResult } // 精神集中の強制解除 (「集中」を継続していた場合のみ生成される. 転倒・防御を試みた際の維持判定失敗のいずれかに起因する)
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
@@ -210,4 +220,3 @@ export type ActionResult =
   | { type: 'dead', judge: Judge }
   | { type: 'readyInterrupted', judge: ReadyInterruptResult } // 防御を試みたことによる, 射撃武器の準備の中断
   | { type: 'aimInterrupted', judge: AimInterruptResult } // 防御を試みたことによる,「狙い」の中断
-  | { type: 'castInterrupted', judge: Judge } // 防御を試みたことによる, 精神集中の維持判定
