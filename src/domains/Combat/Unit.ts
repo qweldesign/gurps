@@ -47,6 +47,7 @@ export type CombatAttackModel = {
   ev: number
   ready: number
   isChain: boolean
+  isTwoHanded: boolean
   isPole: boolean
   isMissile: boolean
   isShield: boolean

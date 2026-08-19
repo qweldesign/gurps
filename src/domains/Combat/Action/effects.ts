@@ -108,6 +108,18 @@ export class ActionEffects {
     // 頭・四肢を狙った攻撃 (負傷上限を超えた場合のみ故障する)
     if (injuryOnLimb) {
       results.push({ type: 'injuryOnLimb', judge: { limb: aim } })
+      // 実際の故障フラグを反映する (耳→聾, 目→盲目, 手首/腕→腕故障, 足首/脚→脚故障)
+      if (aim === 'ear') target.health.deafened = true
+      else if (aim === 'eye') target.health.blinded = true
+      else if (aim === 'hand' || aim === 'arm') {
+        target.health.injuryOnArm = true
+        // 両手用武器を装備している最中に腕・手首が故障した場合, 片手では扱えなくなり, 追加で1ターンの引き戻しが必要になる
+        if (target.attack.model.isTwoHanded) target.attack.ready += 1
+      }
+      else if (aim === 'foot' || aim === 'leg') {
+        target.health.injuryOnLeg = true
+        target.posture = 'prone' // 姿勢変更 (杖のような支えが無ければ立ち上がれなくなるため, 強制的に「這い」にする)
+      }
     }
 
     // それ以外 (頭・体・喉・肚) を狙った攻撃

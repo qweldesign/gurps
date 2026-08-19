@@ -107,10 +107,12 @@ export class ActionAvailability {
   //「姿勢変更」実行可否取得
   // 直立 → 這い は不可能
   // 這い → 膝着きのみ可能
+  // 脚・足首を故障している間は, 杖のような支えが無い前提のため, 二度と「直立」「屈み」には戻れない
   // その他, 現行の姿勢以外にはいつでも変更可能 (幻惑状態では一切変更不可)
   canChangePosture(posture: Posture): boolean {
     const actor = this.state.actor
     if (actor.statusEffects.dazed) return false
+    if (actor.health.injuryOnLeg && (posture === 'standing' || posture === 'crouching')) return false
     const current = actor.posture
     if (posture === current) return false
     if (current === 'standing') return posture !== 'prone'

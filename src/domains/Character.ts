@@ -287,6 +287,7 @@ export class Character {
         ready: item.ready,
         isChain: item.weaponType === 2 ? true : false, // 鎖状
         isPole: item.weaponType === 4 ? true : false, // 竿状
+        isTwoHanded: item.weaponType === 3 ? true : false, // 両手 (腕・手首の故障ペナルティ判定用)
         isMissile: item.weaponType === 5 ? true : false,
         isShield: item.weaponType === 6 && key === 'shield' ? true : false
       }
