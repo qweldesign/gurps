@@ -75,7 +75,6 @@ export class CombatUnitHealth {
   get label(): string {
     if (this.dead) return '死亡'
     if (this.unconscious) return '気絶'
-    if (this.stunned) return '朦朧状態'
     if (this.puppeted) return '傀儡'
     if (this.blinded) return '盲目'
     if (this.injuryOnArm) return '腕故障'
@@ -84,6 +83,8 @@ export class CombatUnitHealth {
     if (this.burning) return '火だるま'
     if (this.dazzled) return '眩しい'
     if (this.confused) return '混乱'
+    if (this.self.posture === 'prone') return '転倒'
+    if (this.stunned) return '朦朧状態'
     return ''
   }
 }
