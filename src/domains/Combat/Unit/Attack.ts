@@ -40,10 +40,13 @@ export class CombatUnitAttack {
   }
 
   // 攻撃キーの変更 (装備変更)
+  // main⇔sub の切替 (鉾槍の(突き)/(振り)やバスタードソードの片手/両手のように, 同一武器の用途違い) は
+  // 別の武器を構え直すわけではないため, 準備状態 (非準備状態を含む) をそのまま引き継ぐ
   set key(key: WeaponSlotKey) {
+    const prevKey = this._key
     this._key = key
-    // 鉾槍(振り)のみ例外対応
-    if (this.models[key].name !== '鉾槍(振り)') {
+    const isSameWeaponUsageSwitch = (prevKey === 'main' || prevKey === 'sub') && (key === 'main' || key === 'sub') && this.models.sub.name !== '装備無し'
+    if (!isSameWeaponUsageSwitch) {
       this.ready = this.models[key].ready // 装備変更したら準備が必要
     }
     this.changeKeyCallback(this.models, key)
