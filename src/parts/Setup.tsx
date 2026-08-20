@@ -50,6 +50,7 @@ function Setup() {
   // サンプル保存関数
   const saveUnits = (size: number) => {
     const mod = Math.floor(Math.random() * 15) // 乱数 0～15 を足してサンプル生成
+    saveData.saveInitialMod(mod) // 戦闘の敵生成時に重複を避けるため保存しておく
     const samples = createSamples(10, 1, 5 - size, mod, size)
     samples.forEach(sample => {
       const unit = new Character(sample.model)

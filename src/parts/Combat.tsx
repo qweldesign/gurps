@@ -52,7 +52,14 @@ function Combat() {
 
   // 仮の戦闘ユニットを用意する関数 (敵側は引き続きランダム生成)
   const initModels = () => {
-    const r2 = Math.floor(Math.random() * 16)
+    // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数と重複すると,
+    // 同じ顔ぶれの NPC が敵として出現してしまうため, それを避けて抽選する
+    const saveData = new SaveData()
+    const excludedMod = saveData.loadInitialMod()
+    let r2 = Math.floor(Math.random() * 16)
+    while (r2 === excludedMod) {
+      r2 = Math.floor(Math.random() * 16)
+    }
     const npcs = createSamples(24, 1, 4, r2, 4)
     return initPlayerModels().concat(npcs.map(unit => unit.combatUnitModel))
   }

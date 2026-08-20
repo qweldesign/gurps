@@ -21,6 +21,7 @@ export class SaveData {
     cp?: number
     gold?: number
     battleMembers?: number[]
+    initialMod?: number
   }
 
   constructor() {
@@ -134,6 +135,18 @@ export class SaveData {
   // 出撃メンバー (id配列) を読み込み
   loadBattleMembers(): number[] {
     return this.data.battleMembers ?? []
+  }
+
+  // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数を更新
+  // 戦闘の敵生成時, この値との重複を避けることで, 仲間と同じ顔ぶれの敵が出現しないようにする
+  saveInitialMod(mod: number) {
+    this.data = { ...this.data, initialMod: mod }
+    this.save()
+  }
+
+  // 初期仲間の生成に使った乱数を読み込み (未生成の場合は null)
+  loadInitialMod(): number | null {
+    return this.data.initialMod ?? null
   }
 
   // CPを更新
