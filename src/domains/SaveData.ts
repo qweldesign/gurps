@@ -20,6 +20,7 @@ export class SaveData {
     keys?: string[]
     cp?: number
     gold?: number
+    battleMembers?: number[]
   }
 
   constructor() {
@@ -122,6 +123,17 @@ export class SaveData {
     this.removeKey(latestUid)
     localStorage.removeItem(latestUniqueKey)
     sessionStorage.removeItem(latestUniqueKey)
+  }
+
+  // 出撃メンバー (id配列) を更新
+  saveBattleMembers(ids: number[]) {
+    this.data = { ...this.data, battleMembers: ids }
+    this.save()
+  }
+
+  // 出撃メンバー (id配列) を読み込み
+  loadBattleMembers(): number[] {
+    return this.data.battleMembers ?? []
   }
 
   // CPを更新

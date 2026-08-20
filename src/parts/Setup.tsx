@@ -5,9 +5,12 @@ import { useNavigate, useParams } from 'react-router-dom'
 import List from './common/List'
 import Detail from './common/Detail'
 import Modal from './common/Modal'
+import BattleSelect from './Setup/BattleSelect'
 import { Character } from '../domains/Character'
 import { SampleCharacter } from '../domains/Sample/Character'
 import { SaveData } from '../domains/SaveData'
+
+const SLOT_SIZE = 4 // 出撃メンバーの人数
 
 function Setup() {
   // セーブデータの読み込み
@@ -18,6 +21,9 @@ function Setup() {
   // List, Detail に渡すパラメータ
   const [units, setUnits] = useState<Character[]>([])
   const [unit, setUnit] = useState<Character | null>(null)
+
+  // BattleSelect に渡すパラメータ (出撃スロット. id, 未選択は null)
+  const [slots, setSlots] = useState<(number | null)[]>(Array(SLOT_SIZE).fill(null))
 
   // Modal に渡すパラメータ
   const [alertMessage, setAlertMessage] = useState<ReactNode>('Test Alert.')
@@ -71,6 +77,22 @@ function Setup() {
     navigate('/setup/')
   }
 
+  // 出撃スロットの選択を更新 (他スロットで選択中の id は候補から除外するため, 選び直しは自動で解除される)
+  const onChangeSlot = (index: number, value: string) => {
+    const id = value === '' ? null : Number(value)
+    setSlots(prev => prev.map((v, i) => (i === index ? id : v)))
+  }
+
+  // 4枠すべて埋まっているか
+  const isBattleReady = slots.every(id => id !== null)
+
+  // 戦闘へ進む → 選出メンバーを保存し, 戦闘画面へ
+  const goToBattle = () => {
+    if (!isBattleReady) return
+    saveData.saveBattleMembers(slots as number[])
+    navigate('/battle/')
+  }
+
   // ゲーム初期化の確認
   const confirmReset = () => {
     setAlertMessage(
@@ -105,6 +127,12 @@ function Setup() {
     })
     setUnits(next)
 
+    // 出撃スロットの初期化: 前回選出済み (4名分) があれば復元, 無ければ主人公 (先頭のキャラクター) のみスロット1に配置
+    const saved = saveData.loadBattleMembers().filter(id => next.some(m => m.id === id))
+    const protagonist = next[0]
+    const base = saved.length === SLOT_SIZE ? saved : (protagonist ? [protagonist.id] : [])
+    setSlots(Array.from({ length: SLOT_SIZE }, (_, i) => base[i] ?? null))
+
     // uid があれば1人のサンプルを探す
     if (uid) setUnit(next.find(m => m.id === Number(uid)) || null)
     else setUnit(null)
@@ -116,9 +144,11 @@ function Setup() {
       {!unit
         ? 
           <>
+            {units.length >= 4 && <BattleSelect units={units} slots={slots} onChangeSlot={onChangeSlot} />}
             <List units={units} points={points} />
             <div className="text-center">
               <button className="w-48 h-12" onClick={() => navigate('./edit/')}>新規作成</button>
+              <button className="w-72 h-12" onClick={goToBattle} disabled={!isBattleReady}>冒険を始める</button>
               <button className="w-48 h-12" onClick={confirmReset}>リセット</button>
             </div>
           </>

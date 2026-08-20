@@ -6,6 +6,8 @@ import Action from './Combat/Action'
 import Summary from './Combat/Summary'
 import Timeline from './Combat/Timeline'
 import { SampleCharacter } from '../domains/Sample/Character'
+import { Character } from '../domains/Character'
+import { SaveData } from '../domains/SaveData'
 import { CombatState as State } from '../domains/Combat/State'
 import DevProgress from './DevProgress'
 import { SPELLS_DEV_PROGRESS } from '../devProgress/spells'
@@ -14,6 +16,8 @@ type QueueItem = {
   node: ReactNode
   resolve?: () => void
 }
+
+const SLOT_SIZE = 4 // プレイヤー側の出撃人数 (Setup/Select と共通)
 
 function Combat() {
   // サンプル生成関数
@@ -29,14 +33,28 @@ function Combat() {
     return samples
   }
 
-  // 仮の戦闘ユニットを用意する関数
-  const initModels = () => {
+  // プレイヤー4人のユニットを用意する関数
+  // Setup で選出された出撃メンバー (4名) があればそれを使用し, 無ければ従来通りサンプルにフォールバックする
+  const initPlayerModels = () => {
+    const saveData = new SaveData()
+    const memberIds = saveData.loadBattleMembers()
+    if (memberIds.length === SLOT_SIZE) {
+      const characters = memberIds.map(id => new Character(saveData.loadModel(String(id).padStart(2, '0'))))
+      // 除名等で id 0 (未設定) が混ざっていなければ, 選出メンバーとして採用
+      if (characters.every(character => character.id !== 0)) {
+        return characters.map(character => character.combatUnitModel)
+      }
+    }
+    // フォールバック: 従来通りのランダムサンプル
     const r1 = Math.floor(Math.random() * 16)
-    const r2 = Math.ceil(Math.random() * 15)
-    const pcs = createSamples(24, 1, 0, r1, 4)
-    const npcs = createSamples(24, 1, 4, (r1 + r2) % 16, 4)
-    const units = pcs.concat(npcs)
-    return units.map(unit => unit.combatUnitModel)
+    return createSamples(24, 1, 0, r1, 4).map(unit => unit.combatUnitModel)
+  }
+
+  // 仮の戦闘ユニットを用意する関数 (敵側は引き続きランダム生成)
+  const initModels = () => {
+    const r2 = Math.floor(Math.random() * 16)
+    const npcs = createSamples(24, 1, 4, r2, 4)
+    return initPlayerModels().concat(npcs.map(unit => unit.combatUnitModel))
   }
 
   // ターン管理
