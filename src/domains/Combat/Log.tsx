@@ -47,6 +47,18 @@ export class CombatLog {
     this.messages.push(messages)
   }
 
+  // 「勝敗判定」用: State (nextTurn) から直接呼び出される, 決着時の追加ログ
+  // (特定の ActionRequest/ActionResult に紐づかないため, receiveResults とは別枠で messages に積む)
+  receiveResult(result: 'win' | 'lose') {
+    const messages: ReactNode[] = []
+    if (result === 'win') {
+      messages.push(<span className="font-bold">{'敵陣営の前衛が崩れた!! 勝利!!'}</span>)
+    } else {
+      messages.push(<span className="font-bold">{'味方陣営の前衛が崩れた... 敗北...'}</span>)
+    }
+    this.messages.push(messages)
+  }
+
   // ラベル生成 (Summary履歴用)
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {

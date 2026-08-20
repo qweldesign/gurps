@@ -1,11 +1,14 @@
 // Combat/State.ts
 
 import { CombatLog as Log } from './Log'
-import { type CombatUnitModel as Model, type CombatUnitSnapshot as UnitSnapshot, CombatUnit as Unit } from './Unit'
+import { type CombatUnitModel as Model, type CombatUnitSnapshot as UnitSnapshot, type Side, CombatUnit as Unit } from './Unit'
 import { CombatFormation as Formation } from './Formation'
 import { CombatAction as Action } from './Action'
 import { judgeTimeRegression } from './Action/resolver'
 import { SPELL_ELEMENTS } from './Spells'
+
+// 勝敗結果 (未決着は null)
+export type CombatResult = 'win' | 'lose' | null
 
 // 「重篤な状態」(「時間遡行」の発動条件用): 死亡・気絶・転倒・目/耳/四肢の故障のいずれか
 function isCriticalUnit(unit: Unit): boolean {
@@ -28,6 +31,7 @@ export class CombatState {
   public action: Action | null
   public foggy: boolean // 濃霧発生中か否か (戦場全体に及ぶ持続効果. 一度発生すれば戦闘終了まで持続する. 「濃霧」用)
   public puppetTarget: Unit | null // 「傀儡」で移行中の対象 (非null の間, actor はこちらを優先する. 通常の行動順の進行とは無関係)
+  public result: CombatResult // 勝敗結果 (未決着中は null. 決着後はターンを進めない)
 
   constructor(models: Model[], playLog: () => Promise<void>) {
     this.round = 1 // 1からカウント
@@ -41,14 +45,37 @@ export class CombatState {
     this.action = null
     this.foggy = false
     this.puppetTarget = null
+    this.result = null
   }
 
   get actor() {
     return this.puppetTarget ?? this.units[this.turnIndex]
   }
 
+  // 勝敗判定: 前衛 (left/center/right) に生存者 (気絶・死亡していない者) が1人もいない陣営があれば, その陣営の敗北とする
+  // 開幕直後は全ユニットが後列に配置されているため, 1ターン目 (round === 1, 全員が最初の1巡を終えるまで) は判定対象外とする
+  private judgeResult(): CombatResult {
+    const hasFrontAlive = (side: Side) => this.units.some(unit => (
+      unit.side === side && unit.position !== 'back' && !unit.health.unconscious && !unit.health.dead
+    ))
+    if (!hasFrontAlive('player')) return 'lose'
+    if (!hasFrontAlive('enemy')) return 'win'
+    return null
+  }
+
   // 次のターンへ進む
   async nextTurn() {
+    // 勝敗判定 (1ターン目を除く. 決着した場合はここで終了し, 以降のターンを進めない)
+    if (this.round > 1) {
+      const result = this.judgeResult()
+      if (result) {
+        this.result = result
+        this.logs[0]?.receiveResult(result)
+        await this.playLog()
+        return
+      }
+    }
+
     // 倒れているユニットのターンをパス
     let isAlive = false
     while (!isAlive) {

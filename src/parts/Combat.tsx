@@ -41,6 +41,7 @@ function Combat() {
 
   // ターン管理
   const stateRef = useRef<State | null>(null)
+  const [result, setResult] = useState<State['result']>(null) // 勝敗結果 (UI表示用. stateRef の変化は自動で再レンダリングされないため, ここに反映する)
 
   // ログ管理
   const timelineRef = useRef<HTMLDivElement | null>(null)
@@ -67,6 +68,10 @@ function Combat() {
     const log = stateRef.current.logs[0]
     const messages = log.messages[log.messages.length - 1]
     await enqueueLog(messages)
+    // 勝敗が決していれば, UI 側 (Action 表示の切り替え) にも反映する
+    if (stateRef.current.result) {
+      setResult(stateRef.current.result)
+    }
   }
 
   // ログ再生
@@ -126,8 +131,12 @@ function Combat() {
               </div>
               <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
                 <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
-                {stateRef.current.action && (
-                  <Action store={stateRef.current.action} />
+                {result ? (
+                  <p className="my-12 text-center font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
+                ) : (
+                  stateRef.current.action && (
+                    <Action store={stateRef.current.action} />
+                  )
                 )}
               </div>
               <div id="log" className="relative order-4 w-lg h-96 bg-white/30 p-3 lg:bg-white/15">
