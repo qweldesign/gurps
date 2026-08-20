@@ -3,6 +3,8 @@
 import { type Point, type ParameterKey } from '../Parameters'
 import { type WeaponKey, type BodyArmorKey } from '../Equipments'
 import { Character } from '../Character'
+import { type CombatUnitModel } from '../Combat/Unit'
+import { type TacticKey } from '../Combat/AI/types'
 
 const DEFAULT_POINTS = 10
 
@@ -79,6 +81,13 @@ const EQUIPMENTS_TABLE: [WeaponKey, BodyArmorKey][][][] = [
   [ // 術士
     [['杖', '革服'], ['杖', '革鎧']]
   ],
+]
+
+// tactic (0~8) → 敵の自動行動タイプ (TacticKey) への対応表 (getTacticName() と同じ並び)
+const TACTIC_KEY_MAP: TacticKey[] = [
+  'heavyWarrior', 'lightWarrior', 'spellWarriorF',
+  'swordsman', 'thief', 'archer',
+  'spellWarriorB', 'spellSwordsman', 'sorcerer'
 ]
 
 // 名前 (PC用)
@@ -210,6 +219,14 @@ export class SampleCharacter extends Character {
       '剣士', '盗賊', '弓使い',
       '術戦士B', '術剣士', '術士'
     ][this.tactic]
+  }
+
+  // 戦闘モデル用データ変換 (tactic (自動行動タイプ) を追加する. サンプル (NPC) は常に自動行動の対象とする)
+  get combatUnitModel(): CombatUnitModel {
+    return {
+      ...super.combatUnitModel,
+      tactic: TACTIC_KEY_MAP[this.tactic]
+    }
   }
 
   // 技能の初期化
