@@ -9,6 +9,7 @@ import { SampleCharacter } from '../domains/Sample/Character'
 import { Character } from '../domains/Character'
 import { SaveData } from '../domains/SaveData'
 import { CombatState as State } from '../domains/Combat/State'
+import { enemy } from '../domains/Combat/Enemy'
 import DevProgress from './DevProgress'
 import { SPELLS_DEV_PROGRESS } from '../devProgress/spells'
 
@@ -52,8 +53,11 @@ function Combat() {
     return createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 0, r1, 4).map(unit => unit.combatUnitModel)
   }
 
-  // 仮の戦闘ユニットを用意する関数 (敵側は引き続きランダム生成)
-  const initModels = () => {
+  // 敵4人のユニットを用意する関数
+  // enemy (このファイル冒頭で定義) に4体分の指定があればそれを使用し, 無ければ従来通りランダム生成する
+  const initEnemyModels = () => {
+    if (enemy.length === SLOT_SIZE) return enemy
+
     // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数と重複すると,
     // 同じ顔ぶれの NPC が敵として出現してしまうため, それを避けて抽選する
     const saveData = new SaveData()
@@ -62,8 +66,12 @@ function Combat() {
     while (r2 === excludedMod) {
       r2 = Math.floor(Math.random() * 16)
     }
-    const npcs = createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 4, r2, 4)
-    return initPlayerModels().concat(npcs.map(unit => unit.combatUnitModel))
+    return createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
+  }
+
+  // プレイヤー4人と敵4人のユニットを結合する関数
+  const initModels = () => {
+    return initPlayerModels().concat(initEnemyModels())
   }
 
   // ターン管理
