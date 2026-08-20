@@ -27,6 +27,7 @@ export class CombatState {
   public playLog: () => Promise<void> // Combat 本体から受け取り, Action から呼び出す
   public action: Action | null
   public foggy: boolean // 濃霧発生中か否か (戦場全体に及ぶ持続効果. 一度発生すれば戦闘終了まで持続する. 「濃霧」用)
+  public puppetTarget: Unit | null // 「傀儡」で移行中の対象 (非null の間, actor はこちらを優先する. 通常の行動順の進行とは無関係)
 
   constructor(models: Model[], playLog: () => Promise<void>) {
     this.round = 1 // 1からカウント
@@ -39,10 +40,11 @@ export class CombatState {
     this.playLog = playLog
     this.action = null
     this.foggy = false
+    this.puppetTarget = null
   }
 
   get actor() {
-    return this.units[this.turnIndex]
+    return this.puppetTarget ?? this.units[this.turnIndex]
   }
 
   // 次のターンへ進む
@@ -94,6 +96,34 @@ export class CombatState {
       this.debug()
       this.nextTurn()
     })
+  }
+
+  // 「傀儡」: 対象のターンへその場で即座に移行する (通常の行動順の進行を伴わない, その場限りの1ターンのみの制御)
+  // nextTurn() のターン開始・終了処理 (Formation再構築・ログ追加・能動防御/状態異常/バフの更新) を, 行動順を進めずに対象1体分だけ再現する
+  // (「時間遡行」の巻き戻し判定は行わない. 傀儡ターンでの重篤な状態への言及は現状スコープ外)
+  async startPuppetTurn(target: Unit) {
+    this.puppetTarget = target
+    this.formation = new Formation(this.actor, this.units)
+    // 術者のログを, その行動者 (術者) の履歴として保持
+    if (this.logs[0]) this.logs[0].actor.history = this.logs[0]
+    // 傀儡ターン用の新しいログを追加
+    const newLog = new Log(this.actor)
+    this.logs.unshift(newLog)
+
+    // ターン開始ログを表示
+    await this.playLog()
+    // コマンドパレット初期化 (対象のコマンドパレットが開く. Action コンストラクタは this.actor = puppetTarget を参照する)
+    this.action = new Action(this)
+    // コマンド入力待機 (対象の1ターン分の行動が完了するまで)
+    await this.action.promise
+    // ターン終了処理 (通常の nextTurn 同様, 牽制の持ち越し・能動防御試行回数・状態異常/バフの残存ターンを更新する)
+    target.attack.nextTurn()
+    target.defense.nextTurn()
+    target.statusEffects.nextTurn()
+    target.statusBuff.nextTurn()
+    // 傀儡状態を解除し, 通常の行動順 (turnIndex 由来の actor) へ戻す
+    target.health.puppeted = false
+    this.puppetTarget = null
   }
 
   // 「時間遡行」(水行術, spellType: 'defense') の発動判定・巻き戻しを行う

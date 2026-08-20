@@ -89,7 +89,8 @@ export class CombatAction {
       all: this.state.units.filter(unit => !unit.health.unconscious && !unit.health.dead),
       allies: formation?.getAllies() ?? [],
       enemies: formation?.getEnemies() ?? [],
-      melee: formation?.getMeleeTargets() ?? []
+      melee: formation?.getMeleeTargets() ?? [],
+      puppet: formation?.getPuppetTargets() ?? []
     }
   }
 
@@ -172,7 +173,13 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時・法術発動時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    // 「傀儡」の発動成功判定 (成功時, 対象のターンへその場で即座に移行する. 術者自身のコマンドパレットには戻らない)
+    const spellResult = results.find((result): result is Extract<ActionResult, { type: 'spell' }> => result.type === 'spell')
+    const puppetTarget = action.key === 'spell' && spellResult?.judge.effectResults.some(effectResult => effectResult.kind === 'puppet')
+      ? action.targets[0]
+      : null
+
+    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時・法術発動時 (「傀儡」成功時を除く) はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
     const recoveryResult = results.find(result => result.type === 'recovery')
     if (action.key === 'recovery' && recoveryResult?.judge.success) {
@@ -187,14 +194,20 @@ export class CombatAction {
       this.unlocked = true
       nextTurn = false
     }
-    if (action.key === 'shoot' || action.key === 'spell') {
+    if (action.key === 'shoot' || (action.key === 'spell' && !puppetTarget)) {
       this.unlocked = true
       nextTurn = false
     }
 
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    if (nextTurn) this.resolve()
+    if (puppetTarget) {
+      // 「傀儡」: 対象のターンへ移行し, それが終わり次第, 術者自身のターンも終了する (そこから術者の行動には戻れない)
+      await this.state.startPuppetTurn(puppetTarget)
+      this.resolve()
+    } else if (nextTurn) {
+      this.resolve()
+    }
   }
 
   // 濃霧発生中か否か (UI側の目標値プレビュー表示用)

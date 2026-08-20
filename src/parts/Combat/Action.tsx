@@ -26,7 +26,10 @@ function Action({ store }: { store: Store }) {
   const spellTargetPool = actionOptions.element !== undefined && actionOptions.spellId !== undefined
     ? (() => {
         const scope = SPELL_LIST[actionOptions.element][actionOptions.spellId].targetScope
-        return scope === 'all' ? store.target.all : scope === 'enemy' ? store.target.enemies : store.target.allies
+        return scope === 'all' ? store.target.all
+          : scope === 'enemy' ? store.target.enemies
+          : scope === 'puppet' ? store.target.puppet
+          : store.target.allies
       })()
     : []
 

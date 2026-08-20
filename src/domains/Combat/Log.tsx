@@ -236,6 +236,8 @@ export class CombatLog {
             messages.push(<>{`${target} の ${SPELL_BUFF_LABELS[result.target]} が上昇した!`}</>)
           } else if (result.kind === 'status') {
             messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} の効果を得た!`}</>)
+          } else if (result.kind === 'puppet') {
+            messages.push(<>{`${target} を傀儡として操る!`}</>)
           } else if (result.kind === 'fog') {
             messages.push(<>{`辺り一帯に深い霧が立ち込めた!`}</>)
           } else if (result.applied) {

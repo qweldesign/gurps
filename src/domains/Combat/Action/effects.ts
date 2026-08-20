@@ -360,12 +360,13 @@ export class ActionEffects {
     return [{ type: 'spell', judge: { ...spellJudge, effectResults } }, ...extraResults]
   }
 
-  // 術の効果を1つ適用し, 結果を返す (buff/status/debuff のみを対象とする. dmg/trip は spellDmgRoutine/spellTripRoutine が個別に処理する)
+  // 術の効果を1つ適用し, 結果を返す (buff/status/debuff/puppet のみを対象とする. dmg/trip は spellDmgRoutine/spellTripRoutine が個別に処理する)
   // buff: 無条件で適用する (発動判定自体は既に成功している)
   // status: 無条件で適用する (抵抗判定を伴わない StatusEffects への直接付与)
   // debuff: 対象自身の抵抗判定 (MRE, resistMod があれば加算した上で) に失敗した場合のみ適用する
   //         duration が 'margin' なら失敗度, 数値ならその値をそのままターン数とする
-  private applySpellEffect(target: Unit, effect: Extract<SpellEffect, { kind: 'buff' } | { kind: 'status' } | { kind: 'debuff' }>): SpellEffectResult {
+  // puppet: 無条件で適用する (発動判定自体は既に成功している. 対象のターンへの移行は Action.execute 側で行う)
+  private applySpellEffect(target: Unit, effect: Extract<SpellEffect, { kind: 'buff' } | { kind: 'status' } | { kind: 'debuff' } | { kind: 'puppet' }>): SpellEffectResult {
     if (effect.kind === 'buff') {
       if (effect.target === 'level') target.statusBuff.addLevelBuff()
       else if (effect.target === 'dmg') target.statusBuff.addDmgBuff()
@@ -377,6 +378,11 @@ export class ActionEffects {
     if (effect.kind === 'status') {
       target.statusEffects[effect.target] = effect.duration
       return { kind: 'status', target: effect.target }
+    }
+
+    if (effect.kind === 'puppet') {
+      target.health.puppeted = true
+      return { kind: 'puppet', target }
     }
 
     // effect.kind === 'debuff'

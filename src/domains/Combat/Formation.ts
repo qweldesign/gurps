@@ -73,8 +73,16 @@ export class CombatFormation {
     return this.units.filter(unit => unit.side !== this.actor.side && !unit.health.unconscious && !unit.health.dead)
   }
 
+  // 傀儡対象取得 (「傀儡」専用. 幻惑状態, もしくは気絶・死亡している敵ユニットを対象とする)
+  getPuppetTargets(): Unit[] {
+    return this.units.filter(unit => unit.side !== this.actor.side && (unit.statusEffects.dazed > 0 || unit.health.unconscious || unit.health.dead))
+  }
+
   // 近接攻撃対象取得
+  // 「傀儡」中の場合, 本来の所属陣営 (=元の「味方」) の全ユニットを, 位置・後列を問わず対象とする (攻撃対象が反転する)
   getMeleeTargets(): Unit[] {
+    if (this.actor.health.puppeted) return this.getAllies()
+
     const enemies = this.getEnemies()
     switch (this.actor.position) {
       case 'left':

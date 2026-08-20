@@ -32,7 +32,7 @@ const EARTH_SPELL: Spell[] = [
   { id: 1, label: 'アースハンド', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'trip', mod: -2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
   { id: 2, label: '大地の癒し', spellType: 'recover', spellCast: 2, effects: [{ kind: 'heal', maxUses: 1, fraction: 0.5, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2, effects: [{ kind: 'status', target: 'resistant', duration: 10 }, { kind: 'debuff', target: 'dazed', duration: 1, resistMod: -2 }], targetScope: 'ally' },
-  { id: 4, label: '傀儡', spellType: 'other', spellCast: 1 },
+  { id: 4, label: '傀儡', spellType: 'other', spellCast: 1, effects: [{ kind: 'puppet' }], targetScope: 'puppet' },
   {
     id: 5, label: '瓦礫の雨', spellType: 'range', spellCast: 3, effects: [
       { kind: 'dmg', dice: 2, dmgType: 0, randomTarget: true },
@@ -133,6 +133,12 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * 抵抗判定への修正は術者から見て敵か味方かで異なる (enemyResistMod/allyResistMod, 未指定はそれぞれ0. 例:「サイレン」の敵-2/味方+2)
  * duration の扱いは debuff と同じ (数値なら固定ターン数, 'margin' なら抵抗判定の失敗度をそのままターン数とする)
  *
+ * puppet: 対象選択は targetScope: 'puppet' 専用の対象プール (幻惑状態, もしくは気絶・死亡している, 敵味方を問わない全ユニット) から行う (「傀儡」用)
+ * 発動判定成功で無条件に適用し, 対象のターンへその場で即座に移行する (通常の行動順を待たない, その場限りの1ターンのみの制御. Health.puppeted は移行中のみ true になる)
+ * 対象の「攻撃」の近接ターゲットは, 位置・後列を問わず本来の所属陣営の全ユニット (元の「味方」) に反転する (getMeleeTargets 参照)
+ * 「集中」「法術」「射撃」「狙い」「特殊攻撃 (全力攻撃)」「全力防御」「移動」は行えない (複数ターンにまたがる仕組みとの整合を避けるため, および被攻撃対象にならないため)
+ * 幻惑状態によるコマンド封じ (StatusEffects.dazed) は無視する (元々幻惑・気絶・死亡のいずれかの状態にある対象のため)
+ *
  * fog: 対象を持たない, 戦場全体への持続効果 (spellType: 'other'). 判定・抵抗を伴わず, 発動判定成功で CombatState.foggy を true にする
  * (再発動しても変化なし. 一度発生すれば戦闘終了まで持続する (時間経過での減衰は無い)). 射撃武器の距離による修正 (distanceMod) を2倍にする (「濃霧」)
  * (「術」による命中判定には距離による修正の概念自体が存在しないため, 現状は影響しない)
@@ -157,9 +163,11 @@ export type SpellEffect =
   | { kind: 'cleanse' }
   | { kind: 'debuffAll', target: StatusEffectTarget, duration: number | 'margin', enemyResistMod?: number, allyResistMod?: number }
   | { kind: 'fog' }
+  | { kind: 'puppet' }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)
-export type SpellTargetScope = 'ally' | 'enemy' | 'all'
+// 'puppet' は幻惑状態, もしくは気絶・死亡しているユニット (敵味方を問わない) を対象とする (「傀儡」専用. CombatFormation.getPuppetTargets 参照)
+export type SpellTargetScope = 'ally' | 'enemy' | 'all' | 'puppet'
 
 // 法術
 type Spell = {
