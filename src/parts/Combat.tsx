@@ -18,6 +18,8 @@ type QueueItem = {
 }
 
 const SLOT_SIZE = 4 // プレイヤー側の出撃人数 (Setup/Select と共通)
+const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP
+const DEFAULT_MULTIPLIER = 1 // ランダム生成時のデフォルトCP倍率
 
 function Combat() {
   // サンプル生成関数
@@ -47,7 +49,7 @@ function Combat() {
     }
     // フォールバック: 従来通りのランダムサンプル
     const r1 = Math.floor(Math.random() * 16)
-    return createSamples(24, 1, 0, r1, 4).map(unit => unit.combatUnitModel)
+    return createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 0, r1, 4).map(unit => unit.combatUnitModel)
   }
 
   // 仮の戦闘ユニットを用意する関数 (敵側は引き続きランダム生成)
@@ -60,7 +62,7 @@ function Combat() {
     while (r2 === excludedMod) {
       r2 = Math.floor(Math.random() * 16)
     }
-    const npcs = createSamples(24, 1, 4, r2, 4)
+    const npcs = createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 4, r2, 4)
     return initPlayerModels().concat(npcs.map(unit => unit.combatUnitModel))
   }
 
