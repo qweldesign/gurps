@@ -8,6 +8,7 @@ import Sample from './parts/Sample'
 import Setup from './parts/Setup'
 import Edit from './parts/Setup/Edit'
 import Confirm from './parts/Setup/Confirm'
+import BattleDifficulty from './parts/Setup/BattleDifficulty'
 import Combat from './parts/Combat'
 import { docsLoader } from './docs/docsLoader'
 
@@ -35,7 +36,8 @@ export const router = createBrowserRouter([
         { path: 'confirm', children: [
           { index: true, element: <Confirm /> },
           { path: ':uid', element: <Confirm /> }
-        ]}
+        ]},
+        { path: 'difficulty', element: <BattleDifficulty /> }
       ]},
       { path: 'battle', element: <Combat /> }
     ]

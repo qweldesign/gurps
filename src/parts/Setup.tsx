@@ -91,7 +91,7 @@ function Setup() {
   const goToBattle = () => {
     if (!isBattleReady) return
     saveData.saveBattleMembers(slots as number[])
-    navigate('/battle/')
+    navigate('/setup/difficulty')
   }
 
   // ゲーム初期化の確認
