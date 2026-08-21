@@ -1,6 +1,7 @@
 // Combat.tsx
 
 import { type ReactNode, useRef, useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import Formation from './Combat/Formation'
 import Action from './Combat/Action'
 import Summary from './Combat/Summary'
@@ -9,7 +10,8 @@ import { SampleCharacter } from '../domains/Sample/Character'
 import { Character } from '../domains/Character'
 import { SaveData } from '../domains/SaveData'
 import { CombatState as State } from '../domains/Combat/State'
-import { enemy } from '../domains/Combat/Enemy'
+import type { BattleDifficultyTier } from '../domains/Combat/Difficulty'
+import { enemy, getEnemyFormation, getRankFromCp } from '../domains/Combat/Enemy'
 import DevProgress from './DevProgress'
 import { SPELLS_DEV_PROGRESS } from '../devProgress/spells'
 
@@ -23,6 +25,11 @@ const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP
 const DEFAULT_MULTIPLIER = 1 // ランダム生成時のデフォルトCP倍率
 
 function Combat() {
+  // Setup/BattleDifficulty から navigate の state で渡された選択難度
+  // (SaveData には永続化しないため, リロード等で state が失われた場合は undefined になる → Normal 相当にフォールバック)
+  const location = useLocation()
+  const difficulty = (location.state as { difficulty?: BattleDifficultyTier } | null)?.difficulty
+
   // サンプル生成関数
   const createSamples = (totalPoints = 10, multiplier = 1, idMod = 0, keyMod = 0,size = 64) => {
     const step = 64 / size // 生成数に応じたステップ
@@ -54,19 +61,30 @@ function Combat() {
   }
 
   // 敵4人のユニットを用意する関数
-  // enemy (このファイル冒頭で定義) に4体分の指定があればそれを使用し, 無ければ従来通りランダム生成する
+  // enemy (このファイル冒頭で定義) に4体分の指定があればそれを使用し, 無ければ難度に応じて生成する
   const initEnemyModels = () => {
     if (enemy.length === SLOT_SIZE) return enemy
 
+    const saveData = new SaveData()
+
+    // VeryEasy / Easy: ゴブリン編成 (Rank はプレイヤー保有CPから算出)
+    if (difficulty === 'veryEasy' || difficulty === 'easy') {
+      const rank = getRankFromCp(saveData.loadPoints())
+      return getEnemyFormation(difficulty, rank).models
+    }
+
+    // Normal, および Hard/VeryHard (敵データ未実装につき暫定でNormal相当にフォールバック),
+    // 難度未指定 (state 消失時のフォールバック) の場合: 従来通りサンプル (人間) を生成する.
+    // 生成CPは固定値 (DEFAULT_CP) ではなく, プレイヤーの実際のCPに連動させる
+    //
     // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数と重複すると,
     // 同じ顔ぶれの NPC が敵として出現してしまうため, それを避けて抽選する
-    const saveData = new SaveData()
     const excludedMod = saveData.loadInitialMod()
     let r2 = Math.floor(Math.random() * 16)
     while (r2 === excludedMod) {
       r2 = Math.floor(Math.random() * 16)
     }
-    return createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
+    return createSamples(saveData.loadPoints(), DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
   }
 
   // プレイヤー4人と敵4人のユニットを結合する関数

@@ -21,13 +21,14 @@ import { type CombatAttackModel, type CombatDefenseModels,  type CombatUnitModel
 // ]
 //
 // 【将来の拡張ポイント・未実装分】
-//   - バトル難度 Normal: サンプルユニット (人間) とバトル (従来の仕様と同様) だが, 生成に使う CP を
-//     SaveData から取得するプレイヤーの実際のCPに連動させる (Combat.tsx 側の DEFAULT_CP 固定値を置き換える)
-//   - バトル難度 Hard/VeryHard: 未実装 (VeryHardはゴブリン以外の新規テンプレートが必要)
-//   - 難度選択UI (Setup側) ・勝利時の報酬付与 (SaveData.savePoints/saveGold と連携) は未実装
-//   - 「味方の成長」は Setup 側のセーブデータ (SaveData.savePoints/saveGold 等) と連携し,
-//     戦闘終了後に加算する形で実装できる (上記, 報酬付与と同じ仕組みを使う)
-//   - Combat.tsx 側で敵生成時に呼び出す想定: getEnemyFormation(difficulty, getRankFromCp(saveData.loadPoints()))
+//   - バトル難度 Hard/VeryHard: 未実装 (VeryHardはゴブリン以外の新規テンプレートが必要).
+//     Combat.tsx 側では暫定的に Normal (サンプルユニット) と同じ生成にフォールバックしている
+//   - 勝利時の報酬付与 (SaveData.savePoints/saveGold と連携) は未実装.
+//     getEnemyFormation の戻り値に rewardCp/rewardGold を含めてあるので, 戦闘終了時にそれを
+//     SaveData.savePoints/saveGold へ加算する形で実装できる
+//
+// 難度選択UI (Setup/BattleDifficulty.tsx) ・Combat.tsx 側での結線
+// (難度/RankからgetEnemyFormationを呼び出す処理, NormalのCP連動) は実装済み
 
 // 空き武器スロット (main 以外は現状どの AI ハンドラーからも参照されないため, ダミーで問題ない)
 const EMPTY_ATTACK: CombatAttackModel = {
