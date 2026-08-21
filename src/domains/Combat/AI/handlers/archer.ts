@@ -21,7 +21,6 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  * 
  * 4. 攻撃/狙い
  * 敵の防御目標値が11以下なら攻撃, そうでないなら狙い
- * 
  */
 export const archer: TacticHandler = (actor, state) => {
   const { availability, target } = state.action!
