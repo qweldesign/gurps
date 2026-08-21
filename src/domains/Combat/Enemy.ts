@@ -20,15 +20,17 @@ import { type CombatAttackModel, type CombatDefenseModels,  type CombatUnitModel
 //   ...
 // ]
 //
+// バトル難度は3段階 (Easy/Normal/Hard). Easy はこのファイルの getEnemyFormation でゴブリン編成を生成し,
+// Normal はサンプルユニット (人間) を Combat.tsx 側で直接生成する (生成CPはプレイヤーの実際のCPの
+// 1.0〜1.25倍を戦闘毎にランダム抽選). 難度選択UI・Combat.tsx側との結線は実装済み
+//
 // 【将来の拡張ポイント・未実装分】
-//   - バトル難度 Hard/VeryHard: 未実装 (VeryHardはゴブリン以外の新規テンプレートが必要).
-//     Combat.tsx 側では暫定的に Normal (サンプルユニット) と同じ生成にフォールバックしている
+//   - バトル難度 Hard: 未実装 (ゴブリン以外の新規テンプレートが必要). Combat.tsx 側では暫定的に
+//     Normal (サンプルユニット) と同じ生成にフォールバックしている
 //   - 勝利時の報酬付与 (SaveData.savePoints/saveGold と連携) は未実装.
 //     getEnemyFormation の戻り値に rewardCp/rewardGold を含めてあるので, 戦闘終了時にそれを
 //     SaveData.savePoints/saveGold へ加算する形で実装できる
-//
-// 難度選択UI (Setup/BattleDifficulty.tsx) ・Combat.tsx 側での結線
-// (難度/RankからgetEnemyFormationを呼び出す処理, NormalのCP連動) は実装済み
+//   - Combat.tsx 側で敵生成時に呼び出す想定 (Easy): getEnemyFormation(getRankFromCp(saveData.loadPoints()))
 
 // 空き武器スロット (main 以外は現状どの AI ハンドラーからも参照されないため, ダミーで問題ない)
 const EMPTY_ATTACK: CombatAttackModel = {
@@ -196,7 +198,7 @@ const ENEMY_TEMPLATES: Record<EnemyKey, (rank: number) => Omit<CombatUnitModel, 
   weakGoblin, goblinSwordsman, goblinWarrior, hobgoblin, goblinArcher, goblinSorcerer
 }
 
-// Rank算出 (プレイヤー保有CPから0〜3を導出する. VeryEasy/Easyのゴブリン生成に使用する)
+// Rank算出 (プレイヤー保有CPから0〜3を導出する. Easyのゴブリン生成に使用する)
 export function getRankFromCp(cp: number): number {
   if (cp < 16) return 0
   else if (cp < 24) return 1
@@ -204,36 +206,29 @@ export function getRankFromCp(cp: number): number {
   else return 3
 }
 
-// バトル難度 (Normal/Hard/VeryHard は未実装. Combat.tsx 側との結線, 難度選択UI, 報酬付与は別途対応予定)
-export type BattleDifficulty = 'veryEasy' | 'easy'
-
-// 敵編成 (1難度につき複数編成をランダム抽選する)
+// 敵編成 (ランダムに複数編成を抽選する)
 type EnemyFormationDef = { members: EnemyKey[], rewardCp: number, rewardGold: number }
 
 /**
- * 敵編成
+ * 敵編成 (バトル難度 Easy 用)
  *
- * バトル難度: VeryEasy, Easy
  * ランダムで下記編成 (ゴブリン) とバトル (※スライム戦も実装予定)
+ * バトル難度 Normal は Combat.tsx 側でサンプルユニット (人間) を直接生成するため, ここには含まない.
+ * Hard は敵データ未実装 (今後対応)
  */
-const FORMATIONS: Record<BattleDifficulty, EnemyFormationDef[]> = {
-  veryEasy: [
-    { members: ['weakGoblin', 'goblinSwordsman', 'goblinWarrior', 'goblinArcher'], rewardCp: 1, rewardGold: 25 },
-    { members: ['weakGoblin', 'goblinSwordsman', 'goblinArcher', 'goblinSorcerer'], rewardCp: 1, rewardGold: 25 },
-    { members: ['weakGoblin', 'goblinSwordsman', 'goblinWarrior', 'goblinSorcerer'], rewardCp: 1, rewardGold: 25 }
-  ],
-  easy: [
-    { members: ['goblinSwordsman', 'goblinWarrior', 'hobgoblin', 'goblinArcher'], rewardCp: 2, rewardGold: 50 },
-    { members: ['goblinSwordsman', 'goblinWarrior', 'goblinArcher', 'goblinSorcerer'], rewardCp: 2, rewardGold: 50 },
-    { members: ['goblinSwordsman', 'goblinWarrior', 'hobgoblin', 'goblinSorcerer'], rewardCp: 2, rewardGold: 50 }
-  ]
-}
+const EASY_FORMATIONS: EnemyFormationDef[] = [
+  { members: ['weakGoblin', 'goblinSwordsman', 'goblinWarrior', 'goblinArcher'], rewardCp: 1, rewardGold: 25 },
+  { members: ['weakGoblin', 'goblinSwordsman', 'goblinArcher', 'goblinSorcerer'], rewardCp: 1, rewardGold: 25 },
+  { members: ['weakGoblin', 'goblinSwordsman', 'goblinWarrior', 'goblinSorcerer'], rewardCp: 1, rewardGold: 25 },
+  { members: ['goblinSwordsman', 'goblinWarrior', 'hobgoblin', 'goblinArcher'], rewardCp: 1, rewardGold: 50 },
+  { members: ['goblinSwordsman', 'goblinWarrior', 'goblinArcher', 'goblinSorcerer'], rewardCp: 1, rewardGold: 50 },
+  { members: ['goblinSwordsman', 'goblinWarrior', 'hobgoblin', 'goblinSorcerer'], rewardCp: 1, rewardGold: 50 }
+]
 
-// 難度・Rank を指定して敵編成 (4体) を1つランダムに選び, 実際の CombatUnitModel[] と報酬を返す
+// Rank を指定して敵編成 (4体) を1つランダムに選び, 実際の CombatUnitModel[] と報酬を返す
 // (id はテンプレートを編成間で使い回すため, ここで 101〜104 に振り直す)
-export function getEnemyFormation(difficulty: BattleDifficulty, rank: number): { models: CombatUnitModel[], rewardCp: number, rewardGold: number } {
-  const pool = FORMATIONS[difficulty]
-  const picked = pool[Math.floor(Math.random() * pool.length)]
+export function getEnemyFormation(rank: number): { models: CombatUnitModel[], rewardCp: number, rewardGold: number } {
+  const picked = EASY_FORMATIONS[Math.floor(Math.random() * EASY_FORMATIONS.length)]
   const models = picked.members.map((key, i) => ({ id: 101 + i, ...ENEMY_TEMPLATES[key](rank) }))
   return { models, rewardCp: picked.rewardCp, rewardGold: picked.rewardGold }
 }

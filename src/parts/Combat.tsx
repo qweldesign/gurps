@@ -21,8 +21,10 @@ type QueueItem = {
 }
 
 const SLOT_SIZE = 4 // プレイヤー側の出撃人数 (Setup/Select と共通)
-const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP
+const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP (プレイヤー側フォールバック用)
 const DEFAULT_MULTIPLIER = 1 // ランダム生成時のデフォルトCP倍率
+const NORMAL_CP_MULTIPLIER_MIN = 1 // Normal難度: 敵の生成CPの倍率下限 (プレイヤーCP比)
+const NORMAL_CP_MULTIPLIER_MAX = 1.25 // Normal難度: 敵の生成CPの倍率上限 (プレイヤーCP比)
 
 function Combat() {
   // Setup/BattleDifficulty から navigate の state で渡された選択難度
@@ -67,15 +69,15 @@ function Combat() {
 
     const saveData = new SaveData()
 
-    // VeryEasy / Easy: ゴブリン編成 (Rank はプレイヤー保有CPから算出)
-    if (difficulty === 'veryEasy' || difficulty === 'easy') {
+    // Easy: ゴブリン編成 (Rank はプレイヤー保有CPから算出)
+    if (difficulty === 'easy') {
       const rank = getRankFromCp(saveData.loadPoints())
-      return getEnemyFormation(difficulty, rank).models
+      return getEnemyFormation(rank).models
     }
 
-    // Normal, および Hard/VeryHard (敵データ未実装につき暫定でNormal相当にフォールバック),
+    // Normal, および Hard (敵データ未実装につき暫定でNormal相当にフォールバック),
     // 難度未指定 (state 消失時のフォールバック) の場合: 従来通りサンプル (人間) を生成する.
-    // 生成CPは固定値 (DEFAULT_CP) ではなく, プレイヤーの実際のCPに連動させる
+    // 生成CPは, プレイヤーの実際のCPの1.0〜1.25倍 (戦闘開始のたびにランダムに再抽選) とする
     //
     // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数と重複すると,
     // 同じ顔ぶれの NPC が敵として出現してしまうため, それを避けて抽選する
@@ -84,7 +86,9 @@ function Combat() {
     while (r2 === excludedMod) {
       r2 = Math.floor(Math.random() * 16)
     }
-    return createSamples(saveData.loadPoints(), DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
+    const cpMultiplier = NORMAL_CP_MULTIPLIER_MIN + Math.random() * (NORMAL_CP_MULTIPLIER_MAX - NORMAL_CP_MULTIPLIER_MIN)
+    const enemyCp = Math.round(saveData.loadPoints() * cpMultiplier)
+    return createSamples(enemyCp, DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
   }
 
   // プレイヤー4人と敵4人のユニットを結合する関数
