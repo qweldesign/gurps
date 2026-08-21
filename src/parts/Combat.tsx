@@ -10,6 +10,7 @@ import { SampleCharacter } from '../domains/Sample/Character'
 import { Character } from '../domains/Character'
 import { SaveData } from '../domains/SaveData'
 import { CombatState as State } from '../domains/Combat/State'
+import type { CombatUnitModel } from '../domains/Combat/Unit'
 import type { BattleDifficultyTier } from '../domains/Combat/Difficulty'
 import { enemy, getEnemyFormation, getRankFromCp } from '../domains/Combat/Enemy'
 import DevProgress from './DevProgress'
@@ -25,6 +26,8 @@ const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP (プレイヤ
 const DEFAULT_MULTIPLIER = 1 // ランダム生成時のデフォルトCP倍率
 const NORMAL_CP_MULTIPLIER_MIN = 1 // Normal難度: 敵の生成CPの倍率下限 (プレイヤーCP比)
 const NORMAL_CP_MULTIPLIER_MAX = 1.25 // Normal難度: 敵の生成CPの倍率上限 (プレイヤーCP比)
+const NORMAL_REWARD_CP = 2 // Normal (および現状Normal相当にフォールバックしているHard) 勝利時の固定CP報酬
+const NORMAL_REWARD_GOLD = 100 // Normal (および現状Normal相当にフォールバックしているHard) 勝利時の固定Gold報酬
 
 function Combat() {
   // Setup/BattleDifficulty から navigate の state で渡された選択難度
@@ -62,22 +65,25 @@ function Combat() {
     return createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 0, r1, 4).map(unit => unit.combatUnitModel)
   }
 
-  // 敵4人のユニットを用意する関数
+  // 敵4人のユニットと, その勝利報酬を用意する関数
   // enemy (このファイル冒頭で定義) に4体分の指定があればそれを使用し, 無ければ難度に応じて生成する
-  const initEnemyModels = () => {
-    if (enemy.length === SLOT_SIZE) return enemy
+  // (手動上書き時は報酬なし (null) を返す)
+  const initEnemyModels = (): { models: CombatUnitModel[], reward: { cp: number, gold: number } | null } => {
+    if (enemy.length === SLOT_SIZE) return { models: enemy, reward: null }
 
     const saveData = new SaveData()
 
-    // Easy: ゴブリン編成 (Rank はプレイヤー保有CPから算出)
+    // Easy: ゴブリン編成 (Rank はプレイヤー保有CPから算出). 報酬は編成ごとに定義された値を使用する
     if (difficulty === 'easy') {
       const rank = getRankFromCp(saveData.loadPoints())
-      return getEnemyFormation(rank).models
+      const formation = getEnemyFormation(rank)
+      return { models: formation.models, reward: { cp: formation.rewardCp, gold: formation.rewardGold } }
     }
 
     // Normal, および Hard (敵データ未実装につき暫定でNormal相当にフォールバック),
     // 難度未指定 (state 消失時のフォールバック) の場合: 従来通りサンプル (人間) を生成する.
-    // 生成CPは, プレイヤーの実際のCPの1.0〜1.25倍 (戦闘開始のたびにランダムに再抽選) とする
+    // 生成CPは, プレイヤーの実際のCPの1.0〜1.25倍 (戦闘開始のたびにランダムに再抽選) とする.
+    // 報酬は編成ごとの定義が無いため, 固定値 (NORMAL_REWARD_CP/NORMAL_REWARD_GOLD) を使用する
     //
     // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数と重複すると,
     // 同じ顔ぶれの NPC が敵として出現してしまうため, それを避けて抽選する
@@ -88,17 +94,25 @@ function Combat() {
     }
     const cpMultiplier = NORMAL_CP_MULTIPLIER_MIN + Math.random() * (NORMAL_CP_MULTIPLIER_MAX - NORMAL_CP_MULTIPLIER_MIN)
     const enemyCp = Math.round(saveData.loadPoints() * cpMultiplier)
-    return createSamples(enemyCp, DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
+    const models = createSamples(enemyCp, DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
+    return { models, reward: { cp: NORMAL_REWARD_CP, gold: NORMAL_REWARD_GOLD } }
   }
 
-  // プレイヤー4人と敵4人のユニットを結合する関数
-  const initModels = () => {
-    return initPlayerModels().concat(initEnemyModels())
+  // プレイヤー4人と敵4人のユニットを結合し, 勝利報酬とあわせて返す関数
+  const initModels = (): { models: CombatUnitModel[], reward: { cp: number, gold: number } | null } => {
+    const enemyResult = initEnemyModels()
+    return { models: initPlayerModels().concat(enemyResult.models), reward: enemyResult.reward }
   }
 
   // ターン管理
   const stateRef = useRef<State | null>(null)
   const [result, setResult] = useState<State['result']>(null) // 勝敗結果 (UI表示用. stateRef の変化は自動で再レンダリングされないため, ここに反映する)
+
+  // 勝利報酬 (「開幕」useEffect で initModels() の戻り値から一度だけ設定する)
+  // rewardRef: 付与処理 (useEffect) 用. reward: UI表示用 (result と同じく, ref変化は再レンダリングされないため state にも反映する)
+  const rewardRef = useRef<{ cp: number, gold: number } | null>(null)
+  const [reward, setReward] = useState<{ cp: number, gold: number } | null>(null)
+  const rewardGrantedRef = useRef(false) // 付与処理の重複実行を防ぐガード
 
   // ログ管理
   const timelineRef = useRef<HTMLDivElement | null>(null)
@@ -165,10 +179,26 @@ function Combat() {
   // 開幕
   useEffect(() => {
     if (!stateRef.current) {
-      stateRef.current = new State(initModels(), playLog)
+      const { models, reward: battleReward } = initModels()
+      stateRef.current = new State(models, playLog)
       stateRef.current.nextTurn()
+      // 勝利報酬を記録 (rewardRef: 付与処理用, reward state: UI表示用)
+      rewardRef.current = battleReward
+      if (battleReward) {
+        setReward(battleReward)
+      }
     }
   }, [])
+
+  // 勝利報酬の付与 (勝敗が決した瞬間に一度だけ. 敗北時は何も付与しない)
+  useEffect(() => {
+    if (result === 'win' && !rewardGrantedRef.current && rewardRef.current) {
+      rewardGrantedRef.current = true
+      const saveData = new SaveData()
+      saveData.savePoints(saveData.loadPoints() + rewardRef.current.cp)
+      saveData.saveGold(saveData.loadGold() + rewardRef.current.gold)
+    }
+  }, [result])
 
   return (
     <>
@@ -189,7 +219,12 @@ function Combat() {
               <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
                 <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
                 {result ? (
-                  <p className="my-12 text-center font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
+                  <div className="my-12 text-center">
+                    <p className="font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
+                    {result === 'win' && reward && (
+                      <p className="mt-3 text-sm">CP +{reward.cp} / 軍資金 +{reward.gold}金</p>
+                    )}
+                  </div>
                 ) : (
                   // enemy (AI操作) のターン中はコマンドパレットを表示しない (誤操作防止)
                   // 「傀儡」中は, 対象が敵であっても術者 (player) 側が操作するため対象外とする
