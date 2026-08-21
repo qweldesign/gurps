@@ -5,6 +5,7 @@ export const STORAGE_KEY = 'savedata';
 
 const DEFAULT_POINTS = 10
 const DEFAULT_GOLD = 100
+const DEFAULT_MULTIPLIER = 1 // CP倍率: 初期CP選択 (10/20/40) に対応する 1/2/4 (未選択時は 1 = CP10相当)
 const DEFAULT_MODEL = {
   id: 0,
   name: '未設定',
@@ -20,6 +21,7 @@ export class SaveData {
     keys?: string[]
     cp?: number
     gold?: number
+    multiplier?: number
     battleMembers?: number[]
     initialMod?: number
   }
@@ -177,6 +179,18 @@ export class SaveData {
     } else {
       return this.data.gold ?? DEFAULT_GOLD
     }
+  }
+
+  // CP倍率を更新 (初期CP選択 (10/20/40) にあわせた 1/2/4.
+  // SampleCharacter (NPC/敵サンプル) の能力値スケーリングに使用する. 一度選択したら以後は変更しない想定)
+  saveMultiplier(multiplier: number) {
+    this.data = { ...this.data, multiplier }
+    this.save()
+  }
+
+  // CP倍率を読み込み
+  loadMultiplier(): number {
+    return this.data.multiplier ?? DEFAULT_MULTIPLIER
   }
 
   // LocalStorage をクリア

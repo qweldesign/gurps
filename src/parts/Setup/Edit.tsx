@@ -2,6 +2,7 @@
 
 import { type ReactNode, type Reducer, useState, useReducer, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import OptionsSetting from './Edit/OptionsSetting'
 import ParametersSetting from './Edit/ParametersSetting'
 import EquipmentsSetting from './Edit/EquipmentsSetting'
 import ProfileSetting from './Edit/ProfileSetting'
@@ -44,6 +45,7 @@ export type ParamsState = {
 
 export type Action =
   | { type: 'INIT', payload: { prevModel: Model,  model: Model } }
+  | { type: 'SET_OPTIONS', payload: { points: number, gold: number } }
   | { type: 'STEP_PARAM', payload: { prevParams: Parameters, name: ParameterKey, size: number } }
   | { type: 'RESET_EQUIPS', payload: { prevModel: Model } }
   | { type: 'CHANGE_EQUIP', payload: { slot: 'weapon' | 'spare' | 'shield' | 'body' | 'head' | 'arm' | 'leg', name: string } }
@@ -63,6 +65,10 @@ function Edit() {
 
   // 新規作成かどうかを変数に格納
   const isFirstCreation: boolean = uid === '00' ? true : false
+
+  // ゲーム全体で最初の1人目かどうか (基本設定 (初期CP・所持金) の表示判定用)
+  // isFirstCreation は「編成」画面からの新規追加 (2人目以降) でも true になるため, それとは区別する
+  const isNewGame: boolean = keys.size === 0
 
   // 状態初期値 → ほとんど最初の useEffect で初期値を再代入
   const initialState: ParamsState = {
@@ -139,6 +145,13 @@ function Edit() {
           prevParams, params,
           prevEquips, equips, saleEquips,
           weaponList, armorList
+        }
+
+      case 'SET_OPTIONS':
+        return {
+          ...state,
+          initialPoints: action.payload.points,
+          initialGold: action.payload.gold
         }
 
       case 'STEP_PARAM': {
@@ -315,6 +328,16 @@ function Edit() {
     dispatch({ type: 'INIT', payload: { prevModel, model } })
   }
 
+  // SET_OPTIONS
+  // 初期CP・所持金選択 (10/100, 20/200, 40/400): セーブデータ全体の基準として, CP・CP倍率・所持金を即時保存する
+  // (以後の全キャラクター作成, および NPC/敵サンプル生成 (Setup.tsx, Combat.tsx) がこの値を参照する)
+  const onSetOptions = (points: number, gold: number) => {
+    saveData.savePoints(points)
+    saveData.saveMultiplier(points / 10) // 10/20/40 → 1/2/4
+    saveData.saveGold(gold)
+    dispatch({ type: 'SET_OPTIONS', payload: { points, gold } })
+  }
+
   // RESET_EQUIPS
   const onResetEquip = (prevModel: Model) => {
     // 発火
@@ -465,6 +488,9 @@ function Edit() {
     <div className="edit px-6">
       <div className="max-w-[48em] mx-auto">
         <h3>キャラクター{isFirstCreation ? '作成' : '編集'}</h3>
+        {isNewGame && (
+          <OptionsSetting points={state.initialPoints} gold={state.initialGold} onChange={onSetOptions} />
+        )}
         <ParametersSetting isFirstCreation={isFirstCreation} state={state} dispatch={dispatch} calcPoints={calcPoints} />
         <EquipmentsSetting isFirstCreation={isFirstCreation} state={state} dispatch={dispatch} calcGold={calcGold} />
         {isFirstCreation && (

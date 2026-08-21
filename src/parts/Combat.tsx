@@ -23,7 +23,6 @@ type QueueItem = {
 
 const SLOT_SIZE = 4 // プレイヤー側の出撃人数 (Setup/Select と共通)
 const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP (プレイヤー側フォールバック用)
-const DEFAULT_MULTIPLIER = 1 // ランダム生成時のデフォルトCP倍率
 const NORMAL_CP_MULTIPLIER_MIN = 1 // Normal難度: 敵の生成CPの倍率下限 (プレイヤーCP比)
 const NORMAL_CP_MULTIPLIER_MAX = 1.25 // Normal難度: 敵の生成CPの倍率上限 (プレイヤーCP比)
 const NORMAL_REWARD_CP = 2 // Normal (および現状Normal相当にフォールバックしているHard) 勝利時の固定CP報酬
@@ -61,8 +60,9 @@ function Combat() {
       }
     }
     // フォールバック: 従来通りのランダムサンプル
+    // CP倍率は選択された初期CP (10/20/40) にあわせたセーブデータの値を使用する
     const r1 = Math.floor(Math.random() * 16)
-    return createSamples(DEFAULT_CP, DEFAULT_MULTIPLIER, 0, r1, 4).map(unit => unit.combatUnitModel)
+    return createSamples(DEFAULT_CP, saveData.loadMultiplier(), 0, r1, 4).map(unit => unit.combatUnitModel)
   }
 
   // 敵4人のユニットと, その勝利報酬を用意する関数
@@ -94,7 +94,8 @@ function Combat() {
     }
     const cpMultiplier = NORMAL_CP_MULTIPLIER_MIN + Math.random() * (NORMAL_CP_MULTIPLIER_MAX - NORMAL_CP_MULTIPLIER_MIN)
     const enemyCp = Math.round(saveData.loadPoints() * cpMultiplier)
-    const models = createSamples(enemyCp, DEFAULT_MULTIPLIER, 4, r2, 4).map(unit => unit.combatUnitModel)
+    // 能力値のスケーリング (CP倍率) は選択された初期CP (10/20/40) にあわせたセーブデータの値を使用する
+    const models = createSamples(enemyCp, saveData.loadMultiplier(), 4, r2, 4).map(unit => unit.combatUnitModel)
     return { models, reward: { cp: NORMAL_REWARD_CP, gold: NORMAL_REWARD_GOLD } }
   }
 

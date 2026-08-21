@@ -51,7 +51,8 @@ function Setup() {
   const saveUnits = (size: number) => {
     const mod = Math.floor(Math.random() * 15) // 乱数 0～15 を足してサンプル生成
     saveData.saveInitialMod(mod) // 戦闘の敵生成時に重複を避けるため保存しておく
-    const samples = createSamples(10, 1, 5 - size, mod, size)
+    // 主人公作成時に選択された初期CP・CP倍率にあわせて初期仲間を生成する (パーティ内の戦力差を避けるため)
+    const samples = createSamples(saveData.loadPoints(), saveData.loadMultiplier(), 5 - size, mod, size)
     samples.forEach(sample => {
       const unit = new Character(sample.model)
       const key = String(sample.id).padStart(2, '0')
