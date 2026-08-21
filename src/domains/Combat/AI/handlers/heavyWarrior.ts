@@ -1,7 +1,7 @@
 // Combat/AI/handlers/heavyWarrior.ts
 
 import { type TacticHandler } from '../handler'
-import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, worstOwnDefenseTarget } from '../utils'
+import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
 
 /**
  * 重戦士, 術戦士F: 積極的に中央に移動して前衛で戦う (術は使わない)
@@ -10,7 +10,7 @@ import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, w
  * 1. 移動
  * 後衛にいれば前衛に移動 (優先順位 1.中央, 2.左翼, 3.右翼)
  * 前衛にいて, かつ攻撃対象がいれば 2. へ
- * 
+ *
  * 2. 全力攻撃
  * 自身を攻撃可能な敵全員が朦朧状態や幻惑や目/耳/四肢を故障しているなら全力攻撃
  * それ以外なら 3. へ
@@ -55,6 +55,10 @@ export const heavyWarrior: TacticHandler = (actor, state) => {
     if (position) return { key: 'move', options: { position }, targets: [] }
     return { key: 'wait', options: {}, targets: [] }
   }
+
+  // 前衛にいるが現在位置からは攻撃対象が0体の場合, 移動すれば対象に届く位置があればそこへ移動する
+  const movePosition = pickMoveToReachMeleeTarget(actor, state)
+  if (movePosition) return { key: 'move', options: { position: movePosition }, targets: [] }
 
   const melee = target.melee
   if (melee.length === 0) return { key: 'wait', options: {}, targets: [] }

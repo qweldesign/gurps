@@ -1,7 +1,7 @@
 // Combat/AI/handlers/lightWarrior.ts
 
 import { type TacticHandler } from '../handler'
-import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, worstOwnDefenseTarget } from '../utils'
+import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
 
 /**
  * 軽戦士, 剣士, 盗賊: 積極的に左翼・右翼に移動して前衛で戦う
@@ -55,6 +55,10 @@ export const lightWarrior: TacticHandler = (actor, state) => {
     if (position) return { key: 'move', options: { position }, targets: [] }
     return { key: 'wait', options: {}, targets: [] }
   }
+
+  // 前衛にいるが現在位置からは攻撃対象が0体の場合, 移動すれば対象に届く位置があればそこへ移動する
+  const movePosition = pickMoveToReachMeleeTarget(actor, state)
+  if (movePosition) return { key: 'move', options: { position: movePosition }, targets: [] }
 
   const melee = target.melee
   if (melee.length === 0) return { key: 'wait', options: {}, targets: [] }
