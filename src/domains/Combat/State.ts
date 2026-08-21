@@ -6,6 +6,7 @@ import { CombatFormation as Formation } from './Formation'
 import { CombatAction as Action } from './Action'
 import { judgeTimeRegression } from './Action/resolver'
 import { SPELL_ELEMENTS } from './Spells'
+import { decideEnemyAction } from './AI'
 
 // 勝敗結果 (未決着は null)
 export type CombatResult = 'win' | 'lose' | null
@@ -104,6 +105,22 @@ export class CombatState {
     await this.playLog()
     // コマンドパレット初期化
     this.action = new Action(this)
+    // 開幕時の自動実行 (朦朧回復・消火) の完了を待つ
+    await this.action.ready
+
+    // 敵 (NPC) のターンは自動で行動を決定・実行する
+    // (自動実行 (recovery/extinguish) で既にターンが終わっている場合は unlocked が false のままなのでスキップする.
+    //  「傀儡」で操られている間は, 本来の所属陣営とは無関係にプレイヤー側が操作するため対象外とする.
+    //  「射撃」「法術」等, 選択してもターンが終わらない行動があるため, ターンが終わる (unlocked が false になる)
+    //  か「傀儡」に移行するまで, 続けて次の行動を決定させる)
+    let aiActionCount = 0
+    while (this.action.unlocked && this.actor.side === 'enemy' && this.actor.tactic && !this.actor.health.puppeted) {
+      aiActionCount++
+      if (aiActionCount > 10) break // 安全装置 (通常到達しない想定. 意図しない無限ループを防ぐ)
+      const request = decideEnemyAction(this.actor, this)
+      await this.action.execute(request)
+    }
+
     //　コマンド入力待機
     await this.action.promise.then(async () => {
       const actor = this.actor

@@ -161,7 +161,9 @@ function Combat() {
                 {result ? (
                   <p className="my-12 text-center font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
                 ) : (
-                  stateRef.current.action && (
+                  // enemy (AI操作) のターン中はコマンドパレットを表示しない (誤操作防止)
+                  // 「傀儡」中は, 対象が敵であっても術者 (player) 側が操作するため対象外とする
+                  stateRef.current.action && (stateRef.current.puppetTarget || stateRef.current.actor.side === 'player') && (
                     <Action store={stateRef.current.action} />
                   )
                 )}

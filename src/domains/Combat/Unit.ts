@@ -8,6 +8,7 @@ import { CombatUnitStatusBuff as StatusBuff, type CombatUnitStatusBuffSnapshot a
 import { CombatUnitStatusEffects as StatusEffects, type CombatUnitStatusEffectsSnapshot as StatusEffectsSnapshot } from './Unit/StatusEffects'
 import { SPELL_ELEMENTS, type Spells } from './Spells'
 import { type CombatLog as Log } from './Log'
+import { type TacticKey } from './AI/types'
 
 const combatIds: number[] = [1, 2, 3, 4, 5, 6, 7, 8] as const
 
@@ -81,6 +82,7 @@ export type CombatUnitModel = {
   dmgBuff: number //「怪力」端数 (バフ初期値)
   evBuff: number //「運動」端数 (バフ初期値)
   spells: Spells
+  tactic?: TacticKey // 自動行動タイプ (敵 (NPC) のみ. 未指定の場合は自動行動せず, プレイヤーが操作する通常のユニットとして扱う)
 }
 
 // 「時間遡行」用のユニット全体のスナップショット
@@ -113,13 +115,15 @@ export class CombatUnit {
   public spellCast: Spells
   public healUses: Partial<Record<string, number>> // 回復呪文の使用回数管理 (術名をキーとする. 「1戦闘につき」の上限を持つ回復呪文用)
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
+  public tactic: TacticKey | null // 自動行動タイプ (敵 (NPC) のみ. null の場合は自動行動しない (プレイヤーが操作する))
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells } = model
+    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells, tactic } = model
     this.combatId = combatId
     this.id = id
     this.name = name
     this.side = combatId <= 4 ? 'player' : 'enemy'
+    this.tactic = tactic ?? null
     this.position = 'back'
     this.posture = 'standing'
     this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
