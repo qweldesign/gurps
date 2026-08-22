@@ -66,81 +66,102 @@ const NO_SPELLS = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }
  * 記載されていない dmgBuff, evBuff, spells は全て 0 を取る
  */
 
-/** 1. 下端ゴブリン
+/** 1. ゴブリン (棍棒) 攻撃は当たるが, ダメージが低い
  * maxHp: Rank * 2 + 10
- * attack: 棍棒 Dmg: 2d-1(叩), ev:1, 準備に1ターン, 技能値: Rank + 10
+ * attack: 棍棒 Dmg: 2d-2(叩), ev:1, 準備に1ターン, 技能値: Rank + 12
  * defense: 服 DR: 1(0)
- * ev: Rank + 10, pre: 10, mre: 10
+ * ev: Rank + 10, pre: 8, mre: 8
  * tactic: 'lightWarrior'
  */
-function weakGoblin(rank: number): Omit<CombatUnitModel, 'id'> {
+function goblinA(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
   return {
-    name: '下端ゴブリン', maxHp: rank * 2 + 10,
+    maxHp: rank * 2 + 10,
     attacks: {
-      main: { name: '鎚槌', dmgName: '叩', dmgDice: 2, dmgMod: -1, dmgType: 0, level: rank + 10, ev: 1, ready: 1,
-               isChain: true, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
-      sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
-    },
-    defenses: makeDefenses('服'),
-    ev: rank + 10, pre: 10, mre: 10, dmgBuff: 0, evBuff: 0,
-    spells: NO_SPELLS, tactic: 'lightWarrior'
-  }
-}
-
-/** 2. ゴブリン剣士
- * maxHp: Rank * 2 + 10
- * attack: ダガー Dmg: 1d-1(刺), ev:1, 技能値: Rank + 10
- * defense: 服 DR: 1(0)
- * ev: Rank + 10, pre: 10, mre: 10
- * tactic: 'lightWarrior'
- */
-function goblinSwordsman(rank: number): Omit<CombatUnitModel, 'id'> {
-  return {
-    name: 'ゴブリン剣士', maxHp: rank * 2 + 10,
-    attacks: {
-      main: { name: 'ダガー', dmgName: '刺', dmgDice: 1, dmgMod: -1, dmgType: 2, level: rank + 10, ev: 1, ready: 0,
+      main: { name: '棍棒', dmgName: '叩', dmgDice: 2, dmgMod: -2, dmgType: 0, level: rank + 12, ev: 1, ready: 1,
                isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
       sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
     },
     defenses: makeDefenses('服'),
-    ev: rank + 10, pre: 10, mre: 10, dmgBuff: 0, evBuff: 0,
+    ev: rank + 10, pre: 8, mre: 8, dmgBuff: 0, evBuff: 0,
     spells: NO_SPELLS, tactic: 'lightWarrior'
   }
 }
 
-/** 3. ゴブリン戦士
- * maxHp: Rank * 2 + 12
- * attack: ショートソード Dmg: 1d+1(切), ev:1, 技能値: Rank + 11
+/** 2. ゴブリン (短剣) 攻撃は当たるが, ダメージが低い
+ * maxHp: Rank * 2 + 10
+ * attack: ダガー Dmg: 1d-2(刺), ev:1, 技能値: Rank + 12
+ * defense: 服 DR: 1(0)
+ * ev: Rank + 10, pre: 8, mre: 8
+ * tactic: 'lightWarrior'
+ */
+function goblinB(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
+  return {
+    maxHp: rank * 2 + 10,
+    attacks: {
+      main: { name: 'ダガー', dmgName: '刺', dmgDice: 1, dmgMod: -2, dmgType: 2, level: rank + 12, ev: 1, ready: 0,
+               isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
+      sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
+    },
+    defenses: makeDefenses('服'),
+    ev: rank + 10, pre: 8, mre: 8, dmgBuff: 0, evBuff: 0,
+    spells: NO_SPELLS, tactic: 'lightWarrior'
+  }
+}
+
+/** 3. ホブリン (棍棒)  ダメージはまずまずだが, 滅多に当たらない
+ * maxHp: Rank * 2 + 14
+ * attack: 棍棒 Dmg: 2d-1(叩), ev:1, 技能値: Rank + 11
  * defense: 革服 DR: 1
- * ev: Rank + 10, pre: 10, mre: 10
+ * ev: Rank + 10, pre: 10, mre: 8
  * tactic: 'heavyWarrior'
  */
-function goblinWarrior(rank: number): Omit<CombatUnitModel, 'id'> {
+function hoblinA(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
   return {
-    name: 'ゴブリン戦士', maxHp: rank * 2 + 12,
+    maxHp: rank * 2 + 14,
     attacks: {
-      main: { name: 'ショートソード', dmgName: '切', dmgDice: 1, dmgMod: 1, dmgType: 1, level: rank + 11, ev: 1, ready: 0,
+      main: { name: '棍棒', dmgName: '叩', dmgDice: 2, dmgMod: -1, dmgType: 0, level: rank + 11, ev: 1, ready: 1,
                isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
       sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
     },
     defenses: makeDefenses('革服'),
-    ev: rank + 10, pre: 10, mre: 10, dmgBuff: 0, evBuff: 0,
+    ev: rank + 10, pre: 10, mre: 8, dmgBuff: 0, evBuff: 0,
     spells: NO_SPELLS, tactic: 'heavyWarrior'
   }
 }
 
-/** 4. ホブゴブリン
- * maxHp: Rank * 2 + 12
- * attack: ロングソード Dmg: 1d+2(切), ev:1, 技能値: Rank + 11
+/** 4. ホブリン (小剣) ダメージはまずまずだが, 滅多に当たらない
+ * maxHp: Rank * 2 + 14
+ * attack: ショートソード Dmg: 1d(切), ev:1, 技能値: Rank + 11
+ * defense: 革服 DR: 1
+ * ev: Rank + 10, pre: 10, mre: 10
+ * tactic: 'heavyWarrior'
+ */
+function hoblinB(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
+  return {
+    maxHp: rank * 2 + 14,
+    attacks: {
+      main: { name: 'ショートソード', dmgName: '切', dmgDice: 1, dmgMod: 0, dmgType: 1, level: rank + 11, ev: 1, ready: 0,
+               isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
+      sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
+    },
+    defenses: makeDefenses('革服'),
+    ev: rank + 10, pre: 10, mre: 8, dmgBuff: 0, evBuff: 0,
+    spells: NO_SPELLS, tactic: 'heavyWarrior'
+  }
+}
+
+/** 5. ゴブリンキング
+ * maxHp: Rank * 2 + 18
+ * attack: ロングソード Dmg: 1d+2(切), ev:1, 技能値: Rank + 12
  * defense: 革鎧 DR: 2
  * ev: Rank + 10, pre: 10, mre: 10
  * tactic: 'heavyWarrior'
  */
-function hobgoblin(rank: number): Omit<CombatUnitModel, 'id'> {
+function goblinKing(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
   return {
-    name: 'ホブゴブリン', maxHp: rank * 2 + 12,
+    maxHp: rank * 2 + 18,
     attacks: {
-      main: { name: 'ロングソード', dmgName: '切', dmgDice: 1, dmgMod: 2, dmgType: 1, level: rank + 11, ev: 1, ready: 0,
+      main: { name: 'ロングソード', dmgName: '切', dmgDice: 1, dmgMod: 2, dmgType: 1, level: rank + 12, ev: 1, ready: 0,
                isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
       sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
     },
@@ -150,52 +171,75 @@ function hobgoblin(rank: number): Omit<CombatUnitModel, 'id'> {
   }
 }
 
-/** 5. ゴブリン弓使い
+/** 6. ドビー
  * maxHp: Rank * 2 + 10
- * attack: 短弓 Dmg: 1d-1(刺), ev:-, 技能値: Rank + 12
+ * attack: 短弓 Dmg: 1d-2(刺), ev:-, 技能値: Rank + 12
  * defense: 服 DR: 1(0)
- * ev: Rank + 10, pre: 10, mre: 10
+ * ev: Rank + 10, pre: 8, mre: 8
  * tactic: 'archer'
  */
-function goblinArcher(rank: number): Omit<CombatUnitModel, 'id'> {
+function dobby(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
   return {
-    name: 'ゴブリン弓使い', maxHp: rank * 2 + 10,
+    maxHp: rank * 2 + 10,
     attacks: {
-      main: { name: '短弓', dmgName: '刺', dmgDice: 1, dmgMod: -1, dmgType: 2, level: rank + 12, ev: 0, ready: 1,
+      main: { name: '短弓', dmgName: '刺', dmgDice: 1, dmgMod: -2, dmgType: 2, level: rank + 12, ev: 0, ready: 1,
                isChain: false, isTwoHanded: false, isPole: false, isMissile: true, isShield: false },
       sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
     },
     defenses: makeDefenses('服'),
-    ev: rank + 10, pre: 10, mre: 10, dmgBuff: 0, evBuff: 0,
+    ev: rank + 10, pre: 8, mre: 8, dmgBuff: 0, evBuff: 0,
     spells: NO_SPELLS, tactic: 'archer'
   }
 }
 
-/** 6. ゴブリン術士
+/** 7. ゴブリン術士 (火行)
  * maxHp: Rank * 2 + 10
- * attack: 杖 Dmg: 2d-3(叩), ev:3, 技能値: Rank + 10
+ * attack: 杖 Dmg: 2d-4(叩), ev:3, 技能値: Rank + 10
  * defense: 服 DR: 1(0)
- * ev: Rank + 10, pre: 10, mre: 10
+ * ev: Rank + 10, pre: 8, mre: 10
  * spells: { earth: Rank + 12, metal: Rank + 12 }
  * tactic: 'sorcerer'
  */
-function goblinSorcerer(rank: number): Omit<CombatUnitModel, 'id'> {
+function goblinMageA(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
   return {
-    name: 'ゴブリン術士', maxHp: rank * 2 + 10,
+    maxHp: rank * 2 + 10,
     attacks: {
-      main: { name: '杖', dmgName: '叩', dmgDice: 2, dmgMod: -3, dmgType: 0, level: rank + 10, ev: 3, ready: 0,
+      main: { name: '杖', dmgName: '叩', dmgDice: 2, dmgMod: -4, dmgType: 0, level: rank + 10, ev: 3, ready: 0,
                isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
       sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
     },
     defenses: makeDefenses('服'),
-    ev: rank + 10, pre: 10, mre: 10, dmgBuff: 0, evBuff: 0,
+    ev: rank + 10, pre: 8, mre: 10, dmgBuff: 0, evBuff: 0,
+    spells: { ...NO_SPELLS, fire: rank + 12 }, tactic: 'fireSpell'
+  }
+}
+
+/** 7. ゴブリン術士 (土行/金行)
+ * maxHp: Rank * 2 + 10
+ * attack: 杖 Dmg: 2d-4(叩), ev:3, 技能値: Rank + 10
+ * defense: 服 DR: 1(0)
+ * ev: Rank + 10, pre: 8, mre: 10
+ * spells: { earth: Rank + 12, metal: Rank + 12 }
+ * tactic: 'sorcerer'
+ */
+function goblinMageB(rank: number): Omit<CombatUnitModel, 'id' | 'name'> {
+  return {
+    maxHp: rank * 2 + 10,
+    attacks: {
+      main: { name: '杖', dmgName: '叩', dmgDice: 2, dmgMod: -4, dmgType: 0, level: rank + 10, ev: 3, ready: 0,
+               isChain: false, isTwoHanded: false, isPole: false, isMissile: false, isShield: false },
+      sub: EMPTY_ATTACK, spare: EMPTY_ATTACK, shield: EMPTY_ATTACK
+    },
+    defenses: makeDefenses('服'),
+    ev: rank + 10, pre: 8, mre: 10, dmgBuff: 0, evBuff: 0,
     spells: { ...NO_SPELLS, earth: rank + 12, metal: rank + 12 }, tactic: 'earthMetalSpell'
   }
 }
 
-type EnemyKey = 'weakGoblin' | 'goblinSwordsman' | 'goblinWarrior' | 'hobgoblin' | 'goblinArcher' | 'goblinSorcerer'
-const ENEMY_TEMPLATES: Record<EnemyKey, (rank: number) => Omit<CombatUnitModel, 'id'>> = {
-  weakGoblin, goblinSwordsman, goblinWarrior, hobgoblin, goblinArcher, goblinSorcerer
+type EnemyKey = 'goblinA' | 'goblinB' | 'hoblinA' | 'hoblinB' | 'goblinKing' | 'dobby' | 'goblinMageA' | 'goblinMageB'
+
+const ENEMY_TEMPLATES: Record<EnemyKey, (rank: number) => Omit<CombatUnitModel, 'id' | 'name'>> = {
+  goblinA, goblinB, hoblinA, hoblinB, goblinKing, dobby, goblinMageA, goblinMageB
 }
 
 // Rank算出 (プレイヤー保有CPから0〜3を導出する. Easyのゴブリン生成に使用する)
@@ -207,7 +251,7 @@ export function getRankFromCp(cp: number): number {
 }
 
 // 敵編成 (ランダムに複数編成を抽選する)
-type EnemyFormationDef = { members: EnemyKey[], rewardCp: number, rewardGold: number }
+type EnemyFormationDef = { members: {name: string, key: EnemyKey}[], rewardCp: number, rewardGold: number }
 
 /**
  * 敵編成 (バトル難度 Easy 用)
@@ -217,19 +261,108 @@ type EnemyFormationDef = { members: EnemyKey[], rewardCp: number, rewardGold: nu
  * Hard は敵データ未実装 (今後対応)
  */
 const EASY_FORMATIONS: EnemyFormationDef[] = [
-  { members: ['weakGoblin', 'goblinSwordsman', 'goblinWarrior', 'goblinArcher'], rewardCp: 1, rewardGold: 25 },
-  { members: ['weakGoblin', 'goblinSwordsman', 'goblinArcher', 'goblinSorcerer'], rewardCp: 1, rewardGold: 25 },
-  { members: ['weakGoblin', 'goblinSwordsman', 'goblinWarrior', 'goblinSorcerer'], rewardCp: 1, rewardGold: 25 },
-  { members: ['goblinSwordsman', 'goblinWarrior', 'hobgoblin', 'goblinArcher'], rewardCp: 1, rewardGold: 50 },
-  { members: ['goblinSwordsman', 'goblinWarrior', 'goblinArcher', 'goblinSorcerer'], rewardCp: 1, rewardGold: 50 },
-  { members: ['goblinSwordsman', 'goblinWarrior', 'hobgoblin', 'goblinSorcerer'], rewardCp: 1, rewardGold: 50 }
+  { members: [ // 1
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ホブリン', key: 'hoblinA'},
+    {name: 'ゴブリンA', key: 'goblinA'}, // 1～6固定
+    {name: 'ゴブリンB', key: 'goblinB'}  // 1～6固定
+  ], rewardCp: 1, rewardGold: 50 },
+  { members: [ // 2
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ホブリン', key: 'hoblinB'}, // A → B
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'}
+  ], rewardCp: 1, rewardGold: 50 },
+  { members: [ //3
+    {name: 'ゴブリン術士', key: 'goblinMageA'}, // dobby → mageA
+    {name: 'ホブリン', key: 'hoblinA'},
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 50 },
+  { members: [ //4
+    {name: 'ゴブリン術士', key: 'goblinMageA'},
+    {name: 'ホブリン', key: 'hoblinB'}, // A → B
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 50 },
+  { members: [ // 5
+    {name: 'ゴブリン術士', key: 'goblinMageB'}, // mageA → mageB
+    {name: 'ホブリン', key: 'hoblinA'},
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 50 },
+  { members: [ // 6
+    {name: 'ゴブリン術士', key: 'goblinMageB'},
+    {name: 'ホブリン', key: 'hoblinB'}, // A → B
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 50 },
+  { members: [ // 7
+    {name: 'ゴブリン術士', key: 'goblinMageA'},
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ホブリン', key: 'hoblinA'}, // 7～9固定
+    {name: 'ゴブリン', key: 'goblinB'}, // 7～9固定
+  ], rewardCp: 1, rewardGold: 75 },
+  { members: [ // 8
+    {name: 'ゴブリン術士', key: 'goblinMageB'}, // mageA → mageB
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ホブリン', key: 'hoblinA'},
+    {name: 'ゴブリン', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 75 },
+  { members: [ // 9
+    {name: 'ゴブリン術士A', key: 'goblinMageA'}, // dobby → mageA
+    {name: 'ゴブリン術士B', key: 'goblinMageB'},
+    {name: 'ホブリン', key: 'hoblinA'},
+    {name: 'ゴブリン', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 75 },
+  { members: [ // 10
+    {name: 'ゴブリン術士', key: 'goblinMageA'},
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ホブリン', key: 'hoblinB'}, // 10～12固定
+    {name: 'ゴブリン', key: 'goblinA'}, // 10～12固定
+  ], rewardCp: 1, rewardGold: 75 },
+  { members: [ // 11
+    {name: 'ゴブリン術士', key: 'goblinMageB'}, // mageA → mageB
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ホブリン', key: 'hoblinB'},
+    {name: 'ゴブリン', key: 'goblinA'},
+  ], rewardCp: 1, rewardGold: 75 },
+  { members: [ // 12
+    {name: 'ゴブリン術士A', key: 'goblinMageA'}, // dobby → mageA
+    {name: 'ゴブリン術士B', key: 'goblinMageB'},
+    {name: 'ホブリン', key: 'hoblinB'}, // A → B
+    {name: 'ゴブリン', key: 'goblinA'}, // B → A
+  ], rewardCp: 1, rewardGold: 75 },
+  { members: [ // 13
+    {name: 'ドビー', key: 'dobby'},
+    {name: 'ゴブリンキング', key: 'goblinKing'}, // 13～15固定
+    {name: 'ゴブリンA', key: 'goblinA'}, // 13～15固定
+    {name: 'ゴブリンB', key: 'goblinB'}, // 13～15固定
+  ], rewardCp: 1, rewardGold: 100 },
+  { members: [ // 14
+    {name: 'ゴブリン術士A', key: 'goblinMageA'}, // dobby → mageA
+    {name: 'ゴブリンキング', key: 'goblinKing'},
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 100 },
+  { members: [ // 15
+    {name: 'ゴブリン術士B', key: 'goblinMageB'}, // mageA → mageB
+    {name: 'ゴブリンキング', key: 'goblinKing'},
+    {name: 'ゴブリンA', key: 'goblinA'},
+    {name: 'ゴブリンB', key: 'goblinB'},
+  ], rewardCp: 1, rewardGold: 100 },
+  
 ]
 
 // Rank を指定して敵編成 (4体) を1つランダムに選び, 実際の CombatUnitModel[] と報酬を返す
 // (id はテンプレートを編成間で使い回すため, ここで 101〜104 に振り直す)
 export function getEnemyFormation(rank: number): { models: CombatUnitModel[], rewardCp: number, rewardGold: number } {
   const picked = EASY_FORMATIONS[Math.floor(Math.random() * EASY_FORMATIONS.length)]
-  const models = picked.members.map((key, i) => ({ id: 101 + i, ...ENEMY_TEMPLATES[key](rank) }))
+  const models = picked.members.map((enemy, i) => ({
+    id: 101 + i,
+    name: enemy.name,
+    ...ENEMY_TEMPLATES[enemy.key](rank)
+  }))
   return { models, rewardCp: picked.rewardCp, rewardGold: picked.rewardGold }
 }
 
