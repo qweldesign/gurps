@@ -91,6 +91,7 @@ export type CombatUnitSnapshot = {
   posture: Posture
   spellCast: Spells
   healUses: Partial<Record<string, number>>
+  aiFrontCommitted: boolean
   attack: AttackSnapshot
   defense: DefenseSnapshot
   health: HealthSnapshot
@@ -116,6 +117,7 @@ export class CombatUnit {
   public healUses: Partial<Record<string, number>> // 回復呪文の使用回数管理 (術名をキーとする. 「1戦闘につき」の上限を持つ回復呪文用)
   public history: Log | null // 直近の自ターンの行動ログ (Summary表示用)
   public tactic: TacticKey | null // 自動行動タイプ (敵 (NPC) のみ. null の場合は自動行動しない (プレイヤーが操作する))
+  public aiFrontCommitted: boolean // AI行動用: 前衛への恒久コミット (術戦士B が前衛の味方1人時に前に出た場合等, 一度成立すると以降解除されない)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
     const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells, tactic } = model
@@ -138,6 +140,7 @@ export class CombatUnit {
     }, {} as Spells)
     this.healUses = {}
     this.history = null
+    this.aiFrontCommitted = false
   }
 
   // Summary 表示用ラベル取得 (状態 → 状態異常 → バフの優先順で, 該当する最初のものを返す)
@@ -152,6 +155,7 @@ export class CombatUnit {
       posture: this.posture,
       spellCast: { ...this.spellCast },
       healUses: { ...this.healUses },
+      aiFrontCommitted: this.aiFrontCommitted,
       attack: this.attack.getSnapshot(),
       defense: this.defense.getSnapshot(),
       health: this.health.getSnapshot(),
@@ -166,6 +170,7 @@ export class CombatUnit {
     this.posture = snapshot.posture
     this.spellCast = { ...snapshot.spellCast }
     this.healUses = { ...snapshot.healUses }
+    this.aiFrontCommitted = snapshot.aiFrontCommitted
     this.attack.restoreSnapshot(snapshot.attack)
     this.defense.restoreSnapshot(snapshot.defense)
     this.health.restoreSnapshot(snapshot.health)
