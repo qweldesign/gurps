@@ -157,6 +157,7 @@ export class CombatUnitDefense {
   getParryTarget(actor: Unit) {
     let target = this.parryTarget
     // 後で牽制のターゲットによる修正を追記
+    target += actor.attack.model.isChain ? -2 : 0 // 鎖状武器による修正
     target += actor.attack.model.isMissile ? -4 : 0 // 射撃による修正
     return Math.max(target, 4)
   }
