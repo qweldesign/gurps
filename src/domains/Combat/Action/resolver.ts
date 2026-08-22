@@ -127,9 +127,10 @@ export function judgeCast(actor: Unit, element: SpellElement): Judge | null {
 }
 
 // 「法術」の判定結果を返す (発動する術の名称を含む. 効果の適用結果は effects.ts 側で埋める)
-export function judgeSpell(actor: Unit, element: SpellElement, spellId: number): Omit<SpellResult, 'effectResults'> {
+// distanceMod: 対象の距離による修正 (術者自身の発動判定へのペナルティ. 射撃武器の distanceMod と同じ考え方. 詳細は Spells.ts のコメント参照. 未指定は 0)
+export function judgeSpell(actor: Unit, element: SpellElement, spellId: number, distanceMod: number = 0): Omit<SpellResult, 'effectResults'> {
   const spell = SPELL_LIST[element][spellId].label
-  return { spell, ...judge(actor.spells[element]) }
+  return { spell, ...judge(actor.spells[element] + distanceMod) }
 }
 
 // 術のデバフ効果に対する抵抗判定を返す (対象自身の精神抵抗値 (MRE) を用いる. 成功度がそのまま失敗度ターン数の元になる)

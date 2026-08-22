@@ -117,7 +117,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * trip: dmg と同じ回避判定を経た上で, ダメージの代わりに転倒判定 (mod 付き) のみを行う (「アースハンド」用)
  *
  * flash: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の敵全員に対して個別に dmg と同様の回避判定 ( 「受け」-4/「止め」-2/「よけ」, が false なら「受け」を除く) を行う.
- * 回避に失敗した対象のみ, そのターン中 (対象自身の次ターン終了時まで) 命中判定-4・回避判定-2のペナルティ (StatusEffects.flashed) を受ける (例: 「閃光」).
+ * 回避に失敗した対象のみ, そのターン中 (対象自身の次ターン終了時まで) 命中判定-2・回避判定-1のペナルティ (StatusEffects.flashed) を受ける (例: 「閃光」).
  * ペナルティの数値は状態異常自体に固定で紐づく (朦朧状態の防御-4などと同様) ため, 効果データ側では持たない
  *
  * heal: 回復呪文 (spellType: 'recover') 専用. 判定・抵抗を伴わず対象 (targetScope: 'ally') に無条件で適用する.
@@ -141,7 +141,17 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  *
  * fog: 対象を持たない, 戦場全体への持続効果 (spellType: 'other'). 判定・抵抗を伴わず, 発動判定成功で CombatState.foggy を true にする
  * (再発動しても変化なし. 一度発生すれば戦闘終了まで持続する (時間経過での減衰は無い)). 射撃武器の距離による修正 (distanceMod) を2倍にする (「濃霧」)
- * (「術」による命中判定には距離による修正の概念自体が存在しないため, 現状は影響しない)
+ * 術の発動判定に対する距離による修正 (後述) も同様に2倍になる
+ *
+ * 【術の発動判定に対する距離による修正】 射撃武器の distanceMod と全く同じ考え方で, 対象が離れているほど,
+ * 術者自身の発動判定 (judgeSpell) が失敗しやすくなるペナルティを課す (対象の防御・抵抗判定側には一切影響しない. 濃霧下では2倍になる点も射撃武器と共通)
+ * 対象が単一に定まる術 (spellType: 'shoot' 全般, および spellType: 'resist' で対象が敵 (術者と別陣営) の場合) は,
+ * その対象の配置に応じて前列 -1 / 後列 -2 (濃霧下ではそれぞれ -2 / -4) のペナルティを課す
+ * 対象が味方・自身の場合 (「ベルセルク」targetScope: 'all' でも味方を対象に取る運用, 「痛覚鈍麻」targetScope: 'ally' 等) は 0 とする
+ * spellType: 'range' (対象選択を経ず, 発動時点の敵全員, もしくは「瓦礫の雨」のようにランダムな1体に効果が及ぶ術) は,
+ * 発動判定が1回のみで個々の対象の位置を一意に定められないため, dmg/flash 効果を持つものに限り, 位置によらず一律 -2 (濃霧下では -4) とする
+ * 「サイレン」(debuffAll, 敵味方問わず及ぶ)・「リストレーション」(cleanse, 味方専用) は距離の概念が当てはまらないため対象外 (0) とする
+ * (計算は Action/effects.ts の getSpellDistanceMod で行い, judgeSpell の distanceMod 引数として渡す. SpellEffect のデータ自体には持たない)
  *
  * spellType: 'defense' の術 (「盾」「時間遡行」) は, 通常の「法術」行動 (対象選択・即時効果) を経由せず, 自動的に反応して発動する
  * 特殊な術のため, SpellEffect の kind としては定義しない (個別の反応ロジックとしてハードコードする)
@@ -170,7 +180,7 @@ export type SpellEffect =
 export type SpellTargetScope = 'ally' | 'enemy' | 'all' | 'puppet'
 
 // 法術
-type Spell = {
+export type Spell = {
   id: number
   label: string
   spellType: SpellType

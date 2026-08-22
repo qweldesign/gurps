@@ -21,7 +21,7 @@ export class CombatUnitStatusEffects {
   public dazed: number // 幻惑
   public berserk: number // 狂戦士
   public panic: number // パニック
-  public flashed: number // 目くらみ (「閃光」用. 対象自身の次ターン終了時まで, 命中判定-4/回避判定-2のペナルティを受ける)
+  public flashed: number // 目くらみ (「閃光」用. 対象自身の次ターン終了時まで, 命中判定-2/回避判定-1のペナルティを受ける)
 
   constructor() {
     this.silence = 0

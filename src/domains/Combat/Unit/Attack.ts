@@ -82,7 +82,7 @@ export class CombatUnitAttack {
     let target = this.model.level
     target += POSTURE_MODS[this.self.posture].attackMod // 姿勢による修正
     target += this.self.statusBuff.level // 命中UPバフ (ヒロイズム)
-    target += this.self.statusEffects.flashed > 0 ? -4 : 0 // 目くらみによる命中判定ペナルティ (「閃光」)
+    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる命中判定ペナルティ (「閃光」)
     target += this.self.health.blinded ? -6 : 0 // 目の故障による命中判定ペナルティ
     target += this.self.health.deafened ? -1 : 0 // 耳の故障による命中判定ペナルティ
     target += this.self.health.injuryOnArm ? -4 : 0 // 腕・手首の故障による命中判定ペナルティ (片手武器を非利き手で扱う場合・両手武器を片手で扱う場合の両方に適用)
@@ -96,7 +96,7 @@ export class CombatUnitAttack {
     const fullPowerMod = fullPower === 'level' ? 4 : 0
     const targetPosture = POSTURE_MODS[target.posture]
     const missileMod = this.model.isMissile ? targetPosture.missileMod : 0
-    const distanceMod = this.model.isMissile ? (target.position === 'back' ? -4 : -2) * (foggy ? 2 : 1) : 0
+    const distanceMod = this.model.isMissile ? (target.position === 'back' ? -2 : -1) * (foggy ? 2 : 1) : 0
     return Math.max(this.target + aimMod + fullPowerMod + missileMod + distanceMod, 4)
   }
 
