@@ -96,7 +96,7 @@ export class CombatUnitAttack {
     const fullPowerMod = fullPower === 'level' ? 4 : 0
     const targetPosture = POSTURE_MODS[target.posture]
     const missileMod = this.model.isMissile ? targetPosture.missileMod : 0
-    const distanceMod = this.model.isMissile ? (target.position === 'back' ? -4 : -2) * (foggy ? 2 : 1) : 0
+    const distanceMod = this.model.isMissile ? (target.position === 'back' ? -2 : -1) * (foggy ? 2 : 1) : 0
     return Math.max(this.target + aimMod + fullPowerMod + missileMod + distanceMod, 4)
   }
 

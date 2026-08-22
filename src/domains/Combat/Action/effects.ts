@@ -376,7 +376,7 @@ export class ActionEffects {
       return -2 * (this.state.foggy ? 2 : 1)
     }
     if (target.side === actor.side) return 0
-    const baseMod = target.position === 'back' ? -4 : -2
+    const baseMod = target.position === 'back' ? -2 : -1
     return baseMod * (this.state.foggy ? 2 : 1)
   }
 
