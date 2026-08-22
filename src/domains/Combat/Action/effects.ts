@@ -5,7 +5,7 @@ import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, judgeShieldBlock, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
-import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect } from '../Spells'
+import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect, type Spell } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -311,8 +311,9 @@ export class ActionEffects {
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
-    const spellJudge = judgeSpell(actor, element, spellId)
     const spellData = SPELL_LIST[element][spellId]
+    const distanceMod = this.getSpellDistanceMod(spellData, target)
+    const spellJudge = judgeSpell(actor, element, spellId, distanceMod)
     const effects = spellData.effects ?? []
     const effectResults: SpellEffectResult[] = []
     const extraResults: ActionResult[] = []
@@ -358,6 +359,25 @@ export class ActionEffects {
     }
 
     return [{ type: 'spell', judge: { ...spellJudge, effectResults } }, ...extraResults]
+  }
+
+  // 術の発動判定 (judgeSpell) に課す, 距離による修正 (術者自身へのペナルティ) を返す
+  // 射撃武器の distanceMod と同じ考え方 (対象の防御・抵抗判定側には一切影響しない). 詳細は Spells.ts 冒頭のコメント参照
+  // spellType: 'range' (対象選択を経ず, 発動時点の敵全員, もしくは「瓦礫の雨」のようにランダムな1体に効果が及ぶ術) は,
+  // 個々の対象の位置を発動判定の時点で一意に定められないため, dmg/flash 効果を持つものに限り位置によらず一律のペナルティとする
+  // (「サイレン」(debuffAll)・「リストレーション」(cleanse) は距離の概念が当てはまらないため対象外 (0))
+  // spellType: 'range' 以外は, target (UI で選択された対象, もしくは targetScope の無い術では暫定的に自身) が
+  // 敵 (術者と別陣営) の場合のみ, その配置に応じたペナルティを課す (味方・自身が対象の場合は 0)
+  private getSpellDistanceMod(spellData: Spell, target: Unit): number {
+    const actor = this.state.actor
+    if (spellData.spellType === 'range') {
+      const kind = spellData.effects?.[0]?.kind
+      if (kind !== 'dmg' && kind !== 'flash') return 0
+      return -2 * (this.state.foggy ? 2 : 1)
+    }
+    if (target.side === actor.side) return 0
+    const baseMod = target.position === 'back' ? -4 : -2
+    return baseMod * (this.state.foggy ? 2 : 1)
   }
 
   // 術の効果を1つ適用し, 結果を返す (buff/status/debuff/puppet のみを対象とする. dmg/trip は spellDmgRoutine/spellTripRoutine が個別に処理する)
