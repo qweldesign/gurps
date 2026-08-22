@@ -152,29 +152,36 @@ export class CombatUnitDefense {
     return Math.max(target, 4)
   }
 
+  // actor が自身 (this.self) に牽制を成功させている場合, その成功度を返す (成功させていなければ 0)
+  private getFeintScore(actor: Unit): number {
+    const feint = actor.attack.feint
+    return (feint && feint.target === this.self) ? feint.score : 0
+  }
+
   // 牽制のターゲットの場合, 射撃の場合に, ペナルティを引いた目標値を返す
+  // 牽制による修正は, 他の修正を反映して下限4に丸めた後の値からあらためて減算する (下限4はそちらには適用しない)
   // 「受け」
   getParryTarget(actor: Unit) {
     let target = this.parryTarget
-    // 後で牽制のターゲットによる修正を追記
     target += actor.attack.model.isChain ? -2 : 0 // 鎖状武器による修正
     target += actor.attack.model.isMissile ? -4 : 0 // 射撃による修正
-    return Math.max(target, 4)
+    target = Math.max(target, 4)
+    return target - this.getFeintScore(actor) // 牽制による修正
   }
-  
+
   // 「止め」
   getBlockTarget(actor: Unit) {
     let target = this.blockTarget
-    // 後で牽制のターゲットによる修正を追記
     target += actor.attack.model.isMissile ? -2 : 0 // 射撃による修正
-    return Math.max(target, 4)
+    target = Math.max(target, 4)
+    return target - this.getFeintScore(actor) // 牽制による修正
   }
-  
+
   // 「よけ」
-  getDodgeTarget() {
+  getDodgeTarget(actor: Unit) {
     let target = this.dodgeTarget
-    // 後で牽制のターゲットによる修正を追記
-    return Math.max(target, 4)
+    target = Math.max(target, 4)
+    return target - this.getFeintScore(actor) // 牽制による修正
   }
 
   getCanBlock(aim: Aim) {
@@ -188,18 +195,15 @@ export class CombatUnitDefense {
 
   // 可能な防御のうちで, 最も成功率の高い防御の目標値を取得 (表示用)
   // actor が自身に牽制を成功させている場合, その分の修正も反映する (judgeDefense と同じ優先順・同じ計算)
+  // (牽制による修正は getBlockTarget/getParryTarget/getDodgeTarget 側で反映済み)
   getTarget(actor: Unit, aim: Aim) {
-    let target
     if (this.getCanBlock(aim)) {
-      target = this.getBlockTarget(actor)
+      return this.getBlockTarget(actor)
     } else if (this.canParry) {
-      target = this.getParryTarget(actor)
+      return this.getParryTarget(actor)
     } else {
-      target = this.getDodgeTarget()
+      return this.getDodgeTarget(actor)
     }
-    const feint = actor.attack.feint
-    const feintScore = (feint && feint.target === this.self) ? feint.score : 0
-    return target - feintScore
   }
 
   // 胴防御モデルを取得
