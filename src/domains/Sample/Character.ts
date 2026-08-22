@@ -83,11 +83,11 @@ const EQUIPMENTS_TABLE: [WeaponKey, BodyArmorKey][][][] = [
   ],
 ]
 
-// tactic (0~8) → 敵の自動行動タイプ (TacticKey) への対応表 (getTacticName() と同じ並び)
+// tactic (0~8) → 敵の自動行動タイプ (TacticKey) への対応表
 const TACTIC_KEY_MAP: TacticKey[] = [
-  'heavyWarrior', 'lightWarrior', 'spellWarriorF',
-  'swordsman', 'thief', 'archer',
-  'spellWarriorB', 'spellSwordsman', 'sorcerer'
+  'heavyWarrior', 'lightWarrior', 'heavyWarrior',
+  'lightWarrior', 'archer', 'archer',
+  'fireSpell', 'woodWaterSpell', 'earthMetalSpell'
 ]
 
 // 名前 (PC用)

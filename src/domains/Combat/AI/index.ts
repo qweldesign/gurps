@@ -16,18 +16,14 @@ export { TACTIC_KEYS, type TacticKey } from './types'
 export { type TacticHandler } from './handler'
 
 // TacticKey → 行動パターン (ハンドラー) の対応表
-// 複数のタイプが同じハンドラーを共有してもよい (例: 重戦士と術戦士F は同じ行動パターン)
 // 新しいタイプを追加する場合は AI/types.ts の TACTIC_KEYS にキーを追加し, ここにハンドラーを登録する
 export const TACTIC_HANDLERS: Record<TacticKey, TacticHandler> = {
-  heavyWarrior: heavyWarrior,
-  spellWarriorF: heavyWarrior,
-  lightWarrior: lightWarrior,
-  swordsman: lightWarrior,
-  thief: lightWarrior,
-  archer: archer,
-  spellWarriorB: fireSpell,
-  spellSwordsman: woodWaterSpell,
-  sorcerer: earthMetalSpell
+  heavyWarrior,
+  lightWarrior,
+  archer,
+  fireSpell,
+  woodWaterSpell,
+  earthMetalSpell
 }
 
 // 敵 (NPC) の行動を決定する (State.nextTurn から呼び出される)

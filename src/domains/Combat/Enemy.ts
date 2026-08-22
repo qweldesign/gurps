@@ -189,7 +189,7 @@ function goblinSorcerer(rank: number): Omit<CombatUnitModel, 'id'> {
     },
     defenses: makeDefenses('服'),
     ev: rank + 10, pre: 10, mre: 10, dmgBuff: 0, evBuff: 0,
-    spells: { ...NO_SPELLS, earth: rank + 12, metal: rank + 12 }, tactic: 'sorcerer'
+    spells: { ...NO_SPELLS, earth: rank + 12, metal: rank + 12 }, tactic: 'earthMetalSpell'
   }
 }
 
