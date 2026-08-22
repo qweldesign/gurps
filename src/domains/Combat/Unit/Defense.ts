@@ -88,7 +88,7 @@ export class CombatUnitDefense {
       target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
       target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
     }
-    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
+    target += this.self.statusEffects.flashed > 0 ? -1 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
     target += this.self.health.blinded ? -6 : 0 // 目の故障による防御判定ペナルティ
     target += this.self.health.deafened ? -1 : 0 // 耳の故障による防御判定ペナルティ
     return target
@@ -102,7 +102,7 @@ export class CombatUnitDefense {
       target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
       target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
     }
-    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
+    target += this.self.statusEffects.flashed > 0 ? -1 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
     target += this.self.health.blinded ? -6 : 0 // 目の故障による防御判定ペナルティ
     target += this.self.health.deafened ? -1 : 0 // 耳の故障による防御判定ペナルティ
     return target
@@ -116,7 +116,7 @@ export class CombatUnitDefense {
       target += POSTURE_MODS[this.self.posture].defenseMod // 姿勢による修正
       target += this.self.health.stunned ? -4 : 0 // 朦朧状態による修正 (転倒による修正とは重複しない)
     }
-    target += this.self.statusEffects.flashed > 0 ? -2 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
+    target += this.self.statusEffects.flashed > 0 ? -1 : 0 // 目くらみによる回避判定ペナルティ (「閃光」)
     target += this.self.health.blinded ? -6 : 0 // 目の故障による防御判定ペナルティ
     target += this.self.health.deafened ? -1 : 0 // 耳の故障による防御判定ペナルティ
     return target

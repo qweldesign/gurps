@@ -117,7 +117,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * trip: dmg と同じ回避判定を経た上で, ダメージの代わりに転倒判定 (mod 付き) のみを行う (「アースハンド」用)
  *
  * flash: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の敵全員に対して個別に dmg と同様の回避判定 ( 「受け」-4/「止め」-2/「よけ」, が false なら「受け」を除く) を行う.
- * 回避に失敗した対象のみ, そのターン中 (対象自身の次ターン終了時まで) 命中判定-4・回避判定-2のペナルティ (StatusEffects.flashed) を受ける (例: 「閃光」).
+ * 回避に失敗した対象のみ, そのターン中 (対象自身の次ターン終了時まで) 命中判定-2・回避判定-1のペナルティ (StatusEffects.flashed) を受ける (例: 「閃光」).
  * ペナルティの数値は状態異常自体に固定で紐づく (朦朧状態の防御-4などと同様) ため, 効果データ側では持たない
  *
  * heal: 回復呪文 (spellType: 'recover') 専用. 判定・抵抗を伴わず対象 (targetScope: 'ally') に無条件で適用する.

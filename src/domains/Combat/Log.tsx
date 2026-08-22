@@ -289,7 +289,7 @@ export class CombatLog {
   private pushFlashMessage(messages: ReactNode[], judge: FlashResult) {
     const targetName = judge.target.name
     messages.push(<>{`${targetName} は閃光に目がくらんだ!`}</>)
-    messages.push(<>{`次のターンの終わりまで 命中-4, 回避-2の修正を課される!`}</>)
+    messages.push(<>{`次のターンの終わりまで 命中-2, 回避-1の修正を課される!`}</>)
   }
 
   // 術の範囲デバフ効果の結果ログを追加する (「サイレン」用. 抵抗判定に失敗した対象にのみ呼ばれる)
