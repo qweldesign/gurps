@@ -7,6 +7,9 @@ import { chance, getFrontAllyCount, pickLowestDefenseTarget } from '../utils'
 /**
  * 術戦士B: 火行術をメインで戦う / 前衛の味方が1人になったら前衛に出て「軽戦士」として応戦する
  *
+ * 0. 狂戦士状態
+ * 前に出て近接戦闘を行うのが狂戦士状態でのセオリーのため, 「軽戦士」として振る舞う
+ *
  * 1. 移動
  * 2ターン目以降, 前衛の味方が1人になった場合は前衛に移動し, 「軽戦士」として戦う
  * (一度前衛に出たら, 以降のターンもずっと「軽戦士」として振る舞う)
@@ -32,6 +35,9 @@ import { chance, getFrontAllyCount, pickLowestDefenseTarget } from '../utils'
  * 火行術の技能値が16以上なら, 50% の確率分岐で「火の鳥」か「焼殺」
  */
 export const fireSpell: TacticHandler = (actor, state) => {
+  // 0. 狂戦士状態 (術戦士Bの武器は近接戦闘に使えるため, 持ち替え不要でそのまま委譲できる)
+  if (actor.statusEffects.berserk) return lightWarrior(actor, state)
+
   // 1. 移動 (一度前衛に出たら, 以降はずっと lightWarrior に委譲する)
   if (actor.position !== 'back') return lightWarrior(actor, state)
   if (state.round >= 2 && getFrontAllyCount(state, actor.side) === 1) return lightWarrior(actor, state)

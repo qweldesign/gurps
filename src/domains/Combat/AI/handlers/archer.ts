@@ -2,10 +2,15 @@
 
 import { type TacticHandler } from '../handler'
 import { SPELL_ELEMENTS } from '../../Spells'
+import { lightWarrior } from './lightWarrior'
 import { chance, pickLowestDefenseTarget } from '../utils'
 
 /**
  * 弓使い: 後衛から射撃
+ *
+ * 0. 狂戦士状態
+ * 弓は近接戦闘に使えないため, 予備武器 (近接武器) に持ち替えた上で,
+ * 前に出て近接戦闘を行うのが狂戦士状態でのセオリーのため, 「軽戦士」として振る舞う
  *
  * 1. 準備
  * 準備が必要な場合は準備
@@ -28,6 +33,15 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  */
 export const archer: TacticHandler = (actor, state) => {
   const { availability, target } = state.action!
+
+  // 0. 狂戦士状態 (弓 (main) は近接戦闘に使えないため, 予備武器 (spare: レイピア/ダガー) に持ち替えてから委譲する.
+  // 持ち替え済み (または持ち替え不能) なら, そのまま「軽戦士」の行動パターンに委譲する)
+  if (actor.statusEffects.berserk) {
+    if (actor.attack.key !== 'spare' && availability.changeWeapon) {
+      return { key: 'changeWeapon', options: { weaponSlotKey: 'spare' }, targets: [] }
+    }
+    return lightWarrior(actor, state)
+  }
 
   // 1. 準備
   if (actor.attack.ready > 0) {

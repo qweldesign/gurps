@@ -4,10 +4,14 @@ import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
 import { type TacticHandler } from '../handler'
+import { lightWarrior } from './lightWarrior'
 import { chance, pickLowestDefenseTarget } from '../utils'
 
 /**
  * 術剣士: 木行術と水行術をメインで戦う
+ *
+ * 0. 狂戦士状態
+ * 前に出て近接戦闘を行うのが狂戦士状態でのセオリーのため, 「軽戦士」として振る舞う
  *
  * 1. 集中
  * 集中時間が0ターンなら, 集中
@@ -49,6 +53,9 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  * 「吹雪」/ その前に「時間遡行」が発動する可能性有り
  */
 export const woodWaterSpell: TacticHandler = (actor, state) => {
+  // 0. 狂戦士状態 (術剣士の武器は近接戦闘に使えるため, 持ち替え不要でそのまま委譲できる)
+  if (actor.statusEffects.berserk) return lightWarrior(actor, state)
+
   const active = actor.spellCast.wood > 0 ? 'wood' : actor.spellCast.water > 0 ? 'water' : null
 
   // 1. 集中 (いずれの系統にも集中していなければ, 新たにどちらへ集中するか決める)

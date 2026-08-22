@@ -66,6 +66,21 @@ export function pickMoveToReachMeleeTarget(actor: Unit, state: State): Position 
   return candidates.find(position => action.availability.move[position]) ?? null
 }
 
+// 狂戦士状態で, 現在の配置からは近接攻撃可能な相手が誰もおらず, 移動によっても解消できない場合に true を返す
+// (後衛にいる場合は, いずれかの前衛枠に移動できるなら stuck とはみなさない (移動そのものが今ターンの行動になる).
+//  前衛にいる場合は, 現在の近接対象が0体で, かつ移動しても対象に届く位置が無い場合のみ stuck とみなす)
+// 狂戦士状態では通常攻撃・全力防御・牽制が選択不可であり, 特殊攻撃は近接対象を要するため,
+// これに該当すると (プレイヤー・NPC を問わず) 選択可能な行動が実質的に無くなる
+export function isBerserkStuck(actor: Unit, state: State): boolean {
+  if (!actor.statusEffects.berserk) return false
+  const action = state.action!
+  if (actor.position === 'back') {
+    return (['left', 'center', 'right'] as const).every(position => !action.availability.move[position])
+  }
+  if (action.target.melee.length > 0) return false
+  return pickMoveToReachMeleeTarget(actor, state) === null
+}
+
 // 全力攻撃オプションの選定
 // 準備が必要なら「準備即攻撃」, ダメージ期待値が0点なら「ダメージ安定」,
 // 攻撃目標値が10以下なら「技能値+4」, 敵の防御目標値が11以上なら「牽制即攻撃」, それ以外は「2回攻撃」

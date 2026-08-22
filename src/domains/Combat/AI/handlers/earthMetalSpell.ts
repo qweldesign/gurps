@@ -4,10 +4,14 @@ import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
 import { type TacticHandler } from '../handler'
+import { lightWarrior } from './lightWarrior'
 import { chance, pickLowestDefenseTarget } from '../utils'
 
 /**
  * 術士: 土行術と金行術をメインで戦う
+ *
+ * 0. 狂戦士状態
+ * 前に出て近接戦闘を行うのが狂戦士状態でのセオリーのため, 「軽戦士」として振る舞う
  *
  * 1. 集中
  * 集中時間が0ターンなら, 集中
@@ -45,6 +49,9 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  * 50% の確率分岐で「サイレン」か「塔」
  */
 export const earthMetalSpell: TacticHandler = (actor, state) => {
+  // 0. 狂戦士状態 (術士の武器 (杖) は近接戦闘に使えるため, 持ち替え不要でそのまま委譲できる)
+  if (actor.statusEffects.berserk) return lightWarrior(actor, state)
+
   const active = actor.spellCast.earth > 0 ? 'earth' : actor.spellCast.metal > 0 ? 'metal' : null
 
   // 1. 集中 (いずれの系統にも集中していなければ, 50% の確率分岐でどちらかに集中する)

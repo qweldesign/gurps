@@ -7,6 +7,7 @@ import { CombatAction as Action } from './Action'
 import { judgeTimeRegression } from './Action/resolver'
 import { SPELL_ELEMENTS } from './Spells'
 import { decideEnemyAction } from './AI'
+import { isBerserkStuck } from './AI/utils'
 
 // 勝敗結果 (未決着は null)
 export type CombatResult = 'win' | 'lose' | null
@@ -107,6 +108,13 @@ export class CombatState {
     this.action = new Action(this)
     // 開幕時の自動実行 (朦朧回復・消火) の完了を待つ
     await this.action.ready
+
+    // 狂戦士状態で, 近接攻撃可能な相手が (移動しても) 誰もいない場合, 選択可能な行動が実質的に無くなる
+    // (通常攻撃・全力防御・牽制は狂戦士状態では選択不可, 特殊攻撃は近接対象が必要なため).
+    // プレイヤー・NPC いずれの場合も, 自動的に「待機」を適用してターンを進める
+    if (this.action.unlocked && isBerserkStuck(this.actor, this)) {
+      await this.action.execute({ key: 'wait', options: {}, targets: [] })
+    }
 
     // 敵 (NPC) のターンは自動で行動を決定・実行する
     // (自動実行 (recovery/extinguish) で既にターンが終わっている場合は unlocked が false のままなのでスキップする.
