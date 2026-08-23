@@ -234,7 +234,7 @@ export class SampleCharacter extends Character {
     // 修得技能セット
     const skills = TACTIC_TABLE[this.tactic]
     // 技能修得
-    if (totalPoints > defaultPoints * multiplier) {
+    if (multiplier === 8 || totalPoints > defaultPoints * multiplier) {
       // Point総計が標準(10)より多い場合は主技能を切り分ける
       const [main, ...other] = skills
       this.setMainSkill(main, totalPoints, multiplier)
@@ -257,7 +257,7 @@ export class SampleCharacter extends Character {
       else if (totalPoints >= 16) this.stepParam(skill, 4) // 初期:10 + 主:4 + 副:2
       else if (totalPoints >= 12) this.stepParam(skill, 3) // 初期:10 + 主:2 + 副:0
         else this.stepParam(skill, 1)
-      } else if (multiplier === 2) {
+    } else if (multiplier === 2) {
       if (totalPoints >= 32) this.stepParam(skill, Math.floor(totalPoints / 16) + 3)
         // 32CP = 初期:20 + 主:8 + 副:4
         // 40CP = 初期:20 + 主:8 + 副:12
@@ -271,6 +271,8 @@ export class SampleCharacter extends Character {
         // 64CP = 初期:40 + 主:16 + 副:8
       else if (totalPoints >= 48) this.stepParam(skill, 4) // 初期:40 + 主:4 + 副:4
       else this.stepParam(skill, 1)
+    } else if (multiplier === 8) {
+      this.stepParam(skill, 4) // 初期:80 + 主:4 + 副:12
     }
   }
 
