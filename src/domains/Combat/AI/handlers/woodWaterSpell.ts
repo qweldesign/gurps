@@ -22,16 +22,16 @@ import { chance } from '../utils'
  * A. 木行術パターン (base/woodSpell.ts の woodSpellTactic を参照)
  * B. 水行術パターン (base/waterSpell.ts の waterSpellTactic を参照)
  */
-export const woodWaterSpell: TacticHandler = (actor, state) => {
+export const woodWaterSpell: TacticHandler = (actor, state, difficulity) => {
   // 0-a. 狂戦士状態 (術剣士の武器は近接戦闘に使えるため, 持ち替え不要でそのまま委譲できる)
-  if (actor.statusEffects.berserk) return lightWarrior(actor, state)
+  if (actor.statusEffects.berserk) return lightWarrior(actor, state, difficulity)
 
   // 0-b. 狂戦士状態の解除後: 前衛に出たままなら後衛へ戻る
   if (actor.position !== 'back') {
     const { availability } = state.action!
     if (availability.move.back) return { key: 'move', options: { position: 'back' }, targets: [] }
     // 後衛へ戻れない間 (幻惑状態等) は, 引き続き「軽戦士」として応戦する
-    return lightWarrior(actor, state)
+    return lightWarrior(actor, state, difficulity)
   }
 
   // 1. 集中中の系統があればそちらへ委譲する (いずれも集中していなければ, 新たにどちらへ集中するか決める)

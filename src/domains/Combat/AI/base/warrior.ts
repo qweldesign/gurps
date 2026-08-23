@@ -2,34 +2,57 @@
 //
 // 戦士の基本戦闘パターン
 
+import { type BattleDifficultyTier } from '../../Difficulty'
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
 import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
 
-// 戦士系統の行動パラメータ (重戦士/軽戦士の差異はこれのみに集約される)
-export type WarriorParams = {
-  movePriority: Array<'left' | 'center' | 'right'> // 1. 後衛から前衛への移動優先順位
+// 戦士系統の移動先優先順位
+type MovePriority = Array<'left' | 'center' | 'right'> // 1. 後衛から前衛への移動優先順位
+
+// 戦士系統の行動パラメータ
+type WarriorParams = {
   attackMax: number    // 5. 自身の防御目標値がこの値以下なら全力攻撃
   defenseValues: number[]   // 5. 自身の防御目標値がこれらの値なら全力防御
   coinflipValues: number[]  // 5. 自身の防御目標値がこれらの値なら 50% の確率分岐で全力攻撃/全力防御
 }
 
-// 重戦士, 術戦士F: 積極的に中央に移動して前衛で戦う / 防御優先で慎重に戦う
-export const HEAVY_WARRIOR_PARAMS: WarriorParams = {
-  movePriority: ['center', 'left', 'right'],
+// 重戦士: 積極的に中央に移動して前衛で戦う
+const heavyWarriorMove: MovePriority = ['center', 'left', 'right']
+
+// 軽戦士: 積極的に左翼・右翼に移動して前衛で戦う
+const lightWarriorMove: MovePriority = ['left', 'right', 'center']
+
+// 慎重: 防御優先
+const cautious: WarriorParams = {
   attackMax: 7,
   defenseValues: [9, 10],
   coinflipValues: [8]
 }
 
-// 軽戦士, 剣士, 盗賊: 積極的に左翼・右翼に移動して前衛で戦う / 攻撃優先で大胆に戦う
-export const LIGHT_WARRIOR_PARAMS: WarriorParams = {
-  movePriority: ['left', 'right', 'center'],
+// 堅実: バランス
+const steady: WarriorParams = {
   attackMax: 8,
   defenseValues: [10],
   coinflipValues: [9]
 }
+
+// 大胆: 攻撃優先
+const bold: WarriorParams = {
+  attackMax: 9,
+  defenseValues: [],
+  coinflipValues: [10]
+}
+
+ // 無謀: 防御破棄
+const reckless: WarriorParams = {
+  attackMax: 10,
+  defenseValues: [],
+  coinflipValues: []
+}
+
+// PC / 重戦士, 術戦士F
 
 /**
  * 戦士系統の基本行動パターン
@@ -73,12 +96,17 @@ export const LIGHT_WARRIOR_PARAMS: WarriorParams = {
  * * ターゲットについて
  * 優先順位 1.中央, 2.左翼, 3.右翼
  */
-export function warriorTactic(actor: Unit, state: State, params: WarriorParams): ActionRequest {
+export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean, difficulty: BattleDifficultyTier): ActionRequest {
+  const movePriority: MovePriority = isHeavyWarrior ? heavyWarriorMove : lightWarriorMove
+  const params: WarriorParams = isHeavyWarrior ? 
+    (difficulty === 'hard' ? cautious : difficulty === 'normal' ? steady : bold) :
+    (difficulty === 'hard' ? steady : difficulty === 'normal' ? bold : reckless)
+
   const { availability, target } = state.action!
 
   // 1. 移動
   if (actor.position === 'back') {
-    const position = params.movePriority.find(pos => availability.move[pos])
+    const position = movePriority.find(pos => availability.move[pos])
     if (position) return { key: 'move', options: { position }, targets: [] }
     return { key: 'wait', options: {}, targets: [] }
   }

@@ -17,7 +17,7 @@ import { lightWarrior } from './lightWarrior'
  *
  * 1. 基本の射撃パターン (base/archer.ts の archerTactic を参照)
  */
-export const archer: TacticHandler = (actor, state) => {
+export const archer: TacticHandler = (actor, state, difficulity) => {
   const { availability } = state.action!
 
   // 0-a. 狂戦士状態 (弓 (main) は近接戦闘に使えないため, 予備武器 (spare: レイピア/ダガー) に持ち替えてから委譲する.
@@ -26,14 +26,14 @@ export const archer: TacticHandler = (actor, state) => {
     if (actor.attack.key !== 'spare' && availability.changeWeapon) {
       return { key: 'changeWeapon', options: { weaponSlotKey: 'spare' }, targets: [] }
     }
-    return lightWarrior(actor, state)
+    return lightWarrior(actor, state, difficulity)
   }
 
   // 0-b. 狂戦士状態の解除後: 前衛に出たままなら後衛へ戻る. 後衛に戻れたら弓 (main) に持ち替え直す
   if (actor.position !== 'back') {
     if (availability.move.back) return { key: 'move', options: { position: 'back' }, targets: [] }
     // 後衛へ戻れない間 (幻惑状態等) は, 引き続き「軽戦士」として応戦する
-    return lightWarrior(actor, state)
+    return lightWarrior(actor, state, difficulity)
   }
   if (actor.attack.key !== 'main' && availability.changeWeapon) {
     return { key: 'changeWeapon', options: { weaponSlotKey: 'main' }, targets: [] }

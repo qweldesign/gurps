@@ -25,25 +25,25 @@ import { getFrontAllyCount } from '../utils'
  *
  * 2. 基本の詠唱パターン (base/fireSpell.ts の fireSpellTactic を参照)
  */
-export const fireSpell: TacticHandler = (actor, state) => {
+export const fireSpell: TacticHandler = (actor, state, difficulity) => {
   // 0. 前衛への恒久コミットが成立している場合は, 以降ずっと「軽戦士」として振る舞う
-  if (actor.aiFrontCommitted) return lightWarrior(actor, state)
+  if (actor.aiFrontCommitted) return lightWarrior(actor, state, difficulity)
 
   // 0-a. 狂戦士状態 (術戦士Bの武器は近接戦闘に使えるため, 持ち替え不要でそのまま委譲できる)
-  if (actor.statusEffects.berserk) return lightWarrior(actor, state)
+  if (actor.statusEffects.berserk) return lightWarrior(actor, state, difficulity)
 
   // 0-b. 狂戦士状態の解除後: 前衛に出たままなら後衛へ戻る
   if (actor.position !== 'back') {
     const { availability } = state.action!
     if (availability.move.back) return { key: 'move', options: { position: 'back' }, targets: [] }
     // 後衛へ戻れない間 (幻惑状態等) は, 引き続き「軽戦士」として応戦する
-    return lightWarrior(actor, state)
+    return lightWarrior(actor, state, difficulity)
   }
 
   // 1. 移動 (前衛の味方が1人になった場合, 前衛に出て恒久的にコミットする)
   if (state.round >= 2 && getFrontAllyCount(state, actor.side) === 1) {
     actor.aiFrontCommitted = true
-    return lightWarrior(actor, state)
+    return lightWarrior(actor, state, difficulity)
   }
 
   // 2. 基本の詠唱パターン

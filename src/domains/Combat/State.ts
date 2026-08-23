@@ -1,5 +1,6 @@
 // Combat/State.ts
 
+import { type BattleDifficultyTier } from './Difficulty'
 import { CombatLog as Log } from './Log'
 import { type CombatUnitModel as Model, type CombatUnitSnapshot as UnitSnapshot, type Side, CombatUnit as Unit } from './Unit'
 import { CombatFormation as Formation } from './Formation'
@@ -24,6 +25,7 @@ function isCriticalSnapshot(snapshot: UnitSnapshot): boolean {
 
 // 全ての情報を集約・管理するクラス
 export class CombatState {
+  public difficulty: BattleDifficultyTier // バトル難度
   public round: number // 経過時間
   public turnIndex: number // 行動順
   public units: Unit[]
@@ -35,7 +37,8 @@ export class CombatState {
   public puppetTarget: Unit | null // 「傀儡」で移行中の対象 (非null の間, actor はこちらを優先する. 通常の行動順の進行とは無関係)
   public result: CombatResult // 勝敗結果 (未決着中は null. 決着後はターンを進めない)
 
-  constructor(models: Model[], playLog: () => Promise<void>) {
+  constructor(models: Model[], playLog: () => Promise<void>, difficulty: BattleDifficultyTier = 'easy') {
+    this.difficulty = difficulty
     this.round = 1 // 1からカウント
     this.turnIndex = -1 // 開幕前は -1, 開幕と同時に 0 になる
     this.units = models.map((model, i) => {
@@ -125,7 +128,7 @@ export class CombatState {
     while (this.action.unlocked && this.actor.side === 'enemy' && this.actor.tactic && !this.actor.health.puppeted) {
       aiActionCount++
       if (aiActionCount > 10) break // 安全装置 (通常到達しない想定. 意図しない無限ループを防ぐ)
-      const request = decideEnemyAction(this.actor, this)
+      const request = decideEnemyAction(this.actor, this, this.difficulty)
       await this.action.execute(request)
     }
 

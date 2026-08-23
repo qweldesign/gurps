@@ -181,7 +181,7 @@ function Combat() {
   useEffect(() => {
     if (!stateRef.current) {
       const { models, reward: battleReward } = initModels()
-      stateRef.current = new State(models, playLog)
+      stateRef.current = new State(models, playLog, difficulty)
       stateRef.current.nextTurn()
       // 勝利報酬を記録 (rewardRef: 付与処理用, reward state: UI表示用)
       rewardRef.current = battleReward

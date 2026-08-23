@@ -1,5 +1,6 @@
 // Combat/AI/index.ts
 
+import { type BattleDifficultyTier } from '../Difficulty'
 import { type CombatState as State } from '../State'
 import { type CombatUnit as Unit } from '../Unit'
 import { type ActionRequest } from '../Action/types'
@@ -28,8 +29,8 @@ export const TACTIC_HANDLERS: Record<TacticKey, TacticHandler> = {
 
 // 敵 (NPC) の行動を決定する (State.nextTurn から呼び出される)
 // actor.tactic に対応するハンドラーが無い場合は「待機」を返す (未指定の tactic や, 将来キーを増やし忘れた場合の保険)
-export function decideEnemyAction(actor: Unit, state: State): ActionRequest {
+export function decideEnemyAction(actor: Unit, state: State, difficulity: BattleDifficultyTier): ActionRequest {
   const handler = actor.tactic ? TACTIC_HANDLERS[actor.tactic] : null
   if (!handler) return { key: 'wait', options: {}, targets: [] }
-  return handler(actor, state)
+  return handler(actor, state, difficulity)
 }
