@@ -6,7 +6,7 @@ import { type BattleDifficultyTier } from '../../Difficulty'
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, isIncapacitated, pickByPositionPriority, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
+import { chance, isIncapacitated, pickByPositionPriority, pickAttackOption, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
 
 // 戦士系統の移動先優先順位
 type MovePriority = Array<'left' | 'center' | 'right'> // 1. 後衛から前衛への移動優先順位
@@ -16,6 +16,7 @@ type WarriorParams = {
   attackMax: number    // 5. 自身の防御目標値がこの値以下なら全力攻撃
   defenseValues: number[]   // 5. 自身の防御目標値がこれらの値なら全力防御
   coinflipValues: number[]  // 5. 自身の防御目標値がこれらの値なら 50% の確率分岐で全力攻撃/全力防御
+  quickAttack: number  // 攻撃選択時に指定確率で全力攻撃を実行
 }
 
 // 重戦士: 積極的に中央に移動して前衛で戦う
@@ -28,28 +29,32 @@ const lightWarriorMove: MovePriority = ['left', 'right', 'center']
 const cautious: WarriorParams = {
   attackMax: 7,
   defenseValues: [9, 10],
-  coinflipValues: [8]
+  coinflipValues: [8],
+  quickAttack: 0
 }
 
 // 堅実: バランス
 const steady: WarriorParams = {
   attackMax: 8,
   defenseValues: [10],
-  coinflipValues: [9]
+  coinflipValues: [9],
+  quickAttack: 0.125
 }
 
 // 大胆: 攻撃優先
 const bold: WarriorParams = {
   attackMax: 9,
   defenseValues: [],
-  coinflipValues: [10]
+  coinflipValues: [10],
+  quickAttack: 0.25
 }
 
  // 無謀: 防御破棄
 const reckless: WarriorParams = {
   attackMax: 10,
   defenseValues: [],
-  coinflipValues: []
+  coinflipValues: [],
+  quickAttack: 0.5
 }
 
 // PC / 重戦士, 術戦士F
@@ -135,7 +140,7 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
       return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.foggy) }, targets: [primaryTarget] }
     }
     if (actor.attack.ready > 0) return { key: 'ready', options: {}, targets: [] } // 通常攻撃には武器の準備状態が要る
-    return { key: 'attack', options: { aim: 'body', fullPower: 'none' }, targets: [primaryTarget] }
+    return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
   }
 
   // 5. 全力攻撃/全力防御/準備/攻撃/牽制
@@ -155,9 +160,11 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   // 6. 準備/攻撃/牽制
   if (actor.attack.ready > 0) return { key: 'ready', options: {}, targets: [] }
   const targetDefense = primaryTarget.defense.getTarget(actor, 'body')
-  if (targetDefense <= 11) return { key: 'attack', options: { aim: 'body', fullPower: 'none' }, targets: [primaryTarget] }
+  if (targetDefense <= 11) {
+    return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
+  }
   if (actor.attack.model.ready === 0 && targetDefense === 12) {
-    return { key: 'attack', options: { aim: 'body', fullPower: 'none' }, targets: [primaryTarget] }
+    return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
   }
   return { key: 'feint', options: {}, targets: [primaryTarget] }
 }

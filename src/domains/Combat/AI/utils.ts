@@ -4,7 +4,7 @@
 
 import { type CombatState as State } from '../State'
 import { type CombatUnit as Unit, type Side, type Position } from '../Unit'
-import { type FullPower } from '../Action/types'
+import { type FullPower, type ActionRequest } from '../Action/types'
 
 // 確率分岐 (デフォルトは 50%)
 export function chance(probability: number = 0.5): boolean {
@@ -79,6 +79,16 @@ export function isBerserkStuck(actor: Unit, state: State): boolean {
   }
   if (action.target.melee.length > 0) return false
   return pickMoveToReachMeleeTarget(actor, state) === null
+}
+
+// 攻撃オプションの選定
+// WarriorParams によって, 一定確率で速攻(全力攻撃)を実行
+export function pickAttackOption(actor: Unit, state: State, target: Unit, quickAttack: number): ActionRequest {
+  if (chance(quickAttack)) {
+    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, target, state.foggy) }, targets: [target] }
+  } else {
+    return { key: 'attack', options: { aim: 'body', fullPower: 'none' }, targets: [target] }
+  }
 }
 
 // 全力攻撃オプションの選定
