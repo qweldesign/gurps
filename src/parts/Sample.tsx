@@ -56,6 +56,7 @@ function Sample() {
         <option value="40/4">{'40CP (初期40CP)'}</option>
         <option value="48/4">{'48CP (初期40CP)'}</option>
         <option value="64/4">{'64CP (初期40CP)'}</option>
+        <option value="80/8">{'80CP (初期80CP)'}</option>
       </select>
       {!sample
         ? <List units={samples} points={points} />

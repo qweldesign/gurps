@@ -1,7 +1,7 @@
 // Parameters.ts
 
 const POINT_STEP = [
-  0, 0.5, 1, 2, 4, 8, 16, 24, 32
+  0, 0.5, 1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64
 ] as const
 
 export const PARAMETER_KEYS = [

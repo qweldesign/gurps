@@ -6,6 +6,7 @@ const OPTIONS: [points: number, gold: number][] = [
   [10, 100],
   [20, 200],
   [40, 400],
+  [80, 800]
 ]
 
 // value (select の value 属性) ⇔ 表示ラベルの相互変換
