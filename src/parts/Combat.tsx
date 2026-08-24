@@ -1,7 +1,7 @@
 // Combat.tsx
 
 import { type ReactNode, useRef, useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Formation from './Combat/Formation'
 import Action from './Combat/Action'
 import Summary from './Combat/Summary'
@@ -32,6 +32,7 @@ function Combat() {
   // Setup/BattleDifficulty から navigate の state で渡された選択難度
   // (SaveData には永続化しないため, リロード等で state が失われた場合は undefined になる → Normal 相当にフォールバック)
   const location = useLocation()
+  const navigate = useNavigate()
   const difficulty = (location.state as { difficulty?: BattleDifficultyTier } | null)?.difficulty
 
   // サンプル生成関数
@@ -225,6 +226,7 @@ function Combat() {
                     {result === 'win' && reward && (
                       <p className="mt-3 text-sm">CP +{reward.cp} / 軍資金 +{reward.gold}金</p>
                     )}
+                    <button className="mt-6 w-48 h-12" onClick={() => navigate('/setup/')}>編成に戻る</button>
                   </div>
                 ) : (
                   // enemy (AI操作) のターン中はコマンドパレットを表示しない (誤操作防止)
