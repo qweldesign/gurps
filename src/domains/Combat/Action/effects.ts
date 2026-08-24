@@ -308,6 +308,8 @@ export class ActionEffects {
   // dmg (直接ダメージ型)・trip (転倒効果) は防御判定以降の一連の結果を追加の ActionResult として返す
   // (buff/status/debuff は無条件/抵抗判定のみで完結するため, 従来通り SpellResult.effectResults に集約する)
   // spellType が 'range' (範囲呪文) の場合, 対象選択を経ないため target 引数は用いず, 発動時点の敵全員に対して個別に効果を解決する
+  // 発動判定がファンブルだった場合, 術者自身がそのターンのみ幻惑状態に陥る
+  // 「盾」「時間遡行」(spellType: 'defense') はこのメソッドを経由しない (自動反応として個別の判定関数で処理する) ため, 対象外となる
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
@@ -317,6 +319,10 @@ export class ActionEffects {
     const effects = spellData.effects ?? []
     const effectResults: SpellEffectResult[] = []
     const extraResults: ActionResult[] = []
+
+    if (!spellJudge.success && spellJudge.critical) {
+      actor.statusEffects.dazed = 1
+    }
 
     if (spellJudge.success) {
       if (spellData.spellType === 'range') {

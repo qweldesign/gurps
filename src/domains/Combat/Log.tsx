@@ -229,7 +229,12 @@ export class CombatLog {
       case 'spell': { // 法術の発動判定結果ログ (成功時のみ, 適用された効果の結果も表示する)
         const spellJudge = (results[0].judge as SpellResult)
         if (!spellJudge.success) {
-          messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
+          if (spellJudge.critical) {
+            messages.push(<>{`${actor} の ${spellJudge.spell} はファンブルした!!`}</>)
+            messages.push(<>{`${actor} は ${STATUS_EFFECT_LABELS.dazed} 状態になった!`}</>)
+          } else {
+            messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
+          }
           break
         }
         messages.push(<>{`${actor} の ${spellJudge.spell} 発動!!`}</>)

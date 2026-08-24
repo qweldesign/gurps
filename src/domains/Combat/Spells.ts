@@ -153,6 +153,12 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * 「サイレン」(debuffAll, 敵味方問わず及ぶ)・「リストレーション」(cleanse, 味方専用) は距離の概念が当てはまらないため対象外 (0) とする
  * (計算は Action/effects.ts の getSpellDistanceMod で行い, judgeSpell の distanceMod 引数として渡す. SpellEffect のデータ自体には持たない)
  *
+ * 【術の発動判定のファンブル】
+ * 発動判定 (judgeSpell) がファンブルだった場合, 術者自身がそのターンのみ幻惑状態 (StatusEffects.dazed) に陥る
+ * 
+ * spellType: 'defense' の術 (「盾」「時間遡行」, 下記) は「法術」行動 (spell()) を経由せず judgeSpell も呼ばないため, この仕組みの対象外となる
+ * (適用は Action/effects.ts の spell() 内で行う. SpellEffect のデータ自体には持たない)
+ *
  * spellType: 'defense' の術 (「盾」「時間遡行」) は, 通常の「法術」行動 (対象選択・即時効果) を経由せず, 自動的に反応して発動する
  * 特殊な術のため, SpellEffect の kind としては定義しない (個別の反応ロジックとしてハードコードする)
  * 「盾」: 精神集中(金)が2ターン以上完了している状態で攻撃を受けると, 通常の防御試行回数とは別枠で, 術の技能値による「止め」相当の追加防御を自動発動する
