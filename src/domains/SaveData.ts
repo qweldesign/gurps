@@ -102,11 +102,15 @@ export class SaveData {
   }
 
   // uid を指定してモデルを削除
+  // 除名対象より後ろの (id が大きい) キャラクターは id を1つずつ詰めるため, battleMembers (出撃メンバー, id 配列で保持) の
+  // 参照もあわせて更新する (除名対象自身の id は除外し, それより大きい id は1減算する. 放置すると詰め直し後に
+  // 別のキャラクターを指す不正な参照になりうるため)
   removeModel(uid: string) {
     const keys = this.data.keys
     if (!keys) return
     const order = keys.indexOf(uid)
     if (order === -1) return
+    const removedId = this.loadModel(uid).id
     // 配列を詰める
     keys.forEach((uid, i) => {
       if (i > order) {
@@ -126,6 +130,15 @@ export class SaveData {
     this.removeKey(latestUid)
     localStorage.removeItem(latestUniqueKey)
     sessionStorage.removeItem(latestUniqueKey)
+
+    // 出撃メンバー (battleMembers) の id 参照を, 上記の id 詰め直しに追従させる
+    if (this.data.battleMembers) {
+      const battleMembers = this.data.battleMembers
+        .filter(id => id !== removedId)
+        .map(id => id > removedId ? id - 1 : id)
+      this.data = { ...this.data, battleMembers }
+      this.save()
+    }
   }
 
   // 出撃メンバー (id配列) を更新
