@@ -115,6 +115,7 @@ function Combat() {
   const rewardRef = useRef<{ cp: number, gold: number } | null>(null)
   const [reward, setReward] = useState<{ cp: number, gold: number } | null>(null)
   const rewardGrantedRef = useRef(false) // 付与処理の重複実行を防ぐガード
+  const deadExpelledRef = useRef(false) // 除名処理の重複実行を防ぐガード
 
   // ログ管理
   const timelineRef = useRef<HTMLDivElement | null>(null)
@@ -199,6 +200,23 @@ function Combat() {
       const saveData = new SaveData()
       saveData.savePoints(saveData.loadPoints() + rewardRef.current.cp)
       saveData.saveGold(saveData.loadGold() + rewardRef.current.gold)
+    }
+  }, [result])
+
+  // 死亡した味方の除名 (勝利が決した瞬間に一度だけ. 敗北時は「やり直し」に相当するため何もしない.
+  // サンプル生成のNPCはセーブデータに存在しないため, removeModel側で無視される)
+  // id が大きい順に処理する (removeModel は除名対象より大きい id を1つずつ詰めるため, 小さい方から処理すると後続の除名対象の id がずれてしまう)
+  useEffect(() => {
+    if (result === 'win' && !deadExpelledRef.current && stateRef.current) {
+      deadExpelledRef.current = true
+      const saveData = new SaveData()
+      const deadMemberIds = stateRef.current.units
+        .filter(unit => unit.side === 'player' && unit.health.dead)
+        .map(unit => unit.id)
+        .sort((a, b) => b - a)
+      deadMemberIds.forEach(id => {
+        saveData.removeModel(String(id).padStart(2, '0'))
+      })
     }
   }, [result])
 
