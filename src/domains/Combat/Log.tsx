@@ -197,16 +197,21 @@ export class CombatLog {
               this.pushShieldMessage(messages, result.judge)
               break
 
-            default: // case 'defense': case 'dmg': case 'castCanceled': case 'injuryOnLimb': case 'knockedDown': case 'fatal': case 'unconscious': case 'dead': case 'trip':
-              this.pushDamageResolutionMessage(messages, request.targets[0], result)
-              break
-
             case 'readyInterrupted': // 防御を試みたことによる, 射撃武器の準備の中断
               messages.push(<>{`${target} は ${result.judge.weaponName} の準備動作が中断された!`}</>)
               break
 
             case 'aimInterrupted': // 防御を試みたことによる,「狙い」の中断
               messages.push(<>{`${target} は 狙いの照準が乱れた!`}</>)
+              break
+
+            case 'overextended': // 対象の防御判定のクリティカル成功による, 攻撃側の体勢崩れ (武器種を問わない追加の引き戻し)
+              messages.push(<>{`${actor} は 大きく体勢を崩した!`}</>)
+              messages.push(<>{`${actor} の ${result.judge.weaponName} は非準備状態になった`}</>)
+              break
+
+            default: // case 'defense': case 'dmg': case 'castCanceled': case 'injuryOnLimb': case 'knockedDown': case 'fatal': case 'unconscious': case 'dead': case 'trip':
+              this.pushDamageResolutionMessage(messages, request.targets[0], result)
               break
           }
         })

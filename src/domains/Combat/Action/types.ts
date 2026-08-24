@@ -154,6 +154,12 @@ export type CastCanceledResult = {
   element: SpellElement
 }
 
+// 攻撃側の体勢崩れの結果 (ファンブル, もしくは対象の防御判定のクリティカル成功による. 判定は伴わず, 武器名のみを持つ)
+// 武器の種別 (準備が元々不要な武器を含む) に関わらず, 最低1ターンの引き戻し (準備) が必要になる
+export type OverextendResult = {
+  weaponName: string
+}
+
 // 頭・四肢の故障結果 (判定は伴わず, 部位のみを持つ)
 export type InjuryOnLimbResult = {
   limb: Aim
@@ -214,6 +220,7 @@ export type ActionResult =
   | { type: 'debuffAll', judge: DebuffAllResult } // 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定に失敗した対象にのみ生成される)
   | { type: 'recovery', judge: Judge }
   | { type: 'castCanceled', judge: CastCanceledResult } // 精神集中の強制解除 (「集中」を継続していた場合のみ生成される. 転倒・防御を試みた際の維持判定失敗のいずれかに起因する)
+  | { type: 'overextended', judge: OverextendResult } // 攻撃側の体勢崩れ (対象の防御判定のクリティカル成功) による, 武器種を問わない追加の引き戻し
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }
