@@ -50,8 +50,11 @@ export class CombatLog {
   // ラベル生成 (Summary履歴用)
   private createLabel(request: ActionRequest, results: ActionResult[]): string {
     switch (request.key) {
-      case 'attack':
-        return `${ACTION_LABELS[request.key]}:${this.createAttackResultLabel(request, results)}`
+      case 'attack': {
+        // 全力攻撃 (fullPower !== 'none') の場合は「攻撃」ではなく「全力攻撃」と表示し, 通常攻撃と判別できるようにする
+        const attackLabel = request.options.fullPower !== 'none' ? '全力攻撃' : ACTION_LABELS[request.key]
+        return `${attackLabel}:${this.createAttackResultLabel(request, results)}`
+      }
 
       case 'feint':
         return `${ACTION_LABELS[request.key]}:${this.createFeintResultLabel(results)}`

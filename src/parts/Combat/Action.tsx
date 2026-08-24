@@ -197,7 +197,8 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'attackOption'}>
-        {!store.availability.ready && FULL_POWER_KEYS.map(key => key !== 'none' && key !== 'ready' && (
+        {!store.availability.ready && FULL_POWER_KEYS.map(key => key !== 'none' && key !== 'ready' &&
+          (key !== 'double' || store.availability.doubleAttack) && ( // 「2回攻撃」は攻撃毎に準備を要する武器では選択不可
           <button
             className="is-large"
             key={key}

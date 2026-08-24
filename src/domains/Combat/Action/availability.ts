@@ -44,6 +44,13 @@ export class ActionAvailability {
     return this.canAttackBase() && !this.state.actor.health.puppeted
   }
 
+  // 全力攻撃オプション「2回攻撃」実行可否取得
+  // 攻撃毎に準備を要する武器 (model.ready > 0) では, 1回目の攻撃後に非準備状態になり
+  // 同じターン内で2回目の攻撃ができないため, 選択不可 (常に準備不要な武器のみ選択可能)
+  canDoubleAttack(): boolean {
+    return this.state.actor.attack.model.ready === 0
+  }
+
   //「脚・足首狙い」実行可否取得
   // 屈み以上の姿勢 (直立以外), または竿状武器・射撃武器を構えていることが条件
   canLegAttack(): boolean {
