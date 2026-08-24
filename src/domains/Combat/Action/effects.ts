@@ -70,8 +70,8 @@ export class ActionEffects {
       if (defended) return results // 防御成功時はここで処理を止める
     }
 
-    // ダメージ判定
-    const dmgJudge = rollDmg(actor, aim, fullPower, target)
+    // ダメージ判定 (攻撃判定がクリティカルの場合, 対象のDRを無視する)
+    const dmgJudge = rollDmg(actor, aim, fullPower, target, attackJudge.critical)
     results.push(...this.resolveDamage(dmgJudge, aim, actor.attack.model.dmgType, target))
 
     return results

@@ -43,9 +43,10 @@ export function judgeDefense(actor: Unit, aim: Aim, target: Unit): Array<Omit<De
 
 // ダメージの判定結果を返す
 // 喉・肚狙いは急所への一撃となるため, 貫通ダメージの倍率がさらに上がる
-export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit): DmgResult {
+// critical: true の場合 (攻撃判定がクリティカルの場合), 対象のDRを無視してダメージを算出する
+export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Unit, critical: boolean = false): DmgResult {
   const attack = actor.attack.model
-  const dr = target.defense.getDR(AIM_OPTIONS[aim].group, attack.dmgType)
+  const dr = critical ? 0 : target.defense.getDR(AIM_OPTIONS[aim].group, attack.dmgType)
   let count = attack.dmgDice
   count -= fullPower === 'dmg' ? 1 : 0 // 全力攻撃オプション「ダメージ安定」
   let mod = attack.dmgMod - dr + actor.statusBuff.dmg // 攻撃UPバフ (ベルセルク)
