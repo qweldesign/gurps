@@ -126,7 +126,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
  *
  * cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
- * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk) を解除する (例: 「リストレーション」)
+ * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・パニック状態 (StatusEffects.panic) を解除する (例: 「リストレーション」)
  *
  * debuffAll: 範囲呪文 (spellType: 'range') 専用のデバフ. debuff と同じく対象の抵抗判定 (MRE) に失敗した場合のみ適用するが,
  * 対象選択は行わず, 発動時点の敵味方全員 (術者自身を除く) に対して個別に抵抗判定を行う.

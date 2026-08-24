@@ -325,6 +325,7 @@ export class CombatLog {
     if (judge.curedStun) cured.push('朦朧状態')
     if (judge.curedDazed) cured.push('幻惑状態')
     if (judge.curedBerserk) cured.push('狂戦士状態')
+    if (judge.curedPanic) cured.push('パニック状態')
     messages.push(<>{`${targetName} の ${cured.join('・')} が解除された`}</>)
   }
 

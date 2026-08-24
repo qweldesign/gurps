@@ -573,19 +573,21 @@ export class ActionEffects {
     return [candidates[Math.floor(Math.random() * candidates.length)]]
   }
 
-  // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士状態を解除する)
+  // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・パニック状態を解除する)
   // 何も治癒しなかった場合は結果を生成しない (対象が多数になりうるため, ログの無意味な水増しを避ける)
   private spellCleanseRoutine(target: Unit): ActionResult[] {
     const curedStun = target.health.stunned
     const curedDazed = target.statusEffects.dazed > 0
     const curedBerserk = target.statusEffects.berserk > 0
-    if (!curedStun && !curedDazed && !curedBerserk) return []
+    const curedPanic = target.statusEffects.panic > 0
+    if (!curedStun && !curedDazed && !curedBerserk && !curedPanic) return []
 
     target.health.stunned = false
     target.statusEffects.dazed = 0
     target.statusEffects.berserk = 0
+    target.statusEffects.panic = 0
 
-    const cleanseResult: CleanseResult = { target, curedStun, curedDazed, curedBerserk }
+    const cleanseResult: CleanseResult = { target, curedStun, curedDazed, curedBerserk, curedPanic }
     return [{ type: 'cleanse', judge: cleanseResult }]
   }
 
