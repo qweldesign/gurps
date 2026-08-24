@@ -8,7 +8,6 @@ export type CombatUnitHealthSnapshot = {
   stunned: boolean
   unconscious: boolean
   dead: boolean
-  confused: boolean
   injuryOnArm: boolean
   injuryOnLeg: boolean
   blinded: boolean
@@ -25,7 +24,6 @@ export class CombatUnitHealth {
   private _stunned: boolean // 朦朧状態
   public unconscious: boolean // 気絶
   public dead: boolean // 死亡
-  public confused: boolean // 精神朦朧
   public injuryOnArm: boolean // 腕・手首の故障
   public injuryOnLeg: boolean // 脚・足首の故障
   public blinded: boolean // 目の故障
@@ -41,7 +39,6 @@ export class CombatUnitHealth {
     this._stunned = false
     this.unconscious = false
     this.dead = false
-    this.confused = false
     this.injuryOnArm = false
     this.injuryOnLeg = false
     this.blinded = false
@@ -104,7 +101,6 @@ export class CombatUnitHealth {
       stunned: this._stunned,
       unconscious: this.unconscious,
       dead: this.dead,
-      confused: this.confused,
       injuryOnArm: this.injuryOnArm,
       injuryOnLeg: this.injuryOnLeg,
       blinded: this.blinded,
@@ -121,7 +117,6 @@ export class CombatUnitHealth {
     this._stunned = snapshot.stunned
     this.unconscious = snapshot.unconscious
     this.dead = snapshot.dead
-    this.confused = snapshot.confused
     this.injuryOnArm = snapshot.injuryOnArm
     this.injuryOnLeg = snapshot.injuryOnLeg
     this.blinded = snapshot.blinded
@@ -142,7 +137,6 @@ export class CombatUnitHealth {
     if (this.deafened) return '聾'
     if (this.burning) return '火だるま'
     if (this.dazzled) return '眩しい'
-    if (this.confused) return '混乱'
     if (this.self.posture === 'prone') return '転倒'
     if (this.stunned) return '朦朧状態'
     return ''

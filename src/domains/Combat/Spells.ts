@@ -126,7 +126,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
  *
  * cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
- * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・混乱状態 (Health.confused) を解除する (例: 「リストレーション」)
+ * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・パニック状態 (StatusEffects.panic) を解除する (例: 「リストレーション」)
  *
  * debuffAll: 範囲呪文 (spellType: 'range') 専用のデバフ. debuff と同じく対象の抵抗判定 (MRE) に失敗した場合のみ適用するが,
  * 対象選択は行わず, 発動時点の敵味方全員 (術者自身を除く) に対して個別に抵抗判定を行う.
@@ -152,6 +152,12 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * 発動判定が1回のみで個々の対象の位置を一意に定められないため, dmg/flash 効果を持つものに限り, 位置によらず一律 -2 (濃霧下では -4) とする
  * 「サイレン」(debuffAll, 敵味方問わず及ぶ)・「リストレーション」(cleanse, 味方専用) は距離の概念が当てはまらないため対象外 (0) とする
  * (計算は Action/effects.ts の getSpellDistanceMod で行い, judgeSpell の distanceMod 引数として渡す. SpellEffect のデータ自体には持たない)
+ *
+ * 【術の発動判定のファンブル】
+ * 発動判定 (judgeSpell) がファンブルだった場合, 術者自身がそのターンのみ幻惑状態 (StatusEffects.dazed) に陥る
+ * 
+ * spellType: 'defense' の術 (「盾」「時間遡行」, 下記) は「法術」行動 (spell()) を経由せず judgeSpell も呼ばないため, この仕組みの対象外となる
+ * (適用は Action/effects.ts の spell() 内で行う. SpellEffect のデータ自体には持たない)
  *
  * spellType: 'defense' の術 (「盾」「時間遡行」) は, 通常の「法術」行動 (対象選択・即時効果) を経由せず, 自動的に反応して発動する
  * 特殊な術のため, SpellEffect の kind としては定義しない (個別の反応ロジックとしてハードコードする)

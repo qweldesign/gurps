@@ -319,6 +319,8 @@ export class ActionEffects {
   // dmg (直接ダメージ型)・trip (転倒効果) は防御判定以降の一連の結果を追加の ActionResult として返す
   // (buff/status/debuff は無条件/抵抗判定のみで完結するため, 従来通り SpellResult.effectResults に集約する)
   // spellType が 'range' (範囲呪文) の場合, 対象選択を経ないため target 引数は用いず, 発動時点の敵全員に対して個別に効果を解決する
+  // 発動判定がファンブルだった場合, 術者自身がそのターンのみ幻惑状態に陥る
+  // 「盾」「時間遡行」(spellType: 'defense') はこのメソッドを経由しない (自動反応として個別の判定関数で処理する) ため, 対象外となる
   spell(element: SpellElement, spellId: number, target: Unit): ActionResult[] {
     const actor = this.state.actor
     SPELL_ELEMENTS.forEach(spellElement => { actor.spellCast[spellElement] = 0 })
@@ -328,6 +330,10 @@ export class ActionEffects {
     const effects = spellData.effects ?? []
     const effectResults: SpellEffectResult[] = []
     const extraResults: ActionResult[] = []
+
+    if (!spellJudge.success && spellJudge.critical) {
+      actor.statusEffects.dazed = 1
+    }
 
     if (spellJudge.success) {
       if (spellData.spellType === 'range') {
@@ -578,21 +584,21 @@ export class ActionEffects {
     return [candidates[Math.floor(Math.random() * candidates.length)]]
   }
 
-  // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・混乱状態を解除する)
+  // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・パニック状態を解除する)
   // 何も治癒しなかった場合は結果を生成しない (対象が多数になりうるため, ログの無意味な水増しを避ける)
   private spellCleanseRoutine(target: Unit): ActionResult[] {
     const curedStun = target.health.stunned
     const curedDazed = target.statusEffects.dazed > 0
     const curedBerserk = target.statusEffects.berserk > 0
-    const curedConfused = target.health.confused
-    if (!curedStun && !curedDazed && !curedBerserk && !curedConfused) return []
+    const curedPanic = target.statusEffects.panic > 0
+    if (!curedStun && !curedDazed && !curedBerserk && !curedPanic) return []
 
     target.health.stunned = false
     target.statusEffects.dazed = 0
     target.statusEffects.berserk = 0
-    target.health.confused = false
+    target.statusEffects.panic = 0
 
-    const cleanseResult: CleanseResult = { target, curedStun, curedDazed, curedBerserk, curedConfused }
+    const cleanseResult: CleanseResult = { target, curedStun, curedDazed, curedBerserk, curedPanic }
     return [{ type: 'cleanse', judge: cleanseResult }]
   }
 

@@ -246,7 +246,12 @@ export class CombatLog {
       case 'spell': { // 法術の発動判定結果ログ (成功時のみ, 適用された効果の結果も表示する)
         const spellJudge = (results[0].judge as SpellResult)
         if (!spellJudge.success) {
-          messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
+          if (spellJudge.critical) {
+            messages.push(<>{`${actor} の ${spellJudge.spell} はファンブルした!!`}</>)
+            messages.push(<>{`${actor} は ${STATUS_EFFECT_LABELS.dazed} 状態になった!`}</>)
+          } else {
+            messages.push(<>{`${actor} の ${spellJudge.spell} は不発に終わった...`}</>)
+          }
           break
         }
         messages.push(<>{`${actor} の ${spellJudge.spell} 発動!!`}</>)
@@ -337,7 +342,7 @@ export class CombatLog {
     if (judge.curedStun) cured.push('朦朧状態')
     if (judge.curedDazed) cured.push('幻惑状態')
     if (judge.curedBerserk) cured.push('狂戦士状態')
-    if (judge.curedConfused) cured.push('混乱状態')
+    if (judge.curedPanic) cured.push('パニック状態')
     messages.push(<>{`${targetName} の ${cured.join('・')} が解除された`}</>)
   }
 
