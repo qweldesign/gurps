@@ -504,12 +504,14 @@ export class ActionEffects {
   }
 
   // 術の範囲デバフ効果の判定・効果適用 (「閃光」用. 範囲呪文の対象1体分. dmg/trip と同じ回避判定を経て, 失敗時のみ次ターンの終わりまで命中/回避ペナルティを課す)
+  // 精神集中中の対象は, 維持判定を避けるため, 防御判定自体を試みない
   private spellFlashRoutine(target: Unit, effect: Extract<SpellEffect, { kind: 'flash' }>): ActionResult[] {
     const results: ActionResult[] = []
     const aim = 'body' // 「閃光」に部位狙いの概念は無いため, 常に通常の防御目標値を用いる
     const allowParry = effect.allowParry ?? true
+    const isCasting = SPELL_ELEMENTS.some(element => target.spellCast[element] > 0)
 
-    const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
+    const canDefend = !isCasting && (target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge)
     let castCanceledResults: ActionResult[] = []
     if (canDefend) {
       const defenseJudges = judgeSpellDefense(target, aim, allowParry)
