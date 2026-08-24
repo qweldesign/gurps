@@ -21,7 +21,7 @@ export class CombatUnitStatusEffects {
   public dazed: number // 幻惑
   public berserk: number // 狂戦士
   public panic: number // パニック
-  public flashed: number // 目くらみ (「閃光」用. 対象自身の次ターン終了時まで, 命中判定-2/回避判定-1のペナルティを受ける)
+  public flashed: number // 目くらみ
 
   constructor() {
     this.silence = 0
@@ -72,15 +72,15 @@ export class CombatUnitStatusEffects {
     this.flashed = snapshot.flashed
   }
 
-  // Summary 表示用ラベル取得 (優先度が高い状態異常を1つ返す)
+  // Summary 表示用ラベル取得 (優先度が高い状態異常を1つ返す. 残り持続ターン数を () で併記する)
   get label(): string {
-    if (this.silence) return '沈黙'
-    if (this.resistant) return '痛覚鈍麻'
-    if (this.poisoned) return '毒'
-    if (this.paralyzed) return '麻痺'
-    if (this.dazed) return '幻惑'
-    if (this.berserk) return '狂戦士'
-    if (this.panic) return 'パニック'
+    if (this.silence) return `沈黙(${this.silence})`
+    if (this.resistant) return `痛覚鈍麻(${this.resistant})`
+    if (this.poisoned) return `毒(${this.poisoned})`
+    if (this.paralyzed) return `麻痺(${this.paralyzed})`
+    if (this.dazed) return `幻惑(${this.dazed})`
+    if (this.berserk) return `狂戦士(${this.berserk})`
+    if (this.panic) return `パニック(${this.panic})`
     if (this.flashed) return '目くらみ'
     return ''
   }
