@@ -56,7 +56,10 @@ export class ActionEffects {
     // 攻撃判定
     const attackJudge = judgeAttack(actor, aim, fullPower, target, this.state.foggy)
     // 武器の準備状態を更新 (準備の要る武器の場合, 攻撃後は非準備状態になる)
-    actor.attack.ready = actor.attack.model.ready
+    // ファンブルの場合, 武器の種別 (準備が元々不要な武器を含む) に関わらず,
+    // 大きく空振りして最低1ターンの引き戻しが必要になる
+    const isFumble = attackJudge.critical && !attackJudge.success
+    actor.attack.ready = isFumble ? Math.max(actor.attack.model.ready, 1) : actor.attack.model.ready
     results.push({ type: 'attack', judge: { ...attackJudge, ready: actor.attack.ready === 0 } })
     if (!attackJudge.success) return results // 攻撃失敗時はここで処理を止める
 
@@ -65,9 +68,16 @@ export class ActionEffects {
     const canDefend = target.defense.getCanBlock(aim) || target.defense.canParry || target.defense.canDodge
     if (!attackJudge.critical && canDefend) {
       const defenseJudges = judgeDefense(actor, aim, target)
-      const { results: defenseResults, defended } = this.resolveDefenseAttempts(target, defenseJudges)
+      const { results: defenseResults, defended, criticalDefense } = this.resolveDefenseAttempts(target, defenseJudges)
       results.push(...defenseResults)
-      if (defended) return results // 防御成功時はここで処理を止める
+      if (defended) {
+        // 対象の防御判定がクリティカル成功した場合も, 武器の種別に関わらず自身が体勢を崩し最低1ターンの引き戻しが必要になる
+        if (criticalDefense) {
+          actor.attack.ready = Math.max(actor.attack.ready, 1)
+          results.push({ type: 'overextended', judge: { weaponName: actor.attack.model.name } })
+        }
+        return results // 防御成功時はここで処理を止める
+      }
     }
 
     // ダメージ判定 (攻撃判定がクリティカルの場合, 対象のDRを無視する)
@@ -160,9 +170,11 @@ export class ActionEffects {
   // 「盾」(金行術): 精神集中(金)が2ターン以上完了しており, かつ全力攻撃選択中でなければ (= canDodge が true なら),
   // 通常の防御試行回数 (blockCount/parryCount) とは別枠で, 術の技能値による「止め」相当の追加防御を最初に試みる
   // (成否を問わず発動時点で精神集中(金)はリセットされる. 成功すれば通常の防御判定は行わずそこで処理を止める)
-  private resolveDefenseAttempts(target: Unit, defenseJudges: Array<Omit<DefenseResult, 'ready'>>): { results: ActionResult[], defended: boolean } {
+  // criticalDefense: 成立した防御判定 (盾を含む) がクリティカル成功だったか否か (攻撃側の追加の引き戻し判定に用いる. 呼び出し元の責務とする)
+  private resolveDefenseAttempts(target: Unit, defenseJudges: Array<Omit<DefenseResult, 'ready'>>): { results: ActionResult[], defended: boolean, criticalDefense: boolean } {
     const results: ActionResult[] = []
     let defended = false
+    let criticalDefense = false
     let attempted = defenseJudges.length > 0
 
     if (target.spellCast.metal >= 2 && target.defense.canDodge) {
@@ -172,7 +184,7 @@ export class ActionEffects {
       results.push({ type: 'shield', judge: { ...shieldJudge, target } })
       if (shieldJudge.success) {
         results.push(...this.resolveDefenseInterrupts(target))
-        return { results, defended: true }
+        return { results, defended: true, criticalDefense: shieldJudge.critical }
       }
     }
 
@@ -191,6 +203,7 @@ export class ActionEffects {
       results.push({ type: 'defense', judge: { ...defenseJudge, ready, target } })
       if (defenseJudge.success) {
         defended = true
+        criticalDefense = defenseJudge.critical
         break
       }
     }
@@ -200,7 +213,7 @@ export class ActionEffects {
       results.push(...this.resolveDefenseInterrupts(target))
     }
 
-    return { results, defended }
+    return { results, defended, criticalDefense }
   }
 
   // 防御を試みたことによる, 対象自身への副次的な影響を解決する

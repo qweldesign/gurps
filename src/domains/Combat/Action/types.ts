@@ -144,6 +144,12 @@ export type SpellResult = Judge & {
   effectResults: SpellEffectResult[]
 }
 
+// 攻撃側の体勢崩れの結果 (ファンブル, もしくは対象の防御判定のクリティカル成功による. 判定は伴わず, 武器名のみを持つ)
+// 武器の種別 (準備が元々不要な武器を含む) に関わらず, 最低1ターンの引き戻し (準備) が必要になる
+export type OverextendResult = {
+  weaponName: string
+}
+
 // 頭・四肢の故障結果 (判定は伴わず, 部位のみを持つ)
 export type InjuryOnLimbResult = {
   limb: Aim
@@ -203,6 +209,7 @@ export type ActionResult =
   | { type: 'cleanse', judge: CleanseResult } // 術の範囲浄化効果の適用結果 (「リストレーション」用. 何か1つでも治癒した対象にのみ生成される)
   | { type: 'debuffAll', judge: DebuffAllResult } // 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定に失敗した対象にのみ生成される)
   | { type: 'recovery', judge: Judge }
+  | { type: 'overextended', judge: OverextendResult } // 攻撃側の体勢崩れ (対象の防御判定のクリティカル成功) による, 武器種を問わない追加の引き戻し
   | { type: 'injuryOnLimb', judge: InjuryOnLimbResult }
   | { type: 'knockedDown', judge: Judge }
   | { type: 'fatal', judge: Judge }

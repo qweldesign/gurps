@@ -175,6 +175,11 @@ export class CombatLog {
               messages.push(<>{`${target} は 狙いの照準が乱れた!`}</>)
               break
 
+            case 'overextended': // 対象の防御判定のクリティカル成功による, 攻撃側の体勢崩れ (武器種を問わない追加の引き戻し)
+              messages.push(<>{`${actor} は 大きく体勢を崩した!`}</>)
+              messages.push(<>{`${actor} の ${result.judge.weaponName} は非準備状態になった`}</>)
+              break
+
             case 'castInterrupted': // 防御を試みたことによる, 精神集中の維持判定
               messages.push(<>{`${target} による精神集中の維持判定`}</>)
               messages.push(<>{`出目は ${result.judge.roll}、${this.getResultLabel(result.judge)}`}</>)
