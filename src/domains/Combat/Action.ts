@@ -61,6 +61,7 @@ export class CombatAction {
       ready: this.availabilityChecker.canReady(),
       attack: this.availabilityChecker.canAttack(),
       fullAttack: this.availabilityChecker.canFullAttack(),
+      doubleAttack: this.availabilityChecker.canDoubleAttack(),
       legAttack: this.availabilityChecker.canLegAttack(),
       feint: this.availabilityChecker.canFeint(),
       shoot: this.availabilityChecker.canShoot(),
