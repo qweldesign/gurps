@@ -40,7 +40,7 @@ function EquipmentsSetting({ isFirstCreation, state, dispatch, calcGold }: { isF
           <option value="装備無し">装備無し</option>
           {state.weaponList.filter(([, weapon]) => (
             // 予備武器のみを取り出す
-            weapon.skill === '剣術'
+            weapon.skill === '剣術' && weapon.weaponType !== 6
           )).map(([, weapon], i) => (
             <option key={i} value={weapon.name}>{`${weapon.name} | 性能:${weapon.baseDmg / 2} (${weapon.gold}金)`}</option>
           ))}
