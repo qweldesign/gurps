@@ -13,7 +13,6 @@ export type CombatUnitHealthSnapshot = {
   blinded: boolean
   deafened: boolean
   burning: boolean
-  dazzled: boolean
   puppeted: boolean
 }
 
@@ -29,7 +28,6 @@ export class CombatUnitHealth {
   public blinded: boolean // 目の故障
   public deafened: boolean // 耳の故障
   public burning: boolean // 火だるま
-  public dazzled: boolean // 眩しい
   public puppeted: boolean // 傀儡
 
   constructor(self: Unit, maxHp: number) {
@@ -44,7 +42,6 @@ export class CombatUnitHealth {
     this.blinded = false
     this.deafened = false
     this.burning = false
-    this.dazzled = false
     this.puppeted = false
   }
 
@@ -106,7 +103,6 @@ export class CombatUnitHealth {
       blinded: this.blinded,
       deafened: this.deafened,
       burning: this.burning,
-      dazzled: this.dazzled,
       puppeted: this.puppeted
     }
   }
@@ -122,7 +118,6 @@ export class CombatUnitHealth {
     this.blinded = snapshot.blinded
     this.deafened = snapshot.deafened
     this.burning = snapshot.burning
-    this.dazzled = snapshot.dazzled
     this.puppeted = snapshot.puppeted
   }
 
@@ -136,7 +131,6 @@ export class CombatUnitHealth {
     if (this.injuryOnLeg) return '脚故障'
     if (this.deafened) return '聾'
     if (this.burning) return '火だるま'
-    if (this.dazzled) return '眩しい'
     if (this.self.posture === 'prone') return '転倒'
     if (this.stunned) return '朦朧状態'
     return ''
