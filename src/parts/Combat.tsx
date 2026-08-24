@@ -50,20 +50,22 @@ function Combat() {
 
   // プレイヤー4人のユニットを用意する関数
   // Setup で選出された出撃メンバー (4名) があればそれを使用し, 無ければ従来通りサンプルにフォールバックする
-  const initPlayerModels = () => {
+  // usedRoster: セーブデータ上の実在キャラクターを使用したかどうか (フォールバック時は false)
+  const initPlayerModels = (): { models: CombatUnitModel[], usedRoster: boolean } => {
     const saveData = new SaveData()
     const memberIds = saveData.loadBattleMembers()
     if (memberIds.length === SLOT_SIZE) {
       const characters = memberIds.map(id => new Character(saveData.loadModel(String(id).padStart(2, '0'))))
       // 除名等で id 0 (未設定) が混ざっていなければ, 選出メンバーとして採用
       if (characters.every(character => character.id !== 0)) {
-        return characters.map(character => character.combatUnitModel)
+        return { models: characters.map(character => character.combatUnitModel), usedRoster: true }
       }
     }
     // フォールバック: 従来通りのランダムサンプル
     // CP倍率は選択された初期CP (10/20/40) にあわせたセーブデータの値を使用する
     const r1 = Math.floor(Math.random() * 16)
-    return createSamples(DEFAULT_CP, saveData.loadMultiplier(), 0, r1, 4).map(unit => unit.combatUnitModel)
+    const models = createSamples(DEFAULT_CP, saveData.loadMultiplier(), 0, r1, 4).map(unit => unit.combatUnitModel)
+    return { models, usedRoster: false }
   }
 
   // 敵4人のユニットと, その勝利報酬を用意する関数
@@ -101,9 +103,10 @@ function Combat() {
   }
 
   // プレイヤー4人と敵4人のユニットを結合し, 勝利報酬とあわせて返す関数
-  const initModels = (): { models: CombatUnitModel[], reward: { cp: number, gold: number } | null } => {
+  const initModels = (): { models: CombatUnitModel[], reward: { cp: number, gold: number } | null, usedRoster: boolean } => {
+    const playerResult = initPlayerModels()
     const enemyResult = initEnemyModels()
-    return { models: initPlayerModels().concat(enemyResult.models), reward: enemyResult.reward }
+    return { models: playerResult.models.concat(enemyResult.models), reward: enemyResult.reward, usedRoster: playerResult.usedRoster }
   }
 
   // ターン管理
@@ -114,6 +117,7 @@ function Combat() {
   // rewardRef: 付与処理 (useEffect) 用. reward: UI表示用 (result と同じく, ref変化は再レンダリングされないため state にも反映する)
   const rewardRef = useRef<{ cp: number, gold: number } | null>(null)
   const [reward, setReward] = useState<{ cp: number, gold: number } | null>(null)
+  const usedRosterRef = useRef(false) // セーブデータ上の実在キャラクターで出撃したか (「開幕」useEffectで一度だけ設定)
   const rewardGrantedRef = useRef(false) // 付与処理の重複実行を防ぐガード
   const deadExpelledRef = useRef(false) // 除名処理の重複実行を防ぐガード
 
@@ -182,7 +186,7 @@ function Combat() {
   // 開幕
   useEffect(() => {
     if (!stateRef.current) {
-      const { models, reward: battleReward } = initModels()
+      const { models, reward: battleReward, usedRoster } = initModels()
       stateRef.current = new State(models, playLog, difficulty)
       stateRef.current.nextTurn()
       // 勝利報酬を記録 (rewardRef: 付与処理用, reward state: UI表示用)
@@ -190,12 +194,15 @@ function Combat() {
       if (battleReward) {
         setReward(battleReward)
       }
+      // 除名処理 (死亡した味方の除名) の対象可否を記録
+      usedRosterRef.current = usedRoster
     }
   }, [])
 
   // 勝利報酬の付与 (勝敗が決した瞬間に一度だけ. 敗北時は何も付与しない)
+  // (フォールバックのサンプルで戦闘した場合も何も付与しない)
   useEffect(() => {
-    if (result === 'win' && !rewardGrantedRef.current && rewardRef.current) {
+    if (result === 'win' && !rewardGrantedRef.current && rewardRef.current && usedRosterRef.current) {
       rewardGrantedRef.current = true
       const saveData = new SaveData()
       saveData.savePoints(saveData.loadPoints() + rewardRef.current.cp)
@@ -204,10 +211,11 @@ function Combat() {
   }, [result])
 
   // 死亡した味方の除名 (勝利が決した瞬間に一度だけ. 敗北時は「やり直し」に相当するため何もしない.
-  // サンプル生成のNPCはセーブデータに存在しないため, removeModel側で無視される)
+  // セーブデータの出撃メンバーを使わなかった (フォールバックのサンプルで戦闘した) 場合は,
+  // サンプルの id がセーブデータ上の実在キャラクターの id と偶然一致することがあるため, 除名処理自体を行わない)
   // id が大きい順に処理する (removeModel は除名対象より大きい id を1つずつ詰めるため, 小さい方から処理すると後続の除名対象の id がずれてしまう)
   useEffect(() => {
-    if (result === 'win' && !deadExpelledRef.current && stateRef.current) {
+    if (result === 'win' && !deadExpelledRef.current && stateRef.current && usedRosterRef.current) {
       deadExpelledRef.current = true
       const saveData = new SaveData()
       const deadMemberIds = stateRef.current.units
