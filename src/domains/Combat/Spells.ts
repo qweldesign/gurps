@@ -47,7 +47,7 @@ const METAL_SPELL: Spell[] = [
   { id: 1, label: '杯', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, cureStun: true }], targetScope: 'ally' },
   { id: 2, label: '金貨', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin', resistMod: -2 }], targetScope: 'enemy' },
   { id: 3, label: '盾', spellType: 'defense', spellCast: 2 },
-  { id: 4, label: 'サイレン', spellType: 'range', spellCast: 3, effects: [{ kind: 'debuffAll', target: 'berserk', duration: 1, enemyResistMod: -2, allyResistMod: 2 }] },
+  { id: 4, label: 'サイレン', spellType: 'range', spellCast: 3, effects: [{ kind: 'debuffAll', target: 'berserk', duration: 'margin', enemyResistMod: -2, allyResistMod: 2 }] },
   { id: 5, label: '塔', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 1 }], targetScope: 'enemy' }
 ] as const
 
