@@ -158,7 +158,7 @@ export type WeaponSlotKey = typeof WEAPON_SLOT_KEYS[number]
 export type ArmorSlotKey = typeof ARMOR_SLOT_KEYS[number]
 
 // ダメージ型の有効/無効で, それぞれダメージを算出して返す
-function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg {
+export function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg {
   const baseDmg = typeOption && weapon.dmgType == 2 // (刺)
     ? weapon.baseDmg - Math.max((Math.floor((weapon.baseDmg - 1) / 3) + 1), 2)
     : typeOption && weapon.dmgType == 1 // (切)
@@ -169,7 +169,7 @@ function getDmg(weapon: Weapon, typeOption: boolean, mod:number = 0): Dmg {
 }
 
 // ダメージ型の有効/無効で, それぞれダメージの文字列を結合して返す
-function getDmgName(weapon: Weapon, typeOption: boolean, mod:number = 0): string {
+export function getDmgName(weapon: Weapon, typeOption: boolean, mod:number = 0): string {
   const dmg = getDmg(weapon, typeOption, mod)
   const dmgType = dmg.type === 2 ? ' (刺)' : dmg.type === 1 ? ' (切)' : ' (叩)'
   return typeOption ? `${dmg.name}${dmgType}` : `${dmg.name}`
