@@ -12,7 +12,7 @@ import { SaveData } from '../domains/SaveData'
 import { CombatState as State } from '../domains/Combat/State'
 import type { CombatUnitModel } from '../domains/Combat/Unit'
 import type { BattleDifficultyTier } from '../domains/Combat/Difficulty'
-import { enemy, getEnemyFormation, getRankFromCp } from '../domains/Combat/Enemy'
+import { getEnemyFormation, getRankFromCp } from '../domains/Combat/Enemy'
 import DevProgress from './DevProgress'
 import { SPELLS_DEV_PROGRESS } from '../devProgress/spells'
 
@@ -68,23 +68,20 @@ function Combat() {
     return { models, usedRoster: false }
   }
 
-  // 敵4人のユニットと, その勝利報酬を用意する関数
-  // enemy (このファイル冒頭で定義) に4体分の指定があればそれを使用し, 無ければ難度に応じて生成する
-  // (手動上書き時は報酬なし (null) を返す)
+  // 敵4人のユニット (難度に応じて生成) と, その勝利報酬を用意する関数
   const initEnemyModels = (): { models: CombatUnitModel[], reward: { cp: number, gold: number } | null } => {
-    if (enemy.length === SLOT_SIZE) return { models: enemy, reward: null }
-
     const saveData = new SaveData()
 
-    // Easy: ゴブリン編成 (Rank はプレイヤー保有CPから算出). 報酬は編成ごとに定義された値を使用する
-    if (difficulty === 'easy') {
+    // Easy または難度未指定 (state 消失時のフォールバック) の場合: 
+    // ゴブリン編成 (Rank はプレイヤー保有CPから算出). 報酬は編成ごとに定義された値を使用する
+    if (!difficulty || difficulty === 'easy') {
       const rank = getRankFromCp(saveData.loadPoints())
       const formation = getEnemyFormation(rank)
       return { models: formation.models, reward: { cp: formation.rewardCp, gold: formation.rewardGold } }
     }
 
-    // Normal, および Hard (敵データ未実装につき暫定でNormal相当にフォールバック),
-    // 難度未指定 (state 消失時のフォールバック) の場合: 従来通りサンプル (人間) を生成する.
+    // Normal, および Hard (敵データ未実装につき暫定でNormal相当にフォールバック) の場合:
+    // 従来通りサンプル (人間) を生成する.
     // 生成CPは, プレイヤーの実際のCPの1.0〜1.25倍 (戦闘開始のたびにランダムに再抽選) とする.
     // 報酬は編成ごとの定義が無いため, 固定値 (NORMAL_REWARD_CP/NORMAL_REWARD_GOLD) を使用する
     //
