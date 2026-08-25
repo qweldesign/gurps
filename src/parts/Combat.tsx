@@ -26,7 +26,7 @@ const DEFAULT_CP = 10 // ランダム生成時のデフォルトCP (プレイヤ
 const NORMAL_CP_MULTIPLIER_MIN = 1 // Normal難度: 敵の生成CPの倍率下限 (プレイヤーCP比)
 const NORMAL_CP_MULTIPLIER_MAX = 1.25 // Normal難度: 敵の生成CPの倍率上限 (プレイヤーCP比)
 const NORMAL_REWARD_CP = 2 // Normal (および現状Normal相当にフォールバックしているHard) 勝利時の固定CP報酬
-const NORMAL_REWARD_GOLD = 100 // Normal (および現状Normal相当にフォールバックしているHard) 勝利時の固定Gold報酬
+const NORMAL_REWARD_GOLD = 200 // Normal (および現状Normal相当にフォールバックしているHard) 勝利時の固定Gold報酬
 
 function Combat() {
   // Setup/BattleDifficulty から navigate の state で渡された選択難度
@@ -83,7 +83,7 @@ function Combat() {
     // Normal, および Hard (敵データ未実装につき暫定でNormal相当にフォールバック) の場合:
     // 従来通りサンプル (人間) を生成する.
     // 生成CPは, プレイヤーの実際のCPの1.0〜1.25倍 (戦闘開始のたびにランダムに再抽選) とする.
-    // 報酬は編成ごとの定義が無いため, 固定値 (NORMAL_REWARD_CP/NORMAL_REWARD_GOLD) を使用する
+    // 報酬は, CPは固定値 (2), Goldは200 * CP倍率 とする.
     //
     // 初期仲間 (ゲーム開始時に自動生成される仲間セット) の生成に使った乱数と重複すると,
     // 同じ顔ぶれの NPC が敵として出現してしまうため, それを避けて抽選する
@@ -96,7 +96,7 @@ function Combat() {
     const enemyCp = Math.round(saveData.loadPoints() * cpMultiplier)
     // 能力値のスケーリング (CP倍率) は選択された初期CP (10/20/40) にあわせたセーブデータの値を使用する
     const models = createSamples(enemyCp, saveData.loadMultiplier(), 4, r2, 4).map(unit => unit.combatUnitModel)
-    return { models, reward: { cp: NORMAL_REWARD_CP, gold: NORMAL_REWARD_GOLD } }
+    return { models, reward: { cp: NORMAL_REWARD_CP, gold: NORMAL_REWARD_GOLD * cpMultiplier } }
   }
 
   // プレイヤー4人と敵4人のユニットを結合し, 勝利報酬とあわせて返す関数
