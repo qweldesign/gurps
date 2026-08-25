@@ -80,28 +80,35 @@ export class CombatFormation {
 
   // 近接攻撃対象取得
   // 「傀儡」中の場合, 本来の所属陣営 (=元の「味方」) の全ユニットを, 位置・後列を問わず対象とする (攻撃対象が反転する)
+  // 通常時, 現在の配置による近接対象が0体になる場合 (自身が左翼/右翼で, 敵が鏡写しの翼にしかいない場合等) は,
+  // 行動不能に陥らないよう, 位置・後列を問わず生存中の敵全員を対象とする (自身が後列の場合は従来通り対象なし)
   getMeleeTargets(): Unit[] {
     if (this.actor.health.puppeted) return this.getAllies()
 
     const enemies = this.getEnemies()
-    switch (this.actor.position) {
-      case 'left':
-        return enemies.filter(unit => {
-          return unit.position === 'right' || unit.position === 'center'
-        })
+    const reachable = (() => {
+      switch (this.actor.position) {
+        case 'left':
+          return enemies.filter(unit => {
+            return unit.position === 'right' || unit.position === 'center'
+          })
 
-      case 'center':
-        return enemies.filter(unit => {
-          return unit.position !== 'back'
-        })
+        case 'center':
+          return enemies.filter(unit => {
+            return unit.position !== 'back'
+          })
 
-      case 'right':
-        return enemies.filter(unit => {
-          return unit.position === 'left' || unit.position === 'center'
-        })
+        case 'right':
+          return enemies.filter(unit => {
+            return unit.position === 'left' || unit.position === 'center'
+          })
 
-      default: // case 'back':
-        return []
-    }
+        default: // case 'back':
+          return []
+      }
+    })()
+
+    if (reachable.length === 0 && this.actor.position !== 'back') return enemies
+    return reachable
   }
 }
