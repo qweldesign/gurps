@@ -122,7 +122,7 @@ export type Weapon = {
   secondName?: WeaponUsageKey
   weaponType: number // 0: 格闘, 1: 通常, 2: 鎖状, 3: 両手, 4: 竿状, 5: 射撃, 6: 盾
   baseDmg: number
-  dmgType: number // 0: 叩, 1: 切, 2: 刺
+  dmgType: number // 0: 叩, 1: 切, 2: 刺 (3: 炎 は Combat/Spells.ts の火行術専用のダメージ型. 武器には使用しない)
   skill: ParameterKey
   ready: number
   ev: number

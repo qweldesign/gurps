@@ -391,9 +391,12 @@ export class CombatLog {
         this.pushInjuryOnLimbMessage(messages, targetName, result.judge)
         break
 
-      case 'knockedDown': // 朦朧状態・転倒判定の結果ログ
-        if (result.judge.success) messages.push(<>{`${targetName} は 朦朧状態に陥った!`}</>)
-        else messages.push(<>{`${targetName} は 転倒した!!`}</>)
+      case 'knockedDown': // 朦朧状態・転倒判定の結果ログ (成功時, アンデッド・スライムは朦朧状態に陥らないため何も表示しない)
+        if (result.judge.success) {
+          if (target.defense.creatureType === 'normal') messages.push(<>{`${targetName} は 朦朧状態に陥った!`}</>)
+        } else {
+          messages.push(<>{`${targetName} は 転倒した!!`}</>)
+        }
         break
 
       case 'fatal': // 気絶・死亡判定の結果ログ

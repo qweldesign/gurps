@@ -2,7 +2,7 @@
 
 import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
 import { type Aim } from '../Action/types'
-import { POSTURE_MODS, type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, CombatUnit as Unit } from '../Unit'
+import { POSTURE_MODS, type CombatAttackModels as AttackModels, type CombatDefenseModel as DefenseModel, type CombatDefenseModels as DefenseModels, type CreatureType, CombatUnit as Unit } from '../Unit'
 
 // 「時間遡行」用のスナップショット (可変な状態のみを持つ. ev/pre/mre等の固定値は含まない)
 export type CombatUnitDefenseSnapshot = {
@@ -36,8 +36,9 @@ export class CombatUnitDefense {
   public ev: number //「よけ」基本値
   public pre: number // 身体抵抗値
   public mre: number // 精神抵抗値
+  public creatureType: CreatureType // 生物種別 (通常/アンデッド/スライム. ダメージ判定 (getDmgRate) と状態異常耐性 (Health.ts 参照) に影響する)
 
-  constructor(self: Unit, attacks: AttackModels, defenses: DefenseModels, ev: number, pre: number, mre: number) {
+  constructor(self: Unit, attacks: AttackModels, defenses: DefenseModels, ev: number, pre: number, mre: number, creatureType: CreatureType = 'normal') {
     this.self = self
     this.models = defenses
     this._parryTarget = ev + attacks.main.ev
@@ -54,6 +55,7 @@ export class CombatUnitDefense {
     this.ev = ev
     this.pre = pre
     this.mre = mre
+    this.creatureType = creatureType
   }
 
   nextTurn() {
