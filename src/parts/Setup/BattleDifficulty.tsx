@@ -2,13 +2,14 @@
 
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BATTLE_DIFFICULTY_KEYS, BATTLE_DIFFICULTY_LABELS, NORMAL_UNLOCK_CP, isDifficultyLocked, type BattleDifficultyTier } from '../../domains/Combat/Difficulty'
+import { BATTLE_DIFFICULTY_KEYS, BATTLE_DIFFICULTY_LABELS, NORMAL_UNLOCK_CP, HARD_UNLOCK_CP, isDifficultyLocked, type BattleDifficultyTier } from '../../domains/Combat/Difficulty'
 import { SaveData } from '../../domains/SaveData'
 
 // ロック中の難度に表示する補足 (未定義の場合は「(未解放)」を表示する)
 const UNLOCK_HINTS: Partial<Record<BattleDifficultyTier, string>> = {
   //normal: `(CP${NORMAL_UNLOCK_CP}で解放)`
-  normal: `(未解放)`
+  normal: `(未解放)`,
+  hard: `(未解放)`
 }
 
 // 「冒険を始める」→ 戦闘開始 (/battle/) の間に挟む, バトル難度選択画面
@@ -49,7 +50,7 @@ function BattleDifficulty() {
           )
         })}
       </div>
-      <p className="mb-6 text-center text-sm text-gray-400">Normal は CP{NORMAL_UNLOCK_CP}, Hard は, CPが一定を超えると解放される予定です</p>
+      <p className="mb-6 text-center text-sm text-gray-400">Normal は CP{NORMAL_UNLOCK_CP}, Hard は, CP{HARD_UNLOCK_CP}を超えると解放されます</p>
       <div className="text-center">
         <button className="w-48 h-12" onClick={() => navigate('/setup/')}>戻る</button>
       </div>

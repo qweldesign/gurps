@@ -74,14 +74,15 @@ function Combat() {
 
     // Easy または難度未指定 (state 消失時のフォールバック) の場合: 
     // ゴブリン編成 (Rank はプレイヤー保有CPから算出). 報酬は編成ごとに定義された値を使用する
-    if (!difficulty || difficulty === 'easy') {
+    // Hardの場合:
+    // アンデッド編成 (Rank はプレイヤー保有CPから算出). 報酬は固定で, CP: 4, Gold: 400 とする
+    if (!difficulty || difficulty === 'easy' || difficulty === 'hard') {
       const rank = getRankFromCp(saveData.loadPoints())
-      const formation = getEnemyFormation(rank)
+      const formation = getEnemyFormation(difficulty, rank)
       return { models: formation.models, reward: { cp: formation.rewardCp, gold: formation.rewardGold } }
     }
 
-    // Normal, および Hard (敵データ未実装につき暫定でNormal相当にフォールバック) の場合:
-    // 従来通りサンプル (人間) を生成する.
+    // Normalの場合: 従来通りサンプル (人間) を生成する.
     // 生成CPは, プレイヤーの実際のCPの1.0〜1.25倍 (戦闘開始のたびにランダムに再抽選) とする.
     // 報酬は, CPは固定値 (2), Goldは200 * CP倍率 とする.
     //

@@ -40,8 +40,8 @@ const GOBLIN_EQUIPS_SETS: Record<string, Omit<EnemyEquips, 'armorKey'>> = {
 
 // ゴブリン後衛
 const GOBLIN_BACK_UNITS: EnemyDef[] = [
-  { name: 'ゴブリン:短弓', params: GOBLIN_PARAMS, equips: { ...GOBLIN_EQUIPS_SETS['短弓'], armorKey: '服'}, tactic: 'archer' },
-  { name: 'ゴブリン:杖', params: GOBLIN_PARAMS, equips: { ...GOBLIN_EQUIPS_SETS['杖'], armorKey: '服'}, tactic: 'earthMetalSpell' }
+  { name: 'ゴブリン:杖', params: GOBLIN_PARAMS, equips: { ...GOBLIN_EQUIPS_SETS['杖'], armorKey: '服'}, tactic: 'earthMetalSpell' },
+  { name: 'ゴブリン:短弓', params: GOBLIN_PARAMS, equips: { ...GOBLIN_EQUIPS_SETS['短弓'], armorKey: '服'}, tactic: 'archer' }
 ]
 
 // ゴブリン前衛
