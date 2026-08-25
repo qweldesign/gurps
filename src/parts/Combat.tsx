@@ -115,7 +115,10 @@ function Combat() {
   // rewardRef: 付与処理 (useEffect) 用. reward: UI表示用 (result と同じく, ref変化は再レンダリングされないため state にも反映する)
   const rewardRef = useRef<{ cp: number, gold: number } | null>(null)
   const [reward, setReward] = useState<{ cp: number, gold: number } | null>(null)
-  const usedRosterRef = useRef(false) // セーブデータ上の実在キャラクターで出撃したか (「開幕」useEffectで一度だけ設定)
+  // セーブデータ上の実在キャラクターで出撃したか (「開幕」useEffectで一度だけ設定)
+  // usedRosterRef: 除名・報酬付与処理 (useEffect) 用. usedRoster: UI表示用 (ref変化は再レンダリングされないため state にも反映する)
+  const usedRosterRef = useRef(false)
+  const [usedRoster, setUsedRoster] = useState(false)
   const rewardGrantedRef = useRef(false) // 付与処理の重複実行を防ぐガード
   const deadExpelledRef = useRef(false) // 除名処理の重複実行を防ぐガード
 
@@ -184,7 +187,7 @@ function Combat() {
   // 開幕
   useEffect(() => {
     if (!stateRef.current) {
-      const { models, reward: battleReward, usedRoster } = initModels()
+      const { models, reward: battleReward, usedRoster: battleUsedRoster } = initModels()
       stateRef.current = new State(models, playLog, difficulty)
       stateRef.current.nextTurn()
       // 勝利報酬を記録 (rewardRef: 付与処理用, reward state: UI表示用)
@@ -192,8 +195,9 @@ function Combat() {
       if (battleReward) {
         setReward(battleReward)
       }
-      // 除名処理 (死亡した味方の除名) の対象可否を記録
-      usedRosterRef.current = usedRoster
+      // 除名処理 (死亡した味方の除名) の対象可否を記録 (usedRosterRef: 除名・報酬付与処理用, usedRoster state: UI表示用)
+      usedRosterRef.current = battleUsedRoster
+      setUsedRoster(battleUsedRoster)
     }
   }, [])
 
@@ -245,12 +249,14 @@ function Combat() {
               <div id="action" className="relative order-3 lg:order-2 w-lg h-48 p-3 bg-white/15 lg:bg-white/30">
                 <h3 className="m-0 border-0 font-serif text-sm">Action</h3>
                 {result ? (
-                  <div className="my-12 text-center">
+                  <div className="my-1 text-center">
                     <p className="font-serif text-2xl">{result === 'win' ? '勝利!!' : '敗北...'}</p>
                     {result === 'win' && reward && (
                       <p className="mt-3 text-sm">CP +{reward.cp} / 軍資金 +{reward.gold}金</p>
                     )}
-                    <button className="mt-6 w-48 h-12" onClick={() => navigate('/setup/')}>編成に戻る</button>
+                    {usedRoster && (
+                      <button className="mt-6 w-48 h-12" onClick={() => navigate('/setup/')}>編成に戻る</button>
+                    )}
                   </div>
                 ) : (
                   // enemy (AI操作) のターン中はコマンドパレットを表示しない (誤操作防止)
