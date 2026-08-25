@@ -466,8 +466,8 @@ export class ActionEffects {
     const dmgResults = this.resolveDamage(dmgJudge, aim, effect.dmgType, target, castCanceledResults)
     results.push(...dmgResults)
 
-    // 燃え上がり (「火球」「焼殺」用. DRを引いたダメージが4点以上で火だるま状態になる. 水舞のDRバフ (水の鎧) を纏っている間は免れる)
-    if (effect.burnOnDmg) {
+    // 燃え上がり (dmgType: 3 (炎) の直接ダメージ型呪文専用. 「火球」「炎の嵐」「火の鳥」「焼殺」用. DRを引いたダメージが4点以上で火だるま状態になる. 水舞のDRバフ (水の鎧) を纏っている間は免れる)
+    if (effect.dmgType === 3) {
       const appliedDmg = dmgResults.find(result => result.type === 'dmg')?.judge.roll ?? 0
       const hasWaterArmor = target.statusBuff.dr > 0
       if (appliedDmg >= 4 && !hasWaterArmor) {

@@ -165,8 +165,8 @@ export function judgeUnconscious(target: Unit, dmgType: number): Judge {
 }
 
 // 即死判定を返す (喉狙いで, ダメージが最大HPの半分以上の場合のみ行う. 失敗で即死する)
-// 攻撃型が「切」「刺」の場合, さらに即死しやすくなる
+// 攻撃型が「切」「刺」の場合, さらに即死しやすくなる (「炎」(dmgType: 3) は対象外)
 export function judgeDead(target: Unit, dmgType: number): Judge {
-  const mod = dmgType > 0 ? -2 : 0
+  const mod = dmgType === 1 || dmgType === 2 ? -2 : 0
   return judge(target.defense.pre + mod)
 }

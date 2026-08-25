@@ -66,16 +66,17 @@ export type FullPower = typeof FULL_POWER_KEYS[number]
 // 部位狙いオプション
 export type Aim = typeof AIM_KEYS[number]
 
-// ダメージ型 (dmgType: 0=叩, 1=切, 2=刺) と部位狙い (急所か否か) に応じた, ダメージへの倍率を返す
+// ダメージ型 (dmgType: 0=叩, 1=切, 2=刺, 3=炎) と部位狙い (急所か否か) に応じた, ダメージへの倍率を返す
+// 3 (炎) は術 (火行術の直接ダメージ型呪文) 専用のダメージ型. 武器には使用しない. 部位倍率は「叩」と同じ (1/1.5倍) として扱う
 // creatureType (対象の生物種別) が 'normal' 以外の場合, ダメージ判定に特殊な補正がかかる (public/docs/04-04.md 「魔物」章参照)
-// アンデッド: 「切」「刺」の武器によるダメージ増加が一切無い (常に等倍 (1) として扱う). 「叩」は通常通り影響を受けない
+// アンデッド: 「切」「刺」の武器によるダメージ増加が一切無い (常に等倍 (1) として扱う). 「叩」「炎」は通常通り影響を受けない
 // スライム: 「切」「刺」の武器によるダメージ増加分でしかダメージを与えられない (通常の倍率から1を引いた分のみ通る. 例: 急所以外の「切」なら 1.5 - 1 = 0.5倍)
-//         「叩」の武器では部位を問わず一切ダメージを与えられない (倍率 0)
+//         「叩」の武器では部位を問わず一切ダメージを与えられない (倍率 0). 「炎」(火行術) は例外的に通常通りダメージが届く (倍率に影響なし)
 export function getDmgRate(dmgType: number, aim: Aim, creatureType: CreatureType = 'normal'): number {
   const baseRate = aim === 'neck' || aim === 'stomach'
-    ? (dmgType === 0 ? 1.5 : dmgType === 1 ? 2 : 3)
-    : (dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2)
-  if (creatureType === 'normal') return baseRate
+    ? (dmgType === 1 ? 2 : dmgType === 2 ? 3 : 1.5) // 叩・炎は1.5倍, 切は2倍, 刺は3倍
+    : (dmgType === 1 ? 1.5 : dmgType === 2 ? 2 : 1) // 叩・炎は1倍, 切は1.5倍, 刺は2倍
+  if (creatureType === 'normal' || dmgType === 3) return baseRate // 炎はいずれの生物種別でも影響を受けない (スライムにも通常通りダメージが入る)
   if (creatureType === 'undead') return dmgType === 0 ? baseRate : 1
   return dmgType === 0 ? 0 : baseRate - 1 // creatureType === 'slime'
 }
