@@ -4,7 +4,7 @@ import { type ParameterKey } from "./Parameters"
 
 export const WEAPON_KEYS = [
   '装備無し', 'ダガー', 'ショートソード', 'レイピア', 'ロングソード', 'バスタードソード', 'グレートソード',
-  '三日月刀', '蒼龍刀', '鎚槌', '手斧', '戦鎚', '戦斧', '杖', '長槍', '薙刀', '鉾槍',
+  '三日月刀', '蒼龍刀', '棍棒', '鎚槌', '手斧', '戦鎚', '戦斧', '杖', '長槍', '薙刀', '鉾槍',
   '短弓', '長弓', '弩', '拳', '蹴り', '拳+1', '蹴り+1', '拳+2', '蹴り+2',
   '小盾', '中盾', '大盾'
 ] as const
@@ -37,26 +37,27 @@ export const WEAPONS: Record<WeaponKey, Weapon> = {
   'グレートソード': { id: 6, name: 'グレートソード', weaponType: 3, baseDmg: 12, dmgType: 1, skill: '武術', ready: 0, ev: 2, gold: 160 },
   '三日月刀': { id: 7, name: '三日月刀', secondName: '蒼龍刀(片手)', weaponType: 1, baseDmg: 8, dmgType: 1, skill: '剣術', ready: 0, ev: 1, gold: 80 },
   '蒼龍刀': { id: 8, name: '蒼龍刀', secondName: '蒼龍刀(両手)', weaponType: 3, baseDmg: 10, dmgType: 1, skill: '武術', ready: 0, ev: 2, usage: '三日月刀', gold: 120 },
-  '鎚槌': { id: 9, name: '鎚槌', weaponType: 2, baseDmg: 8, dmgType: 0, skill: '剣術', ready: 1, ev: 1, gold: 25 },
-  '手斧': { id: 10, name: '手斧', weaponType: 1, baseDmg: 10, dmgType: 1, skill: '剣術', ready: 1, ev: 1, gold: 50 },
-  '戦鎚': { id: 11, name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 0, skill: '武術', ready: 1, ev: 1, gold: 75 },
-  '戦斧': { id: 12, name: '戦斧', weaponType: 1, baseDmg: 12, dmgType: 1, skill: '武術', ready: 1, ev: 1, gold: 100 },
-  '杖': { id: 13, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 0, skill: '武術', ready: 0, ev: 2, gold: 20 },
-  '長槍': { id: 14, name: '長槍', secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 8, dmgType: 2, skill: '剣術', ready: 0, ev: 3, gold: 60 },
-  '薙刀': { id: 15, name: '薙刀', weaponType: 4, baseDmg: 10, dmgType: 1, skill: '武術', ready: 0, ev: 3, gold: 90 },
-  '鉾槍': { id: 16, name: '鉾槍', secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 16, dmgType: 1, skill: '武術', ready: 1, ev: 3, usage: '長槍', gold: 120 },
-  '短弓': { id: 17, name: '短弓', weaponType: 5, baseDmg: 6, dmgType: 2, skill: '剣術', ready: 1, ev: 0, gold: 30 },
-  '長弓': { id: 18, name: '長弓', weaponType: 5, baseDmg: 8, dmgType: 2, skill: '弓術', ready: 1, ev: 0, gold: 60 },
-  '弩': { id: 19, name: '弩', weaponType: 5, baseDmg: 10, dmgType: 2, skill: '剣術', ready: 2, ev: 0, gold: 120 },
-  '拳': { id: 20, name: '拳', weaponType: 0, baseDmg: 2, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
-  '蹴り': { id: 21, name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 0, skill: '格闘', ready: 0, ev: 0, usage: '拳', gold: 0 },
-  '拳+1': { id: 22, name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
-  '蹴り+1': { id: 23, name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 0, skill: '格闘', ready: 0, ev: 0, usage: '拳+1', gold: 0 },
-  '拳+2': { id: 24, name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
-  '蹴り+2': { id: 25, name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 0, skill: '格闘', ready: 0, ev: 0, usage: '拳+2', gold: 0 },
-  '小盾': { id: 26, name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '剣術', ready: 1, ev: 2, gold: 10 },
-  '中盾': { id: 27, name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '武術', ready: 1, ev: 3, gold: 15 },
-  '大盾': { id: 28, name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '武術', ready: 1, ev: 4, gold: 20 }
+  '棍棒': { id: 9, name: '棍棒', weaponType: 1, baseDmg: 8, dmgType: 0, skill: '剣術', ready: 1, ev: 1, gold: 10 },
+  '鎚槌': { id: 10, name: '鎚槌', weaponType: 2, baseDmg: 8, dmgType: 0, skill: '剣術', ready: 1, ev: 1, gold: 25 },
+  '手斧': { id: 11, name: '手斧', weaponType: 1, baseDmg: 10, dmgType: 1, skill: '剣術', ready: 1, ev: 1, gold: 50 },
+  '戦鎚': { id: 12, name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 0, skill: '武術', ready: 1, ev: 1, gold: 75 },
+  '戦斧': { id: 13, name: '戦斧', weaponType: 1, baseDmg: 12, dmgType: 1, skill: '武術', ready: 1, ev: 1, gold: 100 },
+  '杖': { id: 14, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 0, skill: '武術', ready: 0, ev: 2, gold: 20 },
+  '長槍': { id: 15, name: '長槍', secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 8, dmgType: 2, skill: '剣術', ready: 0, ev: 3, gold: 60 },
+  '薙刀': { id: 16, name: '薙刀', weaponType: 4, baseDmg: 10, dmgType: 1, skill: '武術', ready: 0, ev: 3, gold: 90 },
+  '鉾槍': { id: 17, name: '鉾槍', secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 16, dmgType: 1, skill: '武術', ready: 1, ev: 3, usage: '長槍', gold: 120 },
+  '短弓': { id: 18, name: '短弓', weaponType: 5, baseDmg: 6, dmgType: 2, skill: '剣術', ready: 1, ev: 0, gold: 30 },
+  '長弓': { id: 19, name: '長弓', weaponType: 5, baseDmg: 8, dmgType: 2, skill: '弓術', ready: 1, ev: 0, gold: 60 },
+  '弩': { id: 20, name: '弩', weaponType: 5, baseDmg: 10, dmgType: 2, skill: '剣術', ready: 2, ev: 0, gold: 120 },
+  '拳': { id: 21, name: '拳', weaponType: 0, baseDmg: 2, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
+  '蹴り': { id: 22, name: '蹴り', weaponType: 0, baseDmg: 4, dmgType: 0, skill: '格闘', ready: 0, ev: 0, usage: '拳', gold: 0 },
+  '拳+1': { id: 23, name: '拳+1', weaponType: 0, baseDmg: 3, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
+  '蹴り+1': { id: 24, name: '蹴り+1', weaponType: 0, baseDmg: 5, dmgType: 0, skill: '格闘', ready: 0, ev: 0, usage: '拳+1', gold: 0 },
+  '拳+2': { id: 25, name: '拳+2', weaponType: 0, baseDmg: 4, dmgType: 0, skill: '格闘', ready: 0, ev: 0, gold: 0 },
+  '蹴り+2': { id: 26, name: '蹴り+2', weaponType: 0, baseDmg: 6, dmgType: 0, skill: '格闘', ready: 0, ev: 0, usage: '拳+2', gold: 0 },
+  '小盾': { id: 27, name: '小盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '剣術', ready: 1, ev: 2, gold: 10 },
+  '中盾': { id: 28, name: '中盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '武術', ready: 1, ev: 3, gold: 15 },
+  '大盾': { id: 29, name: '大盾', weaponType: 6, baseDmg: 4, dmgType: 0, skill: '武術', ready: 1, ev: 4, gold: 20 }
  } as const
 
 export const ARMORS: Record<BodyArmorKey, Armor> = {
