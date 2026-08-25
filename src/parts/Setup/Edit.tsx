@@ -470,6 +470,12 @@ function Edit() {
     const unit = new Character(confirmModel)
     unit.save(true)
 
+    // 初期CP・CP倍率の確定保存 (ゲーム開始時のみ)
+    if (isNewGame) {
+      saveData.savePoints(state.initialPoints)
+      saveData.saveMultiplier(state.initialPoints / 10)
+    }
+
     // 所持金の一時保存
     saveData.saveGold(calcGold(state), true)
 
