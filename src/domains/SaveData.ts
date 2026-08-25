@@ -5,7 +5,7 @@ export const STORAGE_KEY = 'savedata';
 
 const DEFAULT_POINTS = 10
 const DEFAULT_GOLD = 100
-const DEFAULT_MULTIPLIER = 4 // CP倍率: 初期CP選択 (10/20/40) に対応する 1/2/4 (未選択時は 4 = CP40相当)
+const DEFAULT_MULTIPLIER = 2 // CP倍率: 初期CP選択 (10/20/40) に対応する 1/2/4 (未選択時は 2 = CP20相当)
 const DEFAULT_MODEL = {
   id: 0,
   name: '未設定',
