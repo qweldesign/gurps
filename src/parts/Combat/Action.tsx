@@ -141,7 +141,7 @@ function Action({ store }: { store: Store }) {
             <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower ?? 'none', target, store.foggy)}</div>
             <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {target.defense.getTarget(store.actor, actionOptions.aim ?? 'body')}</div>
             <div>効果: </div>
-            <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', target.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType))} 点</div>
+            <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', target.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType), target.defense.creatureType)} 点</div>
           </div>
         )}
         <button

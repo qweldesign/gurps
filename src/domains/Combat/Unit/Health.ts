@@ -52,15 +52,19 @@ export class CombatUnitHealth {
   }
 
   // ダメージ効果 (判定不要の処理はここで解決する)
+  // アンデッド・スライム (defense.creatureType === 'undead' | 'slime') は朦朧状態にも気絶状態にも陥らない (public/docs/04-04.md 「魔物」章参照)
+  // (負傷が最大HPに達した場合は, 気絶を経由せず Action/effects.ts の resolveDamage 側で自動的に死亡する)
   set injury(newInjury: number) {
     const dmg = newInjury - this._injury
+    const isUndeadOrSlime = this.self.defense.creatureType === 'undead' || this.self.defense.creatureType === 'slime'
+
     // 一撃のダメージが最大HPの半分以上の場合, 自動的に朦朧状態に陥る
-    if (dmg >= this.maxHp / 2) {
+    if (!isUndeadOrSlime && dmg >= this.maxHp / 2) {
       this.stunned = true
     }
 
     // 負傷が最大HPに達した場合, 自動的に気絶する
-    if (newInjury >= this.maxHp) {
+    if (!isUndeadOrSlime && newInjury >= this.maxHp) {
       this.unconscious = true
       this.self.position = 'back' // 戦線から外す
       this.self.posture = 'prone' // 姿勢変更
@@ -73,9 +77,9 @@ export class CombatUnitHealth {
     return this._injury
   }
 
-  // 朦朧状態への代入 (新たに true になろうとする代入のみ, 痛覚鈍麻状態の間はブロックする. false への代入 (回復) は常に通す)
+  // 朦朧状態への代入 (新たに true になろうとする代入のみ, 痛覚鈍麻状態・アンデッド/スライムの間はブロックする. false への代入 (回復) は常に通す)
   set stunned(value: boolean) {
-    if (value && this.self.statusEffects.resistant) return
+    if (value && (this.self.statusEffects.resistant || this.self.defense.creatureType === 'undead' || this.self.defense.creatureType === 'slime')) return
     this._stunned = value
   }
 

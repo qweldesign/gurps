@@ -97,7 +97,7 @@ export function pickAttackOption(actor: Unit, state: State, target: Unit, quickA
 export function pickFullPowerOption(actor: Unit, target: Unit, foggy: boolean): FullPower {
   if (actor.attack.ready > 0) return 'ready'
   const dr = target.defense.getDR('body', actor.attack.model.dmgType)
-  if (actor.attack.getExpectedDmg('none', dr) === 0) return 'dmg'
+  if (actor.attack.getExpectedDmg('none', dr, target.defense.creatureType) === 0) return 'dmg'
   if (actor.attack.getTarget('body', 'none', target, foggy) <= 10) return 'level'
   if (target.defense.getTarget(actor, 'body') >= 11) return 'feint'
   return 'double'

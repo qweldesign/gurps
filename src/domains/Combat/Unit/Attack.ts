@@ -1,8 +1,8 @@
 // Attack.ts
 
 import { type WeaponSlotKey } from '../../Equipments'
-import { type Aim, AIM_OPTIONS, type FullPower } from '../Action/types'
-import { POSTURE_MODS, type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels, CombatUnit as Unit } from '../Unit'
+import { type Aim, AIM_OPTIONS, type FullPower, getDmgRate } from '../Action/types'
+import { POSTURE_MODS, type CombatAttackModel as AttackModel, type CombatAttackModels as AttackModels, type CreatureType, CombatUnit as Unit } from '../Unit'
 
 // 牽制の持ち越し情報 (成功時, 次の自分の攻撃 (対象が同じ場合のみ) の防御目標値を下げる)
 export type Feint = {
@@ -101,13 +101,14 @@ export class CombatUnitAttack {
   }
 
   // 攻撃モデルのダメージ期待値を, ダメージ抵抗に合わせて取得
-  getExpectedDmg(fullPower: FullPower = 'none', dr: number = 0) {
+  // creatureType: 対象の生物種別 (未指定は 'normal'. アンデッド/スライムに対する「切」「刺」のダメージ増加補正を反映する)
+  getExpectedDmg(fullPower: FullPower = 'none', dr: number = 0, creatureType: CreatureType = 'normal') {
     const dmgType = this.model.dmgType
     let count = this.model.dmgDice
     count -= fullPower === 'dmg' ? 1 : 0
     let mod = this.model.dmgMod - dr + this.self.statusBuff.dmg // 攻撃UPバフ (ベルセルク)
     mod += fullPower === 'dmg' ? 6 : 0
-    const rate = dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2
+    const rate = getDmgRate(dmgType, 'body', creatureType)
     return Math.max(0, Math.floor((count * 3.5 + mod) * rate))
   }
 

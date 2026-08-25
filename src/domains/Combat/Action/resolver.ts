@@ -2,7 +2,7 @@
 
 import { type CombatUnit as Unit } from '../Unit'
 import { judge, roll, score, type Judge, type Score } from '../Dice'
-import { AIM_OPTIONS, type Aim, type FullPower, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from './types'
+import { AIM_OPTIONS, type Aim, type FullPower, getDmgRate, type AttackResult, type DefenseResult, type DmgResult, type FeintResult, type SpellResult } from './types'
 import { SPELL_LIST, type SpellElement } from '../Spells'
 
 // 攻撃の判定結果を返す (武器の準備状態の更新は effects 側の責務とする. ここでは判定のみ行う)
@@ -50,9 +50,7 @@ export function rollDmg(actor: Unit, aim: Aim, fullPower: FullPower, target: Uni
   count -= fullPower === 'dmg' ? 1 : 0 // 全力攻撃オプション「ダメージ安定」
   let mod = attack.dmgMod - dr + actor.statusBuff.dmg // 攻撃UPバフ (ベルセルク)
   mod += fullPower === 'dmg' ? 6 : 0 // 全力攻撃オプション「ダメージ安定」
-  const rate = aim === 'neck' || aim === 'stomach'
-    ? (attack.dmgType === 0 ? 1.5 : attack.dmgType === 1 ? 2 : 3)
-    : (attack.dmgType === 0 ? 1 : attack.dmgType === 1 ? 1.5 : 2)
+  const rate = getDmgRate(attack.dmgType, aim, target.defense.creatureType)
   const rolled = Math.floor(roll(count, mod).roll * rate)
   return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
 }
@@ -102,9 +100,7 @@ export function judgeTimeRegression(caster: Unit): Judge {
 export function rollSpellDmg(dice: number, dmgType: number, aim: Aim, target: Unit, ignoreDR: boolean = false): DmgResult {
   const dr = ignoreDR ? 0 : target.defense.getDR(AIM_OPTIONS[aim].group, dmgType)
   const mod = -dr
-  const rate = aim === 'neck' || aim === 'stomach'
-    ? (dmgType === 0 ? 1.5 : dmgType === 1 ? 2 : 3)
-    : (dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2)
+  const rate = getDmgRate(dmgType, aim, target.defense.creatureType)
   const rolled = Math.floor(roll(dice, mod).roll * rate)
   return { roll: rolled, success: rolled > 0, critical: rolled >= 10 }
 }

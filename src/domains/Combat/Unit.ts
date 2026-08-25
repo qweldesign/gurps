@@ -18,6 +18,8 @@ export const POSITION_KEYS = ['back', 'left', 'center', 'right'] as const
 
 export const POSTURE_KEYS: string[] = ['standing', 'crouching', 'kneeling', 'prone'] as const
 
+export const CREATURE_TYPE_KEYS = ['normal', 'undead', 'slime'] as const
+
 export const POSTURE_MODS: Record<Posture, { attackMod: number, defenseMod: number, missileMod: number, label: string }> = {
   'standing': { attackMod: 0, defenseMod: 0, missileMod: 0, label: '直立' },
   'crouching': { attackMod: -2, defenseMod: 0, missileMod: -2, label: '屈み' },
@@ -36,6 +38,9 @@ export type Position = typeof POSITION_KEYS[number]
 
 // 戦闘ユニットの姿勢
 export type Posture = typeof POSTURE_KEYS[number]
+
+// 防御モデルの生物種別 (通常/アンデッド/スライム. ダメージ判定・状態異常耐性に影響する. Unit/Defense.ts, Action/types.ts の getDmgRate 参照)
+export type CreatureType = typeof CREATURE_TYPE_KEYS[number]
 
 // 攻撃手段の定義
 export type CombatAttackModel = {
@@ -83,6 +88,7 @@ export type CombatUnitModel = {
   evBuff: number //「運動」端数 (バフ初期値)
   spells: Spells
   tactic?: TacticKey // 自動行動タイプ (敵 (NPC) のみ. 未指定の場合は自動行動せず, プレイヤーが操作する通常のユニットとして扱う)
+  creatureType?: CreatureType // 生物種別 (未指定は 'normal'. アンデッド/スライムの特殊なダメージ判定・状態異常耐性は Unit/Defense.ts で保持する)
 }
 
 // 「時間遡行」用のユニット全体のスナップショット
@@ -120,7 +126,7 @@ export class CombatUnit {
   public aiFrontCommitted: boolean // AI行動用: 前衛への恒久コミット (術戦士B が前衛の味方1人時に前に出た場合等, 一度成立すると以降解除されない)
 
   constructor(model: CombatUnitModel, combatId: CombatId) {
-    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells, tactic } = model
+    const { id, name, maxHp, attacks, defenses, ev, pre, mre, dmgBuff, evBuff, spells, tactic, creatureType } = model
     this.combatId = combatId
     this.id = id
     this.name = name
@@ -128,7 +134,7 @@ export class CombatUnit {
     this.tactic = tactic ?? null
     this.position = 'back'
     this.posture = 'standing'
-    this.defense = new Defense(this, attacks, defenses, ev, pre, mre)
+    this.defense = new Defense(this, attacks, defenses, ev, pre, mre, creatureType ?? 'normal')
     this.attack = new Attack(this, attacks, this.defense.changeWeaponSlotKey.bind(this.defense))
     this.health = new Health(this, maxHp)
     this.statusBuff = new StatusBuff(dmgBuff, evBuff)

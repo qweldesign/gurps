@@ -1,7 +1,7 @@
 // Combat/Action/types.ts
 
 import { type WeaponSlotKey, type ArmorSlotKey } from '../../Equipments'
-import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
+import { type Position, type Posture, type CreatureType, type CombatUnit as Unit } from '../Unit'
 import { type Judge, type Score } from '../Dice'
 import { type SpellElement, type SpellBuffTarget, type StatusEffectTarget } from '../Spells'
 
@@ -65,6 +65,20 @@ export type FullPower = typeof FULL_POWER_KEYS[number]
 
 // 部位狙いオプション
 export type Aim = typeof AIM_KEYS[number]
+
+// ダメージ型 (dmgType: 0=叩, 1=切, 2=刺) と部位狙い (急所か否か) に応じた, ダメージへの倍率を返す
+// creatureType (対象の生物種別) が 'normal' 以外の場合, ダメージ判定に特殊な補正がかかる (public/docs/04-04.md 「魔物」章参照)
+// アンデッド: 「切」「刺」の武器によるダメージ増加が一切無い (常に等倍 (1) として扱う). 「叩」は通常通り影響を受けない
+// スライム: 「切」「刺」の武器によるダメージ増加分でしかダメージを与えられない (通常の倍率から1を引いた分のみ通る. 例: 急所以外の「切」なら 1.5 - 1 = 0.5倍)
+//         「叩」の武器では部位を問わず一切ダメージを与えられない (倍率 0)
+export function getDmgRate(dmgType: number, aim: Aim, creatureType: CreatureType = 'normal'): number {
+  const baseRate = aim === 'neck' || aim === 'stomach'
+    ? (dmgType === 0 ? 1.5 : dmgType === 1 ? 2 : 3)
+    : (dmgType === 0 ? 1 : dmgType === 1 ? 1.5 : 2)
+  if (creatureType === 'normal') return baseRate
+  if (creatureType === 'undead') return dmgType === 0 ? baseRate : 1
+  return dmgType === 0 ? 0 : baseRate - 1 // creatureType === 'slime'
+}
 
 // 行動オプション
 export type ActionOptions = {

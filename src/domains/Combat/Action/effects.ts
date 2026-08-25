@@ -141,7 +141,12 @@ export class ActionEffects {
 
     // それ以外 (頭・体・喉・肚) を狙った攻撃
     if (aim === 'head' || aim === 'body' || aim === 'neck' || aim === 'stomach') {
+      // アンデッド・スライムは朦朧・気絶のいずれの状態にも陥らないが, 転倒はする (public/docs/04-04.md 「魔物」章参照)
+      // その代わり, 負傷が累積して最大HPに達した時点で, 気絶・判定のいずれも経由せず自動的に死亡する (でなければ蓄積ダメージで打倒する手段が無くなるため)
+      const isUndeadOrSlime = target.defense.creatureType === 'undead' || target.defense.creatureType === 'slime'
+
       // 朦朧状態・転倒判定 (気絶に至っていない場合のみ行う. 頭・喉狙いは急所のため, 最大HPの1/3以上でも対象になる)
+      // アンデッド・スライムに対しては target.health.stunned への代入は Health.ts の stunned セッター側で無視されるため, 転倒判定自体はそのまま行ってよい
       if (!target.health.unconscious && (dmg >= target.health.maxHp / 2 || ((aim === 'head' || aim === 'neck') && dmg >= target.health.maxHp / 3))) {
         target.health.stunned = true
         const knockedDownJudge = judgeKnockedDown(target)
@@ -152,18 +157,24 @@ export class ActionEffects {
         }
       }
 
-      // 気絶・死亡判定 (負傷が最大HPに達し, 気絶している場合)
-      if (target.health.unconscious) {
-        const fatalJudge = judgeFatal(target)
-        results.push({ type: 'fatal', judge: fatalJudge })
-        if (!fatalJudge.success) {
+      // 気絶・死亡判定 (負傷が最大HPに達し, 気絶している場合. アンデッド・スライムは気絶しないため, 代わりに負傷が最大HPに達している間は毎回この条件に該当する)
+      if (isUndeadOrSlime ? target.health.injury >= target.health.maxHp : target.health.unconscious) {
+        if (isUndeadOrSlime) {
+          // アンデッド・スライムは判定を挟まず, 負傷が最大HPに達した時点で自動的に死亡する
+          results.push({ type: 'fatal', judge: { roll: 0, success: false, critical: false } })
           target.health.dead = true // 死亡
+        } else {
+          const fatalJudge = judgeFatal(target)
+          results.push({ type: 'fatal', judge: fatalJudge })
+          if (!fatalJudge.success) {
+            target.health.dead = true // 死亡
+          }
         }
-        return results // ダメージで気絶した時はここで処理を止める
+        return results // ダメージで気絶した (アンデッド・スライムの場合は負傷が最大HPに達した) 時はここで処理を止める
       }
 
-      // 気絶判定 (頭狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に気絶する)
-      if (aim === 'head' && dmg >= target.health.maxHp / 2) {
+      // 気絶判定 (頭狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に気絶する. アンデッド・スライムは気絶しないため対象外)
+      if (!isUndeadOrSlime && aim === 'head' && dmg >= target.health.maxHp / 2) {
         const unconsciousJudge = judgeUnconscious(target, dmgType)
         if (!unconsciousJudge.success) {
           results.push({ type: 'unconscious', judge: unconsciousJudge })
@@ -171,8 +182,8 @@ export class ActionEffects {
         }
       }
 
-      // 即死判定 (喉狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に死亡する)
-      if (aim === 'neck' && dmg >= target.health.maxHp / 2) {
+      // 即死判定 (喉狙いで, ダメージが最大HPの半分以上の場合のみ. 失敗すると即座に死亡する. アンデッド・スライムは対象外)
+      if (!isUndeadOrSlime && aim === 'neck' && dmg >= target.health.maxHp / 2) {
         const deadJudge = judgeDead(target, dmgType)
         if (!deadJudge.success) {
           results.push({ type: 'dead', judge: deadJudge })
