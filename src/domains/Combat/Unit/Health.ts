@@ -64,7 +64,7 @@ export class CombatUnitHealth {
     }
 
     // 負傷が最大HPに達した場合, 自動的に気絶する
-    if (!isUndeadOrSlime && newInjury >= this.maxHp) {
+    if (newInjury >= this.maxHp) {
       this.unconscious = true
       this.self.position = 'back' // 戦線から外す
       this.self.posture = 'prone' // 姿勢変更
