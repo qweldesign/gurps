@@ -34,8 +34,8 @@ export const slime: TacticHandler = (actor, state) => {
 
   const primaryTarget = pickLowestDefenseTarget(actor, melee)!
   
-  // 現在Hpの割合に応じて, 全力攻撃の確率が上がる
-  const quickAttack = actor.health.injury / actor.health.maxHp
+  // 現在Hpの割合に応じて, 全力攻撃の確率が上がる (狂戦士状態なら常に全力攻撃)
+  const quickAttack = actor.statusEffects.berserk ? 1 : actor.health.injury / actor.health.maxHp
 
   // 2. 攻撃/全力攻撃
   return pickAttackOption(actor, state, primaryTarget, quickAttack)

@@ -67,7 +67,7 @@ const reckless: WarriorParams = {
  * 前衛にいて, かつ攻撃対象がいれば 2. へ
  *
  * 2. 全力攻撃
- * 自身を攻撃可能な敵全員が朦朧状態や幻惑や目/耳/四肢を故障しているなら全力攻撃
+ * 自身が狂戦士状態か, もしくは自身を攻撃可能な敵全員が朦朧状態や幻惑や目/耳/四肢を故障しているなら全力攻撃
  * それ以外なら 3. へ
  *
  * 3. 行動分岐
@@ -130,8 +130,8 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   const melee = target.melee
   if (melee.length === 0) return { key: 'wait', options: {}, targets: [] }
 
-  // 2. 全力攻撃
-  if (melee.every(isIncapacitated)) {
+  // 2. 全力攻撃 (狂戦士状態は, 通常攻撃・牽制・全力防御がいずれも選択不可なため, 判定不能状態の場合と同様にここで全力攻撃を確定する)
+  if (actor.statusEffects.berserk || melee.every(isIncapacitated)) {
     const enemy = pickLowestDefenseTarget(actor, melee)!
     return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, enemy, state.shootPenalty[actor.side]) }, targets: [enemy] }
   }
