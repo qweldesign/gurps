@@ -30,9 +30,10 @@ export const TACTIC_HANDLERS: Record<TacticKey, TacticHandler> = {
 }
 
 // 幻惑・恐慌状態時の強制行動を決定する (tactic の種類を問わず全ての自動行動タイプに共通)
-// 優先順位は 幻惑 > 狂戦士 > 恐慌
+// 優先順位 (幻惑 > 狂戦士 > 恐慌) の判定自体は StatusEffects.ts の dazedActive / berserkActive / fearActive に集約済みのため,
+// ここでは「効果として表れている状態」に対応する行動を返すだけでよい
 // 幻惑状態: 「全力防御」以外ほぼ全ての行動 (移動・攻撃・射撃・集中・法術等) が封じられるため, 全力防御を選択する
-//   (狂戦士状態と同時発生している場合も, 幻惑を優先してここで全力防御を選択する.
+//   (狂戦士状態と同時発生している場合も, 幻惑側の全力防御を選択する.
 //    このとき「全力防御」自体は availability.ts の canDefense 側で例外的に許可される)
 // 狂戦士状態 (幻惑ではない場合): ここでは判断せず, 通常の tactic ハンドラー (各ハンドラーの「狂戦士状態」分岐) に判断を委ねる
 //   (狂戦士中は「全力防御」「移動 (後退)」がいずれも選択不可 (availability.ts の canDefense / canMove 参照) であり,
@@ -45,11 +46,11 @@ export const TACTIC_HANDLERS: Record<TacticKey, TacticHandler> = {
 // (幻惑状態には Action.ts 側に自動実行の仕組みが無いため, こちらは通常通り毎ターン判定される)
 // いずれにも該当しない場合は null を返し, 通常の tactic ハンドラーに判断を委ねる
 function decideForImpairedState(actor: Unit): ActionRequest | null {
-  if (actor.statusEffects.dazed > 0) {
+  if (actor.statusEffects.dazedActive) {
     return { key: 'defense', options: {}, targets: [] }
   }
-  if (actor.statusEffects.berserk > 0) return null
-  if (actor.statusEffects.fear > 0) {
+  if (actor.statusEffects.berserkActive) return null
+  if (actor.statusEffects.fearActive) {
     return actor.position !== 'back'
       ? { key: 'move', options: { position: 'back' }, targets: [] }
       : { key: 'wait', options: {}, targets: [] }

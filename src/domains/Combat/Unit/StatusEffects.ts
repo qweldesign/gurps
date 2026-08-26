@@ -54,6 +54,22 @@ export class CombatUnitStatusEffects {
     this.flashed = snapshot.flashed
   }
 
+  // 精神異常 (幻惑・狂戦士・恐慌) が競合した場合の優先順位: 幻惑 > 狂戦士 > 恐慌
+  // 単なる残存ターン数 (dazed / berserk / fear) は複数の状態が同時に成立しうるため,
+  // 「この状態が実際に行動へ反映されるか (=効果として表れるか)」を判定するにはこちらを参照する
+  // (Action.ts の開幕時自動実行, AI/index.ts の decideForImpairedState, availability.ts の canDefense で使用)
+  get dazedActive(): boolean {
+    return this.dazed > 0
+  }
+
+  get berserkActive(): boolean {
+    return this.berserk > 0 && !this.dazedActive
+  }
+
+  get fearActive(): boolean {
+    return this.fear > 0 && !this.dazedActive && !this.berserkActive
+  }
+
   // Summary 表示用ラベル取得 (優先度が高い状態異常を1つ返す. 残り持続ターン数を () で併記する)
   get label(): string {
     if (this.resistant) return `痛覚鈍麻(${this.resistant})`

@@ -47,12 +47,13 @@ export class CombatAction {
     // 火だるま状態の場合は「消火」を自動実行する (両方に該当する場合は「回復」を優先し,「消火」は朦朧から回復した後のターンに持ち越す)
     // 恐慌状態の場合は, 前衛にいれば後衛へ「移動」を, 後衛にいれば「待機」を自動実行する
     // (いずれも該当する場合は, 朦朧回復・消火を優先し, 恐慌への対応は持ち越す)
-    // ただし恐慌状態であっても, 狂戦士状態であればそちらが優先される
+    // 恐慌の判定には statusEffects.fearActive を用いる (幻惑・狂戦士との優先順位は StatusEffects.ts に集約:
+    // 幻惑 > 狂戦士 > 恐慌 のため, 恐慌があっても幻惑・狂戦士のいずれかが同時に成立していればここでは発動しない)
     if (this.actor.health.stunned) {
       this.ready = this.execute({ key: 'recovery', options: {}, targets: [] })
     } else if (this.actor.health.burning) {
       this.ready = this.execute({ key: 'extinguish', options: {}, targets: [] })
-    } else if (this.actor.statusEffects.fear > 0 && this.actor.statusEffects.berserk === 0) {
+    } else if (this.actor.statusEffects.fearActive) {
       this.ready = this.actor.position !== 'back'
         ? this.execute({ key: 'move', options: { position: 'back' }, targets: [] })
         : this.execute({ key: 'wait', options: {}, targets: [] })
