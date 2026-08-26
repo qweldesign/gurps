@@ -7,8 +7,6 @@ import Summary from './Combat/Summary'
 import Timeline from './Combat/Timeline'
 import { useCombat } from './Combat/useCombat'
 import type { BattleDifficultyTier } from '../domains/Combat/Difficulty'
-import DevProgress from './DevProgress'
-import { SPELLS_DEV_PROGRESS } from '../devProgress/spells'
 
 function Combat() {
   // Setup/BattleDifficulty から navigate の state で渡された選択難度
@@ -65,9 +63,6 @@ function Combat() {
             </div>
           )}
         </div>
-      </div>
-      <div className="mt-24 px-6">
-        <DevProgress tasks={SPELLS_DEV_PROGRESS} />
       </div>
     </>
   )
