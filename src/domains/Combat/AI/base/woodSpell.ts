@@ -19,13 +19,13 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  *
  * 3. 集中時間が2ターン
  * 木行術の技能値で分岐
- * 木行術の技能値が14未満なら,「風の刃」
- * 木行術の技能値が16以上なら, 50% の確率分岐で集中を継続するか, 次と同じ
- * 木行術の技能値が14か15なら, 50% の確率分岐で「風の刃」か「サイレンス」
+ * 木行術の技能値が16以上なら, 50% の確率分岐で集中を継続するか,「風の刃」
+ * 木行術の技能値が16未満なら,「風の刃」
+ * 「守りの風」は NPC は使わない
  *
  * 4. 集中時間が3ターン
  * 「召雷」
- * 「リストレーション」は NPC は使わない
+ * 「癒しの風」は NPC は使わない
  */
 export function woodSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.wood
@@ -49,14 +49,12 @@ export function woodSpellTactic(actor: Unit, state: State): ActionRequest {
     return chance() ? self(0) : enemy(1) // ヘイスト / 茨の呪縛
   }
 
-  // 3. 集中時間が2ターン
+  // 3. 集中時間が2ターン (「守りの風」は NPC は使わない)
   if (turns === 2) {
-    if (skill < 14) return enemy(2) // 風の刃
     if (skill >= 16 && chance()) return cast() // 集中継続
-    // 次と同じ (技能値14か15のケースと同じ判定)
-    return chance() ? enemy(2) : enemy(3) // 風の刃 / サイレンス
+    return enemy(2) // 風の刃
   }
 
-  // 4. 集中時間が3ターン (「召雷」.「リストレーション」は NPC は使わない)
+  // 4. 集中時間が3ターン (「召雷」.「癒しの風」は NPC は使わない)
   return enemy(5)
 }

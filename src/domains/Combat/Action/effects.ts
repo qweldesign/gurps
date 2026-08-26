@@ -394,7 +394,7 @@ export class ActionEffects {
   // 射撃武器の distanceMod と同じ考え方 (対象の防御・抵抗判定側には一切影響しない). 詳細は Spells.ts 冒頭のコメント参照
   // spellType: 'range' (対象選択を経ず, 発動時点の敵全員, もしくは「瓦礫の雨」のようにランダムな1体に効果が及ぶ術) は,
   // 個々の対象の位置を発動判定の時点で一意に定められないため, dmg/flash 効果を持つものに限り位置によらず一律のペナルティとする
-  // (「サイレン」(debuffAll)・「リストレーション」(cleanse) は距離の概念が当てはまらないため対象外 (0))
+  // (「サイレン」(debuffAll)・「癒しの風」(cleanse) は距離の概念が当てはまらないため対象外 (0))
   // spellType: 'range' 以外は, target (UI で選択された対象, もしくは targetScope の無い術では暫定的に自身) が
   // 敵 (術者と別陣営) の場合のみ, その配置に応じたペナルティを課す (味方・自身が対象の場合は 0)
   private getSpellDistanceMod(spellData: Spell, target: Unit): number {
@@ -564,7 +564,7 @@ export class ActionEffects {
     return results
   }
 
-  // 回復呪文の効果適用 (「大地の癒し」「杯」「生命の雫」用. 判定・抵抗は伴わず, 使用回数上限のみ確認する)
+  // 回復呪文の効果適用 (「杯」「生命の雫」用. 判定・抵抗は伴わず, 使用回数上限のみ確認する)
   // 対象・術ごとの使用回数 (CombatUnit.healUses, キーは術名) が maxUses に達している場合, 発動はしたが効果を得られない
   private spellHealRoutine(target: Unit, spellLabel: string, effect: Extract<SpellEffect, { kind: 'heal' }>): ActionResult[] {
     const usedCount = target.healUses[spellLabel] ?? 0
@@ -597,7 +597,7 @@ export class ActionEffects {
     return [candidates[Math.floor(Math.random() * candidates.length)]]
   }
 
-  // 術の範囲浄化効果の判定・効果適用 (「リストレーション」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・パニック状態を解除する)
+  // 術の範囲浄化効果の判定・効果適用 (「癒しの風」用. 範囲呪文の対象1体分. 判定を伴わず無条件で朦朧・幻惑・狂戦士・パニック状態を解除する)
   // 何も治癒しなかった場合は結果を生成しない (対象が多数になりうるため, ログの無意味な水増しを避ける)
   private spellCleanseRoutine(target: Unit): ActionResult[] {
     const curedStun = target.health.stunned

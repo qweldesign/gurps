@@ -195,7 +195,7 @@ export type FlashResult = Judge & {
   target: Unit
 }
 
-// 回復呪文の効果適用結果 (「大地の癒し」「杯」「生命の雫」用. 判定は伴わない. target を直接持つ (単一対象呪文だが flash/cleanse との扱いを揃える))
+// 回復呪文の効果適用結果 (「杯」「生命の雫」用. 判定は伴わない. target を直接持つ (単一対象呪文だが flash/cleanse との扱いを揃える))
 export type HealResult = {
   target: Unit
   applied: boolean // false: 対象・術ごとの使用回数上限に達しており, 発動はしたが効果を得られなかった
@@ -204,7 +204,7 @@ export type HealResult = {
   curedLimbInjury: boolean
 }
 
-// 術の範囲浄化効果の適用結果 (「リストレーション」用. 判定を伴わず, 何か1つでも治癒した対象にのみ生成される. target を直接持つ (範囲呪文のため複数対象))
+// 術の範囲浄化効果の適用結果 (「癒しの風」用. 判定を伴わず, 何か1つでも治癒した対象にのみ生成される. target を直接持つ (範囲呪文のため複数対象))
 export type CleanseResult = {
   target: Unit
   curedStun: boolean
@@ -230,8 +230,8 @@ export type ActionResult =
   | { type: 'spell', judge: SpellResult }
   | { type: 'trip', judge: Judge } // 術の転倒効果の判定結果 (「アースハンド」用. 成功: 転倒を免れる, 失敗: 転倒する)
   | { type: 'flash', judge: FlashResult } // 術の範囲デバフ効果の判定結果 (「閃光」用. 回避判定に失敗した対象にのみ生成される)
-  | { type: 'heal', judge: HealResult } // 回復呪文の効果適用結果 (「大地の癒し」「杯」「生命の雫」用)
-  | { type: 'cleanse', judge: CleanseResult } // 術の範囲浄化効果の適用結果 (「リストレーション」用. 何か1つでも治癒した対象にのみ生成される)
+  | { type: 'heal', judge: HealResult } // 回復呪文の効果適用結果 (「杯」「生命の雫」用)
+  | { type: 'cleanse', judge: CleanseResult } // 術の範囲浄化効果の適用結果 (「癒しの風」用. 何か1つでも治癒した対象にのみ生成される)
   | { type: 'debuffAll', judge: DebuffAllResult } // 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定に失敗した対象にのみ生成される)
   | { type: 'recovery', judge: Judge }
   | { type: 'castCanceled', judge: CastCanceledResult } // 精神集中の強制解除 (「集中」を継続していた場合のみ生成される. 転倒・防御を試みた際の維持判定失敗のいずれかに起因する)

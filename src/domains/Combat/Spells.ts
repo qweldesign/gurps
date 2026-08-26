@@ -13,8 +13,8 @@ const WOOD_SPELL: Spell[] = [
   { id: 0, label: 'ヘイスト', spellType: 'assist', spellCast: 1, effects: [{ kind: 'buff', target: 'ev' }], targetScope: 'ally' },
   { id: 1, label: '茨の呪縛', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'dmg', dice: 1, dmgType: 2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
   { id: 2, label: '風の刃', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 2, dmgType: 1 }], targetScope: 'enemy' },
-  { id: 3, label: 'サイレンス', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'silence', duration: 'margin' }], targetScope: 'enemy' },
-  { id: 4, label: 'リストレーション', spellType: 'range', spellCast: 3, effects: [{ kind: 'cleanse' }] },
+  { id: 3, label: '守りの風', spellType: 'other', spellCast: 2, effects: [{ kind: 'shootPenalty' }] },
+  { id: 4, label: '癒しの風', spellType: 'range', spellCast: 3, effects: [{ kind: 'cleanse' }] },
   { id: 5, label: '召雷', spellType: 'shoot', spellCast: 3, effects: [{ kind: 'dmg', dice: 3, dmgType: 0, metalPenalty: true }], targetScope: 'enemy' }
 ] as const
 
@@ -30,7 +30,7 @@ const FIRE_SPELL: Spell[] = [
 const EARTH_SPELL: Spell[] = [
   { id: 0, label: 'ベルセルク', spellType: 'resist', spellCast: 1, effects: [{ kind: 'buff', target: 'dmg' }, { kind: 'debuff', target: 'berserk', duration: 1 }], targetScope: 'all' },
   { id: 1, label: 'アースハンド', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'trip', mod: -2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
-  { id: 2, label: '大地の癒し', spellType: 'recover', spellCast: 2, effects: [{ kind: 'heal', maxUses: 1, fraction: 0.5, cureLimbInjury: true }], targetScope: 'ally' },
+  { id: 2, label: '恐慌', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'panic', duration: 'margin', resistMod: -2 }], targetScope: 'enemy' },
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2, effects: [{ kind: 'status', target: 'resistant', duration: 10 }, { kind: 'debuff', target: 'dazed', duration: 1, resistMod: -2 }], targetScope: 'ally' },
   { id: 4, label: '傀儡', spellType: 'other', spellCast: 1, effects: [{ kind: 'puppet' }], targetScope: 'puppet' },
   {
@@ -44,7 +44,7 @@ const EARTH_SPELL: Spell[] = [
 
 const METAL_SPELL: Spell[] = [
   { id: 0, label: '金縛り', spellType: 'resist', spellCast: 1, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin' }], targetScope: 'enemy' },
-  { id: 1, label: '杯', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, cureStun: true }], targetScope: 'ally' },
+  { id: 1, label: '杯', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, fraction: 1 / 3, cureStun: true, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 2, label: '金貨', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin', resistMod: -2 }], targetScope: 'enemy' },
   { id: 3, label: '盾', spellType: 'defense', spellCast: 2 },
   { id: 4, label: 'サイレン', spellType: 'range', spellCast: 3, effects: [{ kind: 'debuffAll', target: 'berserk', duration: 'margin', enemyResistMod: -2, allyResistMod: 2 }] },
@@ -52,10 +52,10 @@ const METAL_SPELL: Spell[] = [
 ] as const
 
 const WATER_SPELL: Spell[] = [
-  { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, fraction: 1 / 3, cureLimbInjury: true }], targetScope: 'ally' },
+  { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, cureStun: true, fraction: 1 / 3, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 1, label: 'ぼんやり', spellType: 'resist', spellCast: 1, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin' }], targetScope: 'enemy' },
   { id: 2, label: '水舞', spellType: 'assist', spellCast: 2, effects: [{ kind: 'buff', target: 'dr' }], targetScope: 'ally' },
-  { id: 3, label: '濃霧', spellType: 'other', spellCast: 2, effects: [{ kind: 'shootPenalty' }] },
+  { id: 3, label: '水弾', spellType: 'shoot', spellCast: 2, effects: [{ kind: 'dmg', dice: 3, dmgType: 0 }], targetScope: 'enemy' },
   { id: 4, label: '時間遡行', spellType: 'defense', spellCast: 3 },
   { id: 5, label: '吹雪', spellType: 'range', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0 }] }
 ] as const
@@ -101,7 +101,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * status: 発動判定成功で無条件に適用する (StatusEffects のフィールドを直接使う, 抵抗判定を伴わない状態異常/状態効果. 例: 「痛覚鈍麻」の本体効果)
  *
  * debuff: 対象の抵抗判定 (MREを使用) に失敗した場合のみ適用する. duration が 'margin' なら抵抗判定の失敗度をそのままターン数とし,
- * 数値なら固定ターン数とする (例: ベルセルクの「そのターンのみ」は 1). resistMod は抵抗判定自体への修正 (例: 「痛覚鈍麻」「金貨」の -2. 未指定は 0)
+ * 数値なら固定ターン数とする (例: ベルセルクの「そのターンのみ」は 1). resistMod は抵抗判定自体への修正 (例: 「痛覚鈍麻」「金貨」「恐慌」の -2. 未指定は 0)
  *
  * dmg: 直接ダメージ型 (射撃呪文, および範囲呪文 (spellType: 'range') での使用も可). 対象は「受け」-4/「止め」-2/「よけ」で回避判定を行い, 失敗すればダイス数・ダメージ型に応じたダメージを受ける
  * (DR減算・部位狙いによる負傷上限/故障・朦朧/転倒・気絶/死亡までの解決は, 通常の攻撃・射撃と共通のロジックを用いる)
@@ -128,7 +128,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
  *
  * cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
- * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・パニック状態 (StatusEffects.panic) を解除する (例: 「リストレーション」)
+ * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・パニック状態 (StatusEffects.panic) を解除する (例: 「癒しの風」)
  *
  * debuffAll: 範囲呪文 (spellType: 'range') 専用のデバフ. debuff と同じく対象の抵抗判定 (MRE) に失敗した場合のみ適用するが,
  * 対象選択は行わず, 発動時点の敵味方全員 (術者自身を除く) に対して個別に抵抗判定を行う.
@@ -141,7 +141,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * 「集中」「法術」「射撃」「狙い」「特殊攻撃 (全力攻撃)」「全力防御」「移動」は行えない (複数ターンにまたがる仕組みとの整合を避けるため, および被攻撃対象にならないため)
  * 幻惑状態によるコマンド封じ (StatusEffects.dazed) は無視する (元々幻惑・気絶・死亡のいずれかの状態にある対象のため)
  *
- * shootPenalty: 対象を持たない, 持続効果 (spellType: 'other'). 判定・抵抗を伴わず, 発動判定成功で 術者と敵対する陣営の
+ * shootPenalty: 対象を持たない, 持続効果 (spellType: 'other'. 例: 「守りの風」). 判定・抵抗を伴わず, 発動判定成功で 術者と敵対する陣営の
  * CombatState.shootPenalty を true にする (自陣営には影響しない. 再発動しても変化なし. 一度発生すれば戦闘終了まで持続する (時間経過での減衰は無い)).
  * shootPenalty が true の陣営に属するユニットは, 射撃武器の距離による修正 (distanceMod) が2倍になる (「濃霧」)
  * 術の発動判定に対する距離による修正 (後述) も, 術者自身の陣営が対象なら同様に2倍になる
@@ -154,7 +154,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * 対象が味方・自身の場合 (「ベルセルク」targetScope: 'all' でも味方を対象に取る運用, 「痛覚鈍麻」targetScope: 'ally' 等) は 0 とする
  * spellType: 'range' (対象選択を経ず, 発動時点の敵全員, もしくは「瓦礫の雨」のようにランダムな1体に効果が及ぶ術) は,
  * 発動判定が1回のみで個々の対象の位置を一意に定められないため, dmg/flash 効果を持つものに限り, 位置によらず一律 -2 (「濃霧」の影響下では -4) とする
- * 「サイレン」(debuffAll, 敵味方問わず及ぶ)・「リストレーション」(cleanse, 味方専用) は距離の概念が当てはまらないため対象外 (0) とする
+ * 「サイレン」(debuffAll, 敵味方問わず及ぶ)・「癒しの風」(cleanse, 味方専用) は距離の概念が当てはまらないため対象外 (0) とする
  * (計算は Action/effects.ts の getSpellDistanceMod で行い, judgeSpell の distanceMod 引数として渡す. SpellEffect のデータ自体には持たない)
  *
  * 【術の発動判定のファンブル】

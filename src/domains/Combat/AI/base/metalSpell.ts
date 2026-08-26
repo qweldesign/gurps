@@ -13,20 +13,20 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  *
  * 2. 集中時間が1ターン
  * 金行術の技能値で分岐
- * 金行術の技能値が13未満なら,「金縛り」
  * 金行術の技能値が13以上なら, 50% の確率分岐で集中を継続するか,「金縛り」
+ * 金行術の技能値が13未満なら,「金縛り」
  * 「杯」は NPC は使わない
  *
  * 3. 集中時間が2ターン
  * 金行術の技能値で分岐
- * 金行術の技能値が15未満なら,「金貨」
  * 金行術の技能値が15以上なら, 50% の確率分岐で集中を継続するか,「金貨」
+ * 金行術の技能値が15未満なら,「金貨」
  * その前に「盾」が発動する可能性有り
  *
  * 4. 集中時間が3ターン
  * 金行術の技能値で分岐
- * 金行術の技能値が16未満なら,「サイレン」
  * 金行術の技能値が16以上なら, 50% の確率分岐で「サイレン」か「塔」
+ * 金行術の技能値が16未満なら,「サイレン」
  */
 export function metalSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.metal
@@ -54,6 +54,6 @@ export function metalSpellTactic(actor: Unit, state: State): ActionRequest {
   }
 
   // 4. 集中時間が3ターン
-  if (skill < 16) return enemy(4) // サイレン
-  return chance() ? enemy(4) : enemy(5) // サイレン / 塔
+  if (skill >= 16 && chance()) return enemy(5) // 塔
+  return enemy(4) // サイレン
 }

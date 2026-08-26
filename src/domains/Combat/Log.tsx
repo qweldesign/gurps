@@ -323,7 +323,7 @@ export class CombatLog {
     messages.push(<>{`${targetName} は ${STATUS_EFFECT_LABELS[judge.statusTarget]} 状態になった!`}</>)
   }
 
-  // 回復呪文の結果ログを追加する (「大地の癒し」「杯」「生命の雫」用)
+  // 回復呪文の結果ログを追加する (「杯」「生命の雫」用)
   private pushHealMessage(messages: ReactNode[], judge: HealResult) {
     const targetName = judge.target.name
     if (!judge.applied) {
@@ -335,7 +335,7 @@ export class CombatLog {
     if (judge.curedLimbInjury) messages.push(<>{`${targetName} の腕・脚の故障が治癒した!`}</>)
   }
 
-  // 術の範囲浄化効果の結果ログを追加する (「リストレーション」用. 何か1つでも治癒した対象にのみ呼ばれる)
+  // 術の範囲浄化効果の結果ログを追加する (「癒しの風」用. 何か1つでも治癒した対象にのみ呼ばれる)
   private pushCleanseMessage(messages: ReactNode[], judge: CleanseResult) {
     const targetName = judge.target.name
     const cured: string[] = []

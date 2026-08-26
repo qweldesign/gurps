@@ -20,13 +20,13 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  * 3. 集中時間が2ターン
  * 火行術の技能値で分岐
  * 火行術の技能値が14未満なら,「火球」
- * 火行術の技能値が15以上なら, 50% の確率分岐で集中を継続するか, 次と同じ
+ * 火行術の技能値が15以上なら, 50% の確率分岐で集中を継続するか,「炎の嵐」
  * 火行術の技能値が14なら,「炎の嵐」
  *
  * 4. 集中時間が3ターン
  * 火行術の技能値で分岐
- * 火行術の技能値が16未満なら,「火の鳥」
  * 火行術の技能値が16以上なら, 50% の確率分岐で「火の鳥」か「焼殺」
+ * 火行術の技能値が16未満なら,「火の鳥」
  */
 export function fireSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.fire
@@ -58,6 +58,6 @@ export function fireSpellTactic(actor: Unit, state: State): ActionRequest {
   }
 
   // 4. 集中時間が3ターン
-  if (skill < 16) return self(4) // 火の鳥
-  return chance() ? self(4) : enemy(5) // 火の鳥 / 焼殺
+  if (skill >= 16 && chance()) return enemy(5) // 焼殺
+  return self(4) // 火の鳥
 }
