@@ -98,9 +98,12 @@ export class ActionAvailability {
 
   //「全力防御」実行可否取得
   // 狂戦士状態ではないことが条件 (幻惑状態でも「身を守るための単純な行動」として選択できる)
+  // ただし狂戦士状態と幻惑状態が同時に発生している場合に限り, 例外的に全力防御を許可する
+  // (幻惑が狂戦士より優先されるため. 幻惑単独の場合と同じ扱いになる)
   // 「傀儡」中は不可 (被攻撃対象にならないため, 防御に専念する意味が無い)
   canDefense(): boolean {
-    return !this.state.actor.statusEffects.berserk && !this.state.actor.health.puppeted
+    const actor = this.state.actor
+    return (!actor.statusEffects.berserk || this.isDazed()) && !actor.health.puppeted
   }
 
   //「移動」実行可否取得
