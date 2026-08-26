@@ -17,30 +17,13 @@ export function isIncapacitated(unit: Unit): boolean {
     unit.health.blinded || unit.health.deafened || unit.health.injuryOnArm || unit.health.injuryOnLeg
 }
 
-// 配置優先度 (デフォルト 中央→左翼→右翼) に従って候補から1体選ぶ (候補が空なら null)
-export function pickByPositionPriority(candidates: Unit[], priority: Array<'left' | 'center' | 'right'> = ['center', 'left', 'right']): Unit | null {
-  for (const position of priority) {
-    const found = candidates.find(unit => unit.position === position)
-    if (found) return found
-  }
-  return candidates[0] ?? null
-}
-
-// 防御目標値 (自身の牽制による修正込み) が最も低い候補を選ぶ (候補が空なら null)
-export function pickLowestDefenseTarget(actor: Unit, candidates: Unit[]): Unit | null {
-  return candidates.reduce<Unit | null>((best, unit) => {
-    if (!best) return unit
-    return unit.defense.getTarget(actor, 'body') < best.defense.getTarget(actor, 'body') ? unit : best
-  }, null)
-}
-
 // 前衛 (position !== 'back') がいればそちらのみを候補とし, いなければ全員を候補とする (法術の対象選定用)
 export function frontOrAll(candidates: Unit[]): Unit[] {
   const front = candidates.filter(unit => unit.position !== 'back')
   return front.length > 0 ? front : candidates
 }
 
-// 複数の優先条件を順に適用し, 候補を1体に絞り込む (法術の対象選定用)
+// 複数の優先条件を順に適用し, 候補を1体に絞り込む (近接/法術/射撃, 対象選定全般で共通利用する)
 // 各条件 (keyFns) は数値が低いほど優先する比較キーを返す関数. 条件が同点の場合のみ次の条件で絞り込む
 // 全ての条件を通して同点が残った場合 (もしくは keyFns を使い切った場合), 候補配列内で最初に出現した対象を選ぶ (候補が空なら null)
 export function pickByPriority<T>(candidates: T[], ...keyFns: Array<(unit: T) => number>): T | null {
@@ -51,6 +34,12 @@ export function pickByPriority<T>(candidates: T[], ...keyFns: Array<(unit: T) =>
     pool = pool.filter(unit => keyFn(unit) === minValue)
   }
   return pool[0] ?? null
+}
+
+// 防御目標値 (自身の牽制による修正込み) が最も低い候補を選ぶ (候補が空なら null)
+// 近接 (warrior.ts) / 射撃 (archer.ts) / 法術の直接攻撃対象選定で共通利用する
+export function pickLowestDefenseTarget(actor: Unit, candidates: Unit[]): Unit | null {
+  return pickByPriority(candidates, unit => unit.defense.getTarget(actor, 'body'))
 }
 
 // 自身が攻撃者候補全員から受ける防御目標値のうち, 最も不利な値 (=牽制修正が最大にかかった値) を取得する
