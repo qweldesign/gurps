@@ -5,7 +5,7 @@
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, pickLowestDefenseTarget } from '../utils'
+import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../utils'
 
 /**
  * 1. 集中
@@ -16,6 +16,7 @@ import { chance, pickLowestDefenseTarget } from '../utils'
  * 火行術の技能値が12未満なら,「ヒロイズム」
  * 火行術の技能値が13以上なら, 50% の確率分岐で集中を継続するか, 次と同じ
  * 火行術の技能値が12なら, 50% の確率分岐で「ヒロイズム」か「閃光」
+ * 「ヒロイズム」の対象: 味方前衛優先 (いなければ全員). 素の命中値 (StatusBuff によるバフを除いた attack.model.level) が低い対象を優先する
  *
  * 3. 集中時間が2ターン
  * 火行術の技能値で分岐
@@ -42,12 +43,18 @@ export function fireSpellTactic(actor: Unit, state: State): ActionRequest {
     ? { key: 'spell', options: { element: 'fire', spellId }, targets: [enemyTarget] }
     : { key: 'wait', options: {}, targets: [] }
 
+  // 「ヒロイズム」の対象選定 (味方前衛優先. 素の命中値が低い対象を優先する)
+  const heroismTarget = pickByPriority(frontOrAll(state.action!.target.allies), unit => unit.attack.model.level)
+  const heroism = (): ActionRequest => heroismTarget
+    ? { key: 'spell', options: { element: 'fire', spellId: 0 }, targets: [heroismTarget] }
+    : { key: 'wait', options: {}, targets: [] }
+
   // 2. 集中時間が1ターン
   if (turns === 1) {
-    if (skill < 12) return self(0) // ヒロイズム
+    if (skill < 12) return heroism() // ヒロイズム
     if (skill >= 13 && chance()) return cast() // 集中継続
     // 次と同じ (技能値12のケースと同じ判定)
-    return chance() ? self(0) : self(1) // ヒロイズム / 閃光 (対象を持たない術のため暫定的に自身を対象とする)
+    return chance() ? heroism() : self(1) // ヒロイズム / 閃光 (対象を持たない術のため暫定的に自身を対象とする)
   }
 
   // 3. 集中時間が2ターン

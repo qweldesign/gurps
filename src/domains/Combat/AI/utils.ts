@@ -34,6 +34,25 @@ export function pickLowestDefenseTarget(actor: Unit, candidates: Unit[]): Unit |
   }, null)
 }
 
+// 前衛 (position !== 'back') がいればそちらのみを候補とし, いなければ全員を候補とする (法術の対象選定用)
+export function frontOrAll(candidates: Unit[]): Unit[] {
+  const front = candidates.filter(unit => unit.position !== 'back')
+  return front.length > 0 ? front : candidates
+}
+
+// 複数の優先条件を順に適用し, 候補を1体に絞り込む (法術の対象選定用)
+// 各条件 (keyFns) は数値が低いほど優先する比較キーを返す関数. 条件が同点の場合のみ次の条件で絞り込む
+// 全ての条件を通して同点が残った場合 (もしくは keyFns を使い切った場合), 候補配列内で最初に出現した対象を選ぶ (候補が空なら null)
+export function pickByPriority<T>(candidates: T[], ...keyFns: Array<(unit: T) => number>): T | null {
+  let pool = candidates
+  for (const keyFn of keyFns) {
+    if (pool.length <= 1) break
+    const minValue = Math.min(...pool.map(keyFn))
+    pool = pool.filter(unit => keyFn(unit) === minValue)
+  }
+  return pool[0] ?? null
+}
+
 // 自身が攻撃者候補全員から受ける防御目標値のうち, 最も不利な値 (=牽制修正が最大にかかった値) を取得する
 // 「敵の牽制による修正 (複数なら最大の修正を適用) 込みの自身の防御目標値」に対応する
 export function worstOwnDefenseTarget(actor: Unit, attackers: Unit[]): number {
