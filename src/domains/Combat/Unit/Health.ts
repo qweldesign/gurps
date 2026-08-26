@@ -21,8 +21,8 @@ export class CombatUnitHealth {
   public maxHp: number
   private _injury: number // 負傷 (HPの減少)
   private _stunned: boolean // 朦朧状態
-  public unconscious: boolean // 気絶
-  public dead: boolean // 死亡
+  private _unconscious: boolean // 気絶
+  private _dead: boolean // 死亡
   public injuryOnArm: boolean // 腕・手首の故障
   public injuryOnLeg: boolean // 脚・足首の故障
   public blinded: boolean // 目の故障
@@ -35,8 +35,8 @@ export class CombatUnitHealth {
     this.maxHp = maxHp
     this._injury = 0
     this._stunned = false
-    this.unconscious = false
-    this.dead = false
+    this._unconscious = false
+    this._dead = false
     this.injuryOnArm = false
     this.injuryOnLeg = false
     this.blinded = false
@@ -57,11 +57,9 @@ export class CombatUnitHealth {
       this.stunned = true
     }
 
-    // 負傷が最大HPに達した場合, 自動的に気絶する
+    // 負傷が最大HPに達した場合, 自動的に気絶する (戦線離脱・姿勢変更は unconscious セッターの副作用として行われる)
     if (newInjury >= this.maxHp) {
       this.unconscious = true
-      this.self.position = 'back' // 戦線から外す
-      this.self.posture = 'prone' // 姿勢変更
     }
 
     this._injury = newInjury
@@ -79,6 +77,36 @@ export class CombatUnitHealth {
 
   get stunned() {
     return this._stunned
+  }
+
+  // 気絶状態への代入 (true になろうとする代入時のみ, 戦線から強制的に離脱させる副作用を伴う. false への代入 (回復) は副作用無しでそのまま通す)
+  // Action/effects.ts の即死・即気絶判定 (頭/喉狙い) のように, injury セッターの maxHp 到達を経由せずに直接 true が代入される経路でも
+  // 前衛スロットに取り残されないよう, ここで一元的に position/posture をリセットする (AI/utils.ts の getFrontAllyCount 等, position のみで
+  // 前衛人数を数えるロジックが, 気絶・死亡したユニットを前衛在籍のまま誤カウントしてしまう不具合の対策)
+  set unconscious(value: boolean) {
+    if (value) {
+      this.self.position = 'back' // 戦線から外す
+      this.self.posture = 'prone' // 姿勢変更
+    }
+    this._unconscious = value
+  }
+
+  get unconscious() {
+    return this._unconscious
+  }
+
+  // 死亡状態への代入 (true になろうとする代入時のみ, 戦線から強制的に離脱させる副作用を伴う)
+  // アンデッド・スライムは気絶を経由せず直接死亡するため (Action/effects.ts 参照), unconscious セッターとは別に
+  // こちらでも同様の戦線離脱処理を行う (通常のユニットは既に unconscious セッターで離脱済みのため, 二重に代入されるだけで無害)
+  set dead(value: boolean) {
+    if (value) {
+      this.self.position = 'back' // 戦線から外す
+    }
+    this._dead = value
+  }
+
+  get dead() {
+    return this._dead
   }
 
   // Hp
@@ -115,8 +143,8 @@ export class CombatUnitHealth {
   restoreSnapshot(snapshot: CombatUnitHealthSnapshot) {
     this._injury = snapshot.injury
     this._stunned = snapshot.stunned
-    this.unconscious = snapshot.unconscious
-    this.dead = snapshot.dead
+    this._unconscious = snapshot.unconscious
+    this._dead = snapshot.dead
     this.injuryOnArm = snapshot.injuryOnArm
     this.injuryOnLeg = snapshot.injuryOnLeg
     this.blinded = snapshot.blinded
