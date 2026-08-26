@@ -11,7 +11,8 @@ export const TACTIC_KEYS = [
   'archer',         // 弓使い
   'fireSpell',      // 火行術戦士
   'woodWaterSpell', // 木行/水行術士
-  'earthMetalSpell' // 土行/金行術士
+  'earthMetalSpell',// 土行/金行術士
+  'slime'           // スライム
 ] as const
 
 export type TacticKey = typeof TACTIC_KEYS[number]

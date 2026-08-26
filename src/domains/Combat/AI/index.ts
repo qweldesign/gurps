@@ -12,6 +12,7 @@ import { archer } from './handlers/archer'
 import { woodWaterSpell } from './handlers/woodWaterSpell'
 import { fireSpell } from './handlers/fireSpell'
 import { earthMetalSpell } from './handlers/earthMetalSpell'
+import { slime } from './handlers/slime'
 
 export { TACTIC_KEYS, type TacticKey } from './types'
 export { type TacticHandler } from './handler'
@@ -24,7 +25,8 @@ export const TACTIC_HANDLERS: Record<TacticKey, TacticHandler> = {
   archer,
   fireSpell,
   woodWaterSpell,
-  earthMetalSpell
+  earthMetalSpell,
+  slime
 }
 
 // 幻惑・恐慌状態時の強制行動を決定する (tactic の種類を問わず全ての自動行動タイプに共通)

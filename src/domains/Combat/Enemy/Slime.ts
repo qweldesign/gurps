@@ -54,7 +54,7 @@ export function makeSlime(size: typeof SLIME_SIZES[number], rank: number): Omit<
     dmgBuff: SLIME_PARAMS.dmgBuff + size % 2,
     evBuff: SLIME_PARAMS.evBuff + size % 2,
     spells: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
-    tactic: size === 2 ? 'heavyWarrior' : 'lightWarrior',
+    tactic: 'slime',
     creatureType: SLIME_PARAMS.creatureType
   }
 }
