@@ -54,7 +54,7 @@ export class ActionEffects {
     const actor = this.state.actor
 
     // 攻撃判定
-    const attackJudge = judgeAttack(actor, aim, fullPower, target, this.state.foggy)
+    const attackJudge = judgeAttack(actor, aim, fullPower, target, this.state.shootPenalty[actor.side])
     // 武器の準備状態を更新 (準備の要る武器の場合, 攻撃後は非準備状態になる)
     // ファンブルの場合, 武器の種別 (準備が元々不要な武器を含む) に関わらず,
     // 大きく空振りして最低1ターンの引き戻しが必要になる
@@ -290,7 +290,7 @@ export class ActionEffects {
   // isImmediate: true の場合 (全力攻撃オプション「牽制即攻撃」から呼ばれる), 同じ行動内で直後に続く攻撃から即座に適用する
   feint(target: Unit, isImmediate: boolean = false): ActionResult[] {
     const actor = this.state.actor
-    const feintJudge = judgeFeint(actor, target, this.state.foggy)
+    const feintJudge = judgeFeint(actor, target, this.state.shootPenalty[actor.side])
     if (feintJudge.success) {
       actor.attack.feint = { currentTurn: !isImmediate, target, score: feintJudge.score, source: 'feint' }
     }
@@ -375,10 +375,11 @@ export class ActionEffects {
             extraResults.push(...this.spellTripRoutine(target, effect))
           } else if (effect.kind === 'heal') {
             extraResults.push(...this.spellHealRoutine(target, spellData.label, effect))
-          } else if (effect.kind === 'fog') {
-            // 「濃霧」: 対象を持たない戦場全体への持続効果. 一度発動すれば戦闘終了まで持続する (再発動しても変化なし)
-            this.state.foggy = true
-            effectResults.push({ kind: 'fog' })
+          } else if (effect.kind === 'shootPenalty') {
+            // 「濃霧」: 対象を持たない持続効果. 術者と敵対する陣営 (自陣営には影響しない) にのみ適用され,
+            // 一度発動すれば戦闘終了まで持続する (再発動しても変化なし)
+            this.state.shootPenalty[actor.side === 'player' ? 'enemy' : 'player'] = true
+            effectResults.push({ kind: 'shootPenalty' })
           } else if (effect.kind !== 'flash' && effect.kind !== 'cleanse' && effect.kind !== 'debuffAll') {
             effectResults.push(this.applySpellEffect(target, effect))
           }
@@ -398,14 +399,15 @@ export class ActionEffects {
   // 敵 (術者と別陣営) の場合のみ, その配置に応じたペナルティを課す (味方・自身が対象の場合は 0)
   private getSpellDistanceMod(spellData: Spell, target: Unit): number {
     const actor = this.state.actor
+    const shootPenalty = this.state.shootPenalty[actor.side] // 術者自身の所属陣営が「濃霧」の影響下にあるか否か
     if (spellData.spellType === 'range') {
       const kind = spellData.effects?.[0]?.kind
       if (kind !== 'dmg' && kind !== 'flash') return 0
-      return -2 * (this.state.foggy ? 2 : 1)
+      return -2 * (shootPenalty ? 2 : 1)
     }
     if (target.side === actor.side) return 0
     const baseMod = target.position === 'back' ? -2 : -1
-    return baseMod * (this.state.foggy ? 2 : 1)
+    return baseMod * (shootPenalty ? 2 : 1)
   }
 
   // 術の効果を1つ適用し, 結果を返す (buff/status/debuff/puppet のみを対象とする. dmg/trip は spellDmgRoutine/spellTripRoutine が個別に処理する)

@@ -126,7 +126,7 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   // 2. 全力攻撃
   if (melee.every(isIncapacitated)) {
     const enemy = pickByPositionPriority(melee)!
-    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, enemy, state.foggy) }, targets: [enemy] }
+    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, enemy, state.shootPenalty[actor.side]) }, targets: [enemy] }
   }
 
   // 3. 行動分岐
@@ -137,7 +137,7 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   if (toAggressiveBranch) {
     // 4. 全力攻撃/攻撃
     if (melee.length === 1) {
-      return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.foggy) }, targets: [primaryTarget] }
+      return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.shootPenalty[actor.side]) }, targets: [primaryTarget] }
     }
     if (actor.attack.ready > 0) return { key: 'ready', options: {}, targets: [] } // 通常攻撃には武器の準備状態が要る
     return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
@@ -146,14 +146,14 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   // 5. 全力攻撃/全力防御/準備/攻撃/牽制
   const selfDefense = worstOwnDefenseTarget(actor, melee)
   if (selfDefense <= params.attackMax) {
-    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.foggy) }, targets: [primaryTarget] }
+    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.shootPenalty[actor.side]) }, targets: [primaryTarget] }
   }
   if (params.defenseValues.includes(selfDefense)) {
     return { key: 'defense', options: {}, targets: [] }
   }
   if (params.coinflipValues.includes(selfDefense)) {
     return chance()
-      ? { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.foggy) }, targets: [primaryTarget] }
+      ? { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.shootPenalty[actor.side]) }, targets: [primaryTarget] }
       : { key: 'defense', options: {}, targets: [] }
   }
 

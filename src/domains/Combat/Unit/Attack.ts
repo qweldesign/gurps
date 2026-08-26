@@ -90,13 +90,13 @@ export class CombatUnitAttack {
   }
 
   // 攻撃モデルの目標値を, 諸条件 (部位狙い・全力攻撃オプション・ターゲットの姿勢・距離) に合わせて取得
-  // foggy: true の場合, 距離による修正 (distanceMod) が倍になる (「濃霧」用. 射撃武器以外には影響しない)
-  getTarget(aim: Aim = 'body', fullPower: FullPower = 'none', target: Unit, foggy: boolean = false) {
+  // shootPenalty: true の場合, 距離による修正 (distanceMod) が倍になる (「濃霧」用. 自身の所属陣営が「濃霧」の影響下にある場合のみ true になる. 射撃武器以外には影響しない)
+  getTarget(aim: Aim = 'body', fullPower: FullPower = 'none', target: Unit, shootPenalty: boolean = false) {
     const aimMod = AIM_OPTIONS[aim].mod
     const fullPowerMod = fullPower === 'level' ? 4 : 0
     const targetPosture = POSTURE_MODS[target.posture]
     const missileMod = this.model.isMissile ? targetPosture.missileMod : 0
-    const distanceMod = this.model.isMissile ? (target.position === 'back' ? -2 : -1) * (foggy ? 2 : 1) : 0
+    const distanceMod = this.model.isMissile ? (target.position === 'back' ? -2 : -1) * (shootPenalty ? 2 : 1) : 0
     return Math.max(this.target + aimMod + fullPowerMod + missileMod + distanceMod, 4)
   }
 

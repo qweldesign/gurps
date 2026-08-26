@@ -138,7 +138,7 @@ function Action({ store }: { store: Store }) {
             <div>{target.name}</div>
             <div>{store.actor.attack.model.name}: {store.actor.attack.model.dmgName}</div>
             <div>{target.defense.getModelByKey(AIM_OPTIONS[actionOptions.aim ?? 'body'].group).name}: {target.defense.getModelByKey(AIM_OPTIONS[actionOptions.aim ?? 'body'].group).dr}</div>
-            <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower ?? 'none', target, store.foggy)}</div>
+            <div>攻撃目標値: {store.actor.attack.getTarget(actionOptions.aim ?? 'body', actionOptions.fullPower ?? 'none', target, store.shootPenalty)}</div>
             <div className={actionTargets[0] === store.actor.attack.feint?.target ? 'is-targeted' : ''}>防御目標値: {target.defense.getTarget(store.actor, actionOptions.aim ?? 'body')}</div>
             <div>効果: </div>
             <div>ダメージ {store.actor.attack.getExpectedDmg(actionOptions.fullPower ?? 'none', target.defense.getDR(AIM_OPTIONS[actionOptions.aim ?? 'body'].group, store.actor.attack.model.dmgType), target.defense.creatureType)} 点</div>
@@ -156,7 +156,7 @@ function Action({ store }: { store: Store }) {
           <div className="confirm__grid">
             <div>{store.actor.name}</div>
             <div>{target.name}</div>
-            <div>攻撃目標値: {store.actor.attack.getTarget('body', 'none', target, store.foggy)}</div>
+            <div>攻撃目標値: {store.actor.attack.getTarget('body', 'none', target, store.shootPenalty)}</div>
             <div>防御目標値: {target.defense.getTarget(store.actor, 'body')}</div>
             <div>効果: </div>
             <div>{actionKey === 'feint' ? '牽制' : '狙い'} 防御目標値の低下</div>

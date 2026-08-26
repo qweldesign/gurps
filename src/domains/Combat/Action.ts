@@ -214,8 +214,8 @@ export class CombatAction {
     }
   }
 
-  // 濃霧発生中か否か (UI側の目標値プレビュー表示用)
-  get foggy() {
-    return this.state.foggy
+  // 現在の行動者の所属陣営が「濃霧」の影響下にあるか否か (UI側の目標値プレビュー表示用)
+  get shootPenalty() {
+    return this.state.shootPenalty[this.state.actor.side]
   }
 }
