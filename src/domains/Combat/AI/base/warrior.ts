@@ -89,7 +89,14 @@ const reckless: WarriorParams = {
  * 自身の牽制による修正込みの敵の防御目標値と, 自身の武器が引き戻しが必要な武器かによって分岐
  * 敵の防御目標値が11以下なら攻撃
  * 自身の武器が引き戻し不要で, かつ敵の防御目標値が12なら攻撃
- * それ以外なら牽制
+ * それ以外なら 7. へ
+ *
+ * 7. 攻撃/牽制
+ * 自身の攻撃目標値が11未満なら攻撃
+ * 自身の攻撃目標値が11なら 75% の確率で攻撃か 25% の確率で牽制
+ * 自身の攻撃目標値が12なら 50% の確率で攻撃か 50% の確率で牽制
+ * 自身の攻撃目標値が13なら 25% の確率で攻撃か 75% の確率で牽制
+ * 自身の攻撃目標値が14なら牽制
  *
  * * 全力攻撃オプションについて (pickFullPowerOption に集約)
  * 準備が必要なら, 準備即攻撃
@@ -164,6 +171,14 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
     return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
   }
   if (actor.attack.model.ready === 0 && targetDefense === 12) {
+    return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
+  }
+
+  // 7. 攻撃/牽制
+  // 攻撃目標値が11未満なら攻撃 (=100%), 14なら牽制 (=0%) となるよう, 1刻みで25%ずつ攻撃確率を減らす
+  const attackTarget = actor.attack.getTarget('body', 'none', primaryTarget, state.shootPenalty[actor.side])
+  const attackProbability = Math.min(Math.max((14 - attackTarget) * 0.25, 0), 1)
+  if (chance(attackProbability)) {
     return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
   }
   return { key: 'feint', options: {}, targets: [primaryTarget] }
