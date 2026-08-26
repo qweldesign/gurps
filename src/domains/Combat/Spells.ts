@@ -30,7 +30,7 @@ const FIRE_SPELL: Spell[] = [
 const EARTH_SPELL: Spell[] = [
   { id: 0, label: 'ベルセルク', spellType: 'resist', spellCast: 1, effects: [{ kind: 'buff', target: 'dmg' }, { kind: 'debuff', target: 'berserk', duration: 1 }], targetScope: 'all' },
   { id: 1, label: 'アースハンド', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'trip', mod: -2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
-  { id: 2, label: '恐慌', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'panic', duration: 'margin', resistMod: -2 }], targetScope: 'enemy' },
+  { id: 2, label: '恐慌', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'panic', duration: 'margin' }], targetScope: 'enemy' }, // 恐怖判定を省く分, 効果簡易化のため修正 -2 を外す
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2, effects: [{ kind: 'status', target: 'resistant', duration: 10 }, { kind: 'debuff', target: 'dazed', duration: 1, resistMod: -2 }], targetScope: 'ally' },
   { id: 4, label: '傀儡', spellType: 'other', spellCast: 1, effects: [{ kind: 'puppet' }], targetScope: 'puppet' },
   {
