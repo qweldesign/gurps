@@ -41,7 +41,7 @@ export const WEAPONS: Record<WeaponKey, Weapon> = {
   '手斧': { id: 10, name: '手斧', weaponType: 1, baseDmg: 10, dmgType: 1, skill: '剣術', ready: 1, ev: 1, gold: 50 },
   '戦鎚': { id: 11, name: '戦鎚', weaponType: 1, baseDmg: 10, dmgType: 0, skill: '武術', ready: 1, ev: 1, gold: 75 },
   '戦斧': { id: 12, name: '戦斧', weaponType: 1, baseDmg: 12, dmgType: 1, skill: '武術', ready: 1, ev: 1, gold: 100 },
-  '杖': { id: 13, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 0, skill: '武術', ready: 0, ev: 2, gold: 20 },
+  '杖': { id: 13, name: '杖', weaponType: 4, baseDmg: 6, dmgType: 0, skill: '剣術', ready: 0, ev: 2, gold: 20 },
   '長槍': { id: 14, name: '長槍', secondName: '鉾槍(突き)', weaponType: 4, baseDmg: 8, dmgType: 2, skill: '剣術', ready: 0, ev: 3, gold: 60 },
   '薙刀': { id: 15, name: '薙刀', weaponType: 4, baseDmg: 10, dmgType: 1, skill: '武術', ready: 0, ev: 3, gold: 90 },
   '鉾槍': { id: 16, name: '鉾槍', secondName: '鉾槍(振り)', weaponType: 4, baseDmg: 16, dmgType: 1, skill: '武術', ready: 1, ev: 3, usage: '長槍', gold: 120 },
