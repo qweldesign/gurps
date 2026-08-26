@@ -210,7 +210,7 @@ export type CleanseResult = {
   curedStun: boolean
   curedDazed: boolean
   curedBerserk: boolean
-  curedPanic: boolean
+  curedFear: boolean
 }
 
 // 術の範囲デバフ効果の判定結果 (「サイレン」用. 抵抗判定 (Score) に失敗した対象にのみ生成される. target を直接持つ (範囲呪文のため複数対象))

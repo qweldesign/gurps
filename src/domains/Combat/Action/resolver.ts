@@ -117,9 +117,9 @@ export function judgeFeint(actor: Unit, target: Unit, shootPenalty: boolean = fa
   return { target, ...score(actor.attack.getTarget('body', 'none', target, shootPenalty)) }
 }
 
-// 「集中」の判定結果を返す (聾または沈黙状態の場合のみ判定を要する. それ以外は判定不要 (無条件で詠唱時間が進む) につき null を返す)
+// 「集中」の判定結果を返す (聾の場合のみ判定を要する. それ以外は判定不要 (無条件で詠唱時間が進む) につき null を返す)
 export function judgeCast(actor: Unit, element: SpellElement): Judge | null {
-  if (!actor.health.deafened && !actor.statusEffects.silence) return null
+  if (!actor.health.deafened) return null
   return judge(actor.spells[element] - 6)
 }
 

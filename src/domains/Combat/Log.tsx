@@ -153,7 +153,7 @@ export class CombatLog {
         break
 
       case 'wait':
-        messages.push(<>{`${actor} は パニック状態で行動できない`}</>) // パニック状態のみ
+        messages.push(<>{`${actor} は 恐慌状態で行動できない`}</>) // 恐慌状態のみ
         break
 
       case 'cast':
@@ -342,7 +342,7 @@ export class CombatLog {
     if (judge.curedStun) cured.push('朦朧状態')
     if (judge.curedDazed) cured.push('幻惑状態')
     if (judge.curedBerserk) cured.push('狂戦士状態')
-    if (judge.curedPanic) cured.push('パニック状態')
+    if (judge.curedFear) cured.push('恐慌状態')
     messages.push(<>{`${targetName} の ${cured.join('・')} が解除された`}</>)
   }
 

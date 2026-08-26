@@ -30,7 +30,7 @@ const FIRE_SPELL: Spell[] = [
 const EARTH_SPELL: Spell[] = [
   { id: 0, label: 'ベルセルク', spellType: 'resist', spellCast: 1, effects: [{ kind: 'buff', target: 'dmg' }, { kind: 'debuff', target: 'berserk', duration: 1 }], targetScope: 'all' },
   { id: 1, label: 'アースハンド', spellType: 'shoot', spellCast: 1, effects: [{ kind: 'trip', mod: -2, aim: 'foot', allowParry: false }], targetScope: 'enemy' },
-  { id: 2, label: '恐慌', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'panic', duration: 'margin' }], targetScope: 'enemy' }, // 恐怖判定を省く分, 効果簡易化のため修正 -2 を外す
+  { id: 2, label: '恐慌', spellType: 'resist', spellCast: 2, effects: [{ kind: 'debuff', target: 'fear', duration: 'margin' }], targetScope: 'enemy' }, // 恐怖判定を省く分, 効果簡易化のため修正 -2 を外す
   { id: 3, label: '痛覚鈍麻', spellType: 'resist', spellCast: 2, effects: [{ kind: 'status', target: 'resistant', duration: 10 }, { kind: 'debuff', target: 'dazed', duration: 1, resistMod: -2 }], targetScope: 'ally' },
   { id: 4, label: '傀儡', spellType: 'other', spellCast: 1, effects: [{ kind: 'puppet' }], targetScope: 'puppet' },
   {
@@ -86,11 +86,11 @@ export const SPELL_BUFF_LABELS: Record<SpellBuffTarget, string> = {
 } as const
 
 // デバフ効果の対象 (StatusEffectsのフィールドに対応)
-export type StatusEffectTarget = 'silence' | 'resistant' | 'poisoned' | 'paralyzed' | 'dazed' | 'berserk' | 'panic'
+export type StatusEffectTarget = 'resistant' | 'dazed' | 'berserk' | 'fear'
 
 // デバフ効果のログ表示用ラベル (StatusEffects.label のものと揃える)
 export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
-  silence: '沈黙', resistant: '痛覚鈍麻', poisoned: '毒', paralyzed: '麻痺', dazed: '幻惑', berserk: '狂戦士', panic: 'パニック'
+  resistant: '痛覚鈍麻', dazed: '幻惑', berserk: '狂戦士', fear: '恐慌'
 } as const
 
 /*
@@ -128,7 +128,7 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * maxUses は対象ユニット1体につき, その術が戦闘中に効果を発揮できる回数の上限 (CombatUnit.healUses で対象・術ごとに使用回数を管理する. 上限に達した場合, 発動はするが効果は得られない)
  *
  * cleanse: 範囲呪文 (spellType: 'range') 専用. 対象選択は行わず, 発動時点の味方全員 (術者自身を含む) に対し, 判定を伴わず無条件で
- * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・パニック状態 (StatusEffects.panic) を解除する (例: 「癒しの風」)
+ * 朦朧状態・幻惑状態 (StatusEffects.dazed)・狂戦士状態 (StatusEffects.berserk)・恐慌状態 (StatusEffects.fear) を解除する (例: 「癒しの風」)
  *
  * debuffAll: 範囲呪文 (spellType: 'range') 専用のデバフ. debuff と同じく対象の抵抗判定 (MRE) に失敗した場合のみ適用するが,
  * 対象選択は行わず, 発動時点の敵味方全員 (術者自身を除く) に対して個別に抵抗判定を行う.

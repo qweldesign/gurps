@@ -54,13 +54,13 @@ export function earthSpellTactic(actor: Unit, state: State): ActionRequest {
     : { key: 'wait', options: {}, targets: [] }
 
   // 「恐慌」の対象選定 (敵前衛優先. 抵抗値 (pre) が低い対象を優先し, 同じなら中央を優先する)
-  const panicTarget = pickByPriority(
+  const fearTarget = pickByPriority(
     frontOrAll(state.action!.target.enemies),
     unit => unit.defense.pre,
     unit => unit.position === 'center' ? 0 : 1
   )
-  const panic = (): ActionRequest => panicTarget
-    ? { key: 'spell', options: { element: 'earth', spellId: 2 }, targets: [panicTarget] }
+  const fear = (): ActionRequest => fearTarget
+    ? { key: 'spell', options: { element: 'earth', spellId: 2 }, targets: [fearTarget] }
     : { key: 'wait', options: {}, targets: [] }
 
   // 2. 集中時間が1ターン
@@ -74,7 +74,7 @@ export function earthSpellTactic(actor: Unit, state: State): ActionRequest {
   // 3. 集中時間が2ターン (「痛覚鈍麻」は NPC は使わない)
   if (turns === 2) {
     if (skill >= 16 && chance(0.75)) return cast() // 集中継続
-    return panic() // 恐慌
+    return fear() // 恐慌
   }
 
   // 4. 集中時間が3ターン (「瓦礫の雨」.「傀儡」は NPC は使わない)
