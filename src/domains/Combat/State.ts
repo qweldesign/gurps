@@ -33,7 +33,7 @@ export class CombatState {
   public logs: Log[]
   public playLog: () => Promise<void> // Combat 本体から受け取り, Action から呼び出す
   public action: Action | null
-  public foggy: boolean // 濃霧発生中か否か (戦場全体に及ぶ持続効果. 一度発生すれば戦闘終了まで持続する. 「濃霧」用)
+  public shootPenalty: Record<Side, boolean> // 陣営ごとの射撃/術の距離ペナルティ倍化フラグ (「濃霧」用. 使用した陣営とは逆の陣営にのみ適用される. 一度発生すれば戦闘終了まで持続する)
   public puppetTarget: Unit | null // 「傀儡」で移行中の対象 (非null の間, actor はこちらを優先する. 通常の行動順の進行とは無関係)
   public result: CombatResult // 勝敗結果 (未決着中は null. 決着後はターンを進めない)
 
@@ -48,7 +48,7 @@ export class CombatState {
     this.logs = []
     this.playLog = playLog
     this.action = null
-    this.foggy = false
+    this.shootPenalty = { player: false, enemy: false }
     this.puppetTarget = null
     this.result = null
   }

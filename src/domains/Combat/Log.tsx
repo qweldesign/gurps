@@ -153,7 +153,7 @@ export class CombatLog {
         break
 
       case 'wait':
-        messages.push(<>{`${actor} は 待機している`}</>)
+        messages.push(<>{`${actor} は パニック状態で行動できない`}</>) // パニック状態のみ
         break
 
       case 'cast':
@@ -263,7 +263,7 @@ export class CombatLog {
             messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} の効果を得た!`}</>)
           } else if (result.kind === 'puppet') {
             messages.push(<>{`${target} を傀儡として操る!`}</>)
-          } else if (result.kind === 'fog') {
+          } else if (result.kind === 'shootPenalty') {
             messages.push(<>{`辺り一帯に深い霧が立ち込めた!`}</>)
           } else if (result.applied) {
             messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} 状態になった!`}</>)

@@ -146,13 +146,13 @@ export type FeintResult = Score & {
 }
 
 // 法術の効果適用結果 (buff・status・puppet は発動成功時に無条件適用されるため常に成功, debuff は抵抗判定の成否による)
-// fog は対象を持たない (戦場全体への持続効果. 「濃霧」用)
+// shootPenalty は対象を持たない (戦場全体への持続効果. 「濃霧」用)
 export type SpellEffectResult =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget }
   | { kind: 'debuff', target: StatusEffectTarget, applied: boolean }
   | { kind: 'puppet', target: Unit } // 「傀儡」の発動結果 (成功時, 対象のターンへその場で即座に移行する. Action.execute 参照)
-  | { kind: 'fog' }
+  | { kind: 'shootPenalty' }
 
 // 法術の判定結果 (発動した術の名称と, 発動成功時に適用された効果の一覧を持つ)
 export type SpellResult = Judge & {

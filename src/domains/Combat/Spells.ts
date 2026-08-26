@@ -55,7 +55,7 @@ const WATER_SPELL: Spell[] = [
   { id: 0, label: '生命の雫', spellType: 'recover', spellCast: 1, effects: [{ kind: 'heal', maxUses: 2, fraction: 1 / 3, cureLimbInjury: true }], targetScope: 'ally' },
   { id: 1, label: 'ぼんやり', spellType: 'resist', spellCast: 1, effects: [{ kind: 'debuff', target: 'dazed', duration: 'margin' }], targetScope: 'enemy' },
   { id: 2, label: '水舞', spellType: 'assist', spellCast: 2, effects: [{ kind: 'buff', target: 'dr' }], targetScope: 'ally' },
-  { id: 3, label: '濃霧', spellType: 'other', spellCast: 2, effects: [{ kind: 'fog' }] },
+  { id: 3, label: '濃霧', spellType: 'other', spellCast: 2, effects: [{ kind: 'shootPenalty' }] },
   { id: 4, label: '時間遡行', spellType: 'defense', spellCast: 3 },
   { id: 5, label: '吹雪', spellType: 'range', spellCast: 3, effects: [{ kind: 'dmg', dice: 4, dmgType: 0 }] }
 ] as const
@@ -141,17 +141,19 @@ export const STATUS_EFFECT_LABELS: Record<StatusEffectTarget, string> = {
  * 「集中」「法術」「射撃」「狙い」「特殊攻撃 (全力攻撃)」「全力防御」「移動」は行えない (複数ターンにまたがる仕組みとの整合を避けるため, および被攻撃対象にならないため)
  * 幻惑状態によるコマンド封じ (StatusEffects.dazed) は無視する (元々幻惑・気絶・死亡のいずれかの状態にある対象のため)
  *
- * fog: 対象を持たない, 戦場全体への持続効果 (spellType: 'other'). 判定・抵抗を伴わず, 発動判定成功で CombatState.foggy を true にする
- * (再発動しても変化なし. 一度発生すれば戦闘終了まで持続する (時間経過での減衰は無い)). 射撃武器の距離による修正 (distanceMod) を2倍にする (「濃霧」)
- * 術の発動判定に対する距離による修正 (後述) も同様に2倍になる
+ * shootPenalty: 対象を持たない, 持続効果 (spellType: 'other'). 判定・抵抗を伴わず, 発動判定成功で 術者と敵対する陣営の
+ * CombatState.shootPenalty を true にする (自陣営には影響しない. 再発動しても変化なし. 一度発生すれば戦闘終了まで持続する (時間経過での減衰は無い)).
+ * shootPenalty が true の陣営に属するユニットは, 射撃武器の距離による修正 (distanceMod) が2倍になる (「濃霧」)
+ * 術の発動判定に対する距離による修正 (後述) も, 術者自身の陣営が対象なら同様に2倍になる
  *
  * 【術の発動判定に対する距離による修正】 射撃武器の distanceMod と全く同じ考え方で, 対象が離れているほど,
- * 術者自身の発動判定 (judgeSpell) が失敗しやすくなるペナルティを課す (対象の防御・抵抗判定側には一切影響しない. 濃霧下では2倍になる点も射撃武器と共通)
+ * 術者自身の発動判定 (judgeSpell) が失敗しやすくなるペナルティを課す (対象の防御・抵抗判定側には一切影響しない.
+ * 術者自身の陣営が「濃霧」の影響下 (CombatState.shootPenalty[術者の陣営] が true) にある場合は2倍になる点も射撃武器と共通)
  * 対象が単一に定まる術 (spellType: 'shoot' 全般, および spellType: 'resist' で対象が敵 (術者と別陣営) の場合) は,
- * その対象の配置に応じて前列 -1 / 後列 -2 (濃霧下ではそれぞれ -2 / -4) のペナルティを課す
+ * その対象の配置に応じて前列 -1 / 後列 -2 (「濃霧」の影響下ではそれぞれ -2 / -4) のペナルティを課す
  * 対象が味方・自身の場合 (「ベルセルク」targetScope: 'all' でも味方を対象に取る運用, 「痛覚鈍麻」targetScope: 'ally' 等) は 0 とする
  * spellType: 'range' (対象選択を経ず, 発動時点の敵全員, もしくは「瓦礫の雨」のようにランダムな1体に効果が及ぶ術) は,
- * 発動判定が1回のみで個々の対象の位置を一意に定められないため, dmg/flash 効果を持つものに限り, 位置によらず一律 -2 (濃霧下では -4) とする
+ * 発動判定が1回のみで個々の対象の位置を一意に定められないため, dmg/flash 効果を持つものに限り, 位置によらず一律 -2 (「濃霧」の影響下では -4) とする
  * 「サイレン」(debuffAll, 敵味方問わず及ぶ)・「リストレーション」(cleanse, 味方専用) は距離の概念が当てはまらないため対象外 (0) とする
  * (計算は Action/effects.ts の getSpellDistanceMod で行い, judgeSpell の distanceMod 引数として渡す. SpellEffect のデータ自体には持たない)
  *
@@ -180,7 +182,7 @@ export type SpellEffect =
   | { kind: 'heal', maxUses: number, fraction?: number, cureStun?: boolean, cureLimbInjury?: boolean }
   | { kind: 'cleanse' }
   | { kind: 'debuffAll', target: StatusEffectTarget, duration: number | 'margin', enemyResistMod?: number, allyResistMod?: number }
-  | { kind: 'fog' }
+  | { kind: 'shootPenalty' }
   | { kind: 'puppet' }
 
 // 術の対象範囲 (対象選択パレットでどのユニット群から選ばせるか)

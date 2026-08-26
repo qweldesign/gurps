@@ -57,7 +57,7 @@ export function archerTactic(actor: Unit, state: State): ActionRequest {
       const bestTurns = Math.max(...SPELL_ELEMENTS.map(element => best.spellCast[element]))
       return unitTurns > bestTurns ? unit : best
     })
-    const attackValue = actor.attack.getTarget('body', 'none', longestCastTarget, state.foggy)
+    const attackValue = actor.attack.getTarget('body', 'none', longestCastTarget, state.shootPenalty[actor.side])
     if (attackValue >= 13 || (attackValue === 12 && chance())) chosen = longestCastTarget
   }
 
