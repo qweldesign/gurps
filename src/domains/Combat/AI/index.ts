@@ -29,23 +29,43 @@ export const TACTIC_HANDLERS: Record<TacticKey, TacticHandler> = {
   slime
 }
 
+// 転倒 (「這い」姿勢) ・膝着き姿勢からの自動回復を決定する (tactic の種類を問わず全ての自動行動タイプに共通)
+// 「這い」: 「膝着き」への姿勢変更を選択する (姿勢変更前が「這い」の場合, Action.ts 側でそのターンを終了する仕様のため,
+//   このターンは他の行動を取らずそのまま終わる)
+// 「膝着き」: 「直立」への姿勢変更を選択する (「這い」からの変更と異なりターンは終了しないため, 続けて次の行動を決定させる.
+//   ただし脚が故障している場合は「直立」「屈み」のいずれにも変更できない (availability.ts の canChangePosture 参照) ため,
+//   ここでは何もせず, 「膝着き」のまま通常の tactic ハンドラーに判断を委ねる)
+// いずれの姿勢でもない場合は null を返す
+function decideForPosture(actor: Unit): ActionRequest | null {
+  if (actor.posture === 'prone') {
+    return { key: 'changePosture', options: { posture: 'kneeling' }, targets: [] }
+  }
+  if (actor.posture === 'kneeling' && !actor.health.injuryOnLeg) {
+    return { key: 'changePosture', options: { posture: 'standing' }, targets: [] }
+  }
+  return null
+}
+
 // 幻惑・恐慌状態時の強制行動を決定する (tactic の種類を問わず全ての自動行動タイプに共通)
-// 優先順位 (幻惑 > 狂戦士 > 恐慌) の判定自体は StatusEffects.ts の dazedActive / berserkActive / fearActive に集約済みのため,
-// ここでは「効果として表れている状態」に対応する行動を返すだけでよい
-// 幻惑状態: 「全力防御」以外ほぼ全ての行動 (移動・攻撃・射撃・集中・法術等) が封じられるため, 全力防御を選択する
+// 優先順位 (姿勢回復 > 幻惑 > 狂戦士 > 恐慌) のうち幻惑・狂戦士・恐慌の判定自体は StatusEffects.ts の
+// dazedActive / berserkActive / fearActive に集約済みのため, ここでは「効果として表れている状態」に対応する行動を返すだけでよい
+// 姿勢 (「這い」「膝着き」): 最優先で decideForPosture の判断 (姿勢回復) を返す
+// 幻惑状態 (該当する姿勢でない場合): 「全力防御」以外ほぼ全ての行動 (移動・攻撃・射撃・集中・法術等) が封じられるため, 全力防御を選択する
 //   (狂戦士状態と同時発生している場合も, 幻惑側の全力防御を選択する.
 //    このとき「全力防御」自体は availability.ts の canDefense 側で例外的に許可される)
-// 狂戦士状態 (幻惑ではない場合): ここでは判断せず, 通常の tactic ハンドラー (各ハンドラーの「狂戦士状態」分岐) に判断を委ねる
+// 狂戦士状態 (幻惑でも該当する姿勢でもない場合): ここでは判断せず, 通常の tactic ハンドラー (各ハンドラーの「狂戦士状態」分岐) に判断を委ねる
 //   (狂戦士中は「全力防御」「移動 (後退)」がいずれも選択不可 (availability.ts の canDefense / canMove 参照) であり,
 //    Action.ts の開幕時自動実行と同様, 恐慌より狂戦士を優先させる必要があるため.
 //    狂戦士状態での行き詰まり (近接対象が全く無い場合) は isBerserkStuck 側で別途処理する)
-// 恐慌状態 (幻惑・狂戦士のいずれでもない場合): 前衛にいれば後列へ「移動」を, 後列にいれば「待機」を選択する
+// 恐慌状態 (幻惑・狂戦士のいずれでもなく, 該当する姿勢でもない場合): 前衛にいれば後列へ「移動」を, 後列にいれば「待機」を選択する
 //   (恐慌の定義自体は Action.ts の開幕時自動実行と同一)
 // 通常, 恐慌は開幕時の自動実行 (Action.ts) で既にそのターンが消費されるためここへ到達しないが,
 // 朦朧からの「回復」成功等でターンが継続した場合に備え, 念のためここでも判定する
-// (幻惑状態には Action.ts 側に自動実行の仕組みが無いため, こちらは通常通り毎ターン判定される)
+// (幻惑状態・姿勢には Action.ts 側に自動実行の仕組みが無いため, こちらは通常通り毎ターン判定される)
 // いずれにも該当しない場合は null を返し, 通常の tactic ハンドラーに判断を委ねる
 function decideForImpairedState(actor: Unit): ActionRequest | null {
+  const posture = decideForPosture(actor)
+  if (posture) return posture
   if (actor.statusEffects.dazedActive) {
     return { key: 'defense', options: {}, targets: [] }
   }
@@ -59,7 +79,8 @@ function decideForImpairedState(actor: Unit): ActionRequest | null {
 }
 
 // 敵 (NPC) の行動を決定する (State.nextTurn から呼び出される)
-// 幻惑・狂戦士・恐慌状態の場合は decideForImpairedState (優先順位: 幻惑 > 狂戦士 > 恐慌) の判断を優先し,
+// 姿勢 (「這い」「膝着き」からの回復) ・幻惑・狂戦士・恐慌状態の場合は decideForImpairedState
+// (優先順位: 姿勢回復 > 幻惑 > 狂戦士 > 恐慌) の判断を優先し,
 // actor.tactic に対応するハンドラーが無い場合は「待機」を返す (未指定の tactic や, 将来キーを増やし忘れた場合の保険)
 export function decideEnemyAction(actor: Unit, state: State, difficulity: BattleDifficultyTier): ActionRequest {
   const impaired = decideForImpairedState(actor)
