@@ -6,7 +6,7 @@ import { type BattleDifficultyTier } from '../../Difficulty'
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, isIncapacitated, pickByPositionPriority, pickAttackOption, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
+import { chance, isIncapacitated, pickLowestDefenseTarget, pickAttackOption, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
 
 // 戦士系統の移動先優先順位
 type MovePriority = Array<'left' | 'center' | 'right'> // 1. 後衛から前衛への移動優先順位
@@ -99,7 +99,7 @@ const reckless: WarriorParams = {
  * それ以外なら, 2回攻撃
  *
  * * ターゲットについて
- * 優先順位 1.中央, 2.左翼, 3.右翼
+ * 射撃 (archerTactic) と同様, 近接対象の中から自身の牽制による修正込みの防御目標値が最も低い相手を選ぶ
  */
 export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean, difficulty: BattleDifficultyTier): ActionRequest {
   const movePriority: MovePriority = isHeavyWarrior ? heavyWarriorMove : lightWarriorMove
@@ -125,12 +125,12 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
 
   // 2. 全力攻撃
   if (melee.every(isIncapacitated)) {
-    const enemy = pickByPositionPriority(melee)!
+    const enemy = pickLowestDefenseTarget(actor, melee)!
     return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, enemy, state.shootPenalty[actor.side]) }, targets: [enemy] }
   }
 
   // 3. 行動分岐
-  const primaryTarget = pickByPositionPriority(melee)!
+  const primaryTarget = pickLowestDefenseTarget(actor, melee)!
   const enemyDefense = primaryTarget.defense.getTarget(actor, 'body')
   const toAggressiveBranch = enemyDefense <= 8 || (enemyDefense === 9 && chance())
 
