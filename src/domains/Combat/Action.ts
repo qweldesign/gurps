@@ -1,7 +1,7 @@
 // Combat/Action.ts
 
 import { CombatState as State } from './State'
-import { POSITION_KEYS, POSTURE_KEYS, type Posture } from './Unit'
+import { POSITION_KEYS, POSTURE_KEYS, type Posture, type CombatUnit as Unit } from './Unit'
 import { SPELL_ELEMENTS, type SpellElement } from './Spells'
 import { ACTION_KEYS, ACTION_LABELS, POSITION_LABELS, FULL_POWER_KEYS, FULL_POWER_OPTIONS, AIM_KEYS, AIM_OPTIONS, type ActionKey, type ActionOptions, type ActionRequest, type ActionResult, type ShieldResult, type FeintResult, type SpellResult, type CastCanceledResult, type InjuryOnLimbResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult, type FullPower, type Aim } from './Action/types'
 import { ActionAvailability } from './Action/availability'
@@ -25,6 +25,9 @@ export class CombatAction {
   private resolve!: () => void
   private readonly availabilityChecker: ActionAvailability
   private readonly effects: ActionEffects
+  // 「傀儡」発動成功後, 術者自身のターンが完全に終わるまで保留する移行先 (法術発動自体はターンを終えないため,
+  // 術者はここに至るまで「集中」「移動」等, 別の行動を続けられる. execute() 末尾, ターンが実際に終わる時点で参照する)
+  private pendingPuppetTarget: Unit | null = null
 
   constructor(state: State) {
     this.state = state
@@ -183,13 +186,15 @@ export class CombatAction {
     const log = this.state.logs[0]
     log.receiveResults(action, results)
 
-    // 「傀儡」の発動成功判定 (成功時, 対象のターンへその場で即座に移行する. 術者自身のコマンドパレットには戻らない)
+    // 「傀儡」の発動成功判定 (成功しても即座には移行しない. 法術発動自体はターンを終えないため, ここでは移行先を
+    // 保留するのみとし, 実際の移行は術者自身のターンが完全に終わった時点 (行動終了分岐末尾) で行う)
     const spellResult = results.find((result): result is Extract<ActionResult, { type: 'spell' }> => result.type === 'spell')
     const puppetTarget = action.key === 'spell' && spellResult?.judge.effectResults.some(effectResult => effectResult.kind === 'puppet')
       ? action.targets[0]
       : null
+    if (puppetTarget) this.pendingPuppetTarget = puppetTarget
 
-    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時・法術発動時 (「傀儡」成功時を除く) はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
+    // 行動終了分岐 (回復成功時・装備変更時・姿勢変更時 (「這い」からの起き上がりを除く) ・射撃時・法術発動時はターンを終えず, コマンドパレットを再度アンロックして同じ actor の行動を続ける)
     let nextTurn = true
     const recoveryResult = results.find(result => result.type === 'recovery')
     if (action.key === 'recovery' && recoveryResult?.judge.success) {
@@ -204,18 +209,21 @@ export class CombatAction {
       this.unlocked = true
       nextTurn = false
     }
-    if (action.key === 'shoot' || (action.key === 'spell' && !puppetTarget)) {
+    if (action.key === 'shoot' || action.key === 'spell') {
       this.unlocked = true
       nextTurn = false
     }
 
     // 行動終了
     await this.state.playLog() // ログの再生完了を待つ
-    if (puppetTarget) {
-      // 「傀儡」: 対象のターンへ移行し, それが終わり次第, 術者自身のターンも終了する (そこから術者の行動には戻れない)
-      await this.state.startPuppetTurn(puppetTarget)
-      this.resolve()
-    } else if (nextTurn) {
+    if (nextTurn) {
+      // 「傀儡」発動が保留されている場合, 術者自身のターンがここで完全に終わるため, 対象のターンへ移行する
+      // (対象のターンが終わり次第, そこから術者の行動には戻らず, 通常の行動順で次の者のターンへ進む)
+      if (this.pendingPuppetTarget) {
+        const target = this.pendingPuppetTarget
+        this.pendingPuppetTarget = null
+        await this.state.startPuppetTurn(target)
+      }
       this.resolve()
     }
   }
