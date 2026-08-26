@@ -2,12 +2,9 @@
 //
 // バトル難度 (3段階) の定義
 //
-// Easy   : Enemy.ts の getEnemyFormation と連動してゴブリンまたはスライムが出現する
-// Normal : サンプルユニット (人間) との戦闘. 敵の生成CPはプレイヤーの実際のCPの1.0〜1.25倍を
-//          戦闘開始のたびにランダムに抽選する (Combat.tsx 側を参照). プレイヤー保有CPが
-//          NORMAL_UNLOCK_CP に達するまではロックされる
-// Hard   : Enemy.ts の getEnemyFormation と連動してアンデッドが出現する
-//          HARD_UNLOCK_CP に達するまではロックされる
+// Easy: Enemy.ts の getEnemyBattleSetup (内部で getEnemyFormation) と連動してゴブリンまたはスライムが出現する
+// Normal: サンプルユニット (人間) との戦闘. 敵の生成CPはプレイヤーの実際のCPの1.0〜1.25倍相当
+// Hard: Enemy.ts の getEnemyBattleSetup (内部で getEnemyFormation) と連動してアンデッドが出現する
 //
 // 難度は戦闘のたびに選び直す想定のため, SaveData (localStorage) には永続化しない.
 // Setup/BattleDifficulty.tsx から navigate('/battle/', { state: { difficulty } }) の形で
