@@ -81,7 +81,8 @@ export class CombatState {
       }
     }
 
-    // 倒れているユニットのターンをパス
+    // 倒れている (気絶・死亡した) ユニットのターンをパス
+    // (通常の生物は死亡時に必ず気絶も伴うが, アンデッド・スライムは気絶を経由せず死亡するため, dead も明示的に確認する)
     let isAlive = false
     while (!isAlive) {
       this.turnIndex++
@@ -89,7 +90,7 @@ export class CombatState {
         this.round++
         this.turnIndex %= this.units.length
       }
-      isAlive = !this.actor.health.unconscious
+      isAlive = !this.actor.health.unconscious && !this.actor.health.dead
     }
     this.formation = new Formation(this.actor, this.units)
     // 前ターンのログを, その行動者の履歴として保持 (Summaryの行動ラベル表示用)
