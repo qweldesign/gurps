@@ -26,9 +26,11 @@ export class ActionAvailability {
 
   // 「攻撃」「特殊攻撃」共通の基本条件
   // 射撃武器ではない, 自身が前方に配置されている, かつ幻惑状態ではないことが条件 (武器の準備状態はここに含めない)
+  // 「傀儡」中は, 位置 (後列を含む) を問わず対象を取れる (Formation.getMeleeTargets 参照. 気絶等で後列に
+  // 追いやられた状態のまま傀儡にされることが多いため) ので, 前方配置の条件を外す
   private canAttackBase(): boolean {
     const actor = this.state.actor
-    return !actor.attack.model.isMissile && actor.position !== 'back' && !this.isDazed()
+    return !actor.attack.model.isMissile && (actor.position !== 'back' || actor.health.puppeted) && !this.isDazed()
   }
 
   // 「攻撃」: 基本条件 + 武器が準備状態であること + 狂戦士状態ではないこと
