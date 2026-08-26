@@ -14,14 +14,14 @@ import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../
  * 2. 集中時間が1ターン
  * 木行術の技能値で分岐
  * 木行術の技能値が12未満なら,「ヘイスト」
- * 木行術の技能値が13以上なら, 50% の確率分岐で集中を継続するか, 次と同じ
+ * 木行術の技能値が13以上なら, 75% の確率分岐で集中を継続するか, 次と同じ
  * 木行術の技能値が12なら, 50% の確率分岐で「ヘイスト」か「茨の呪縛」
  * 「ヘイスト」の対象: 味方前衛優先 (いなければ全員). 既に回避UPバフが掛かっている対象がいれば最優先,
  * それ以外は素の回避値 (StatusBuff によるバフを除いた defense.ev) が低い対象を優先する
  *
  * 3. 集中時間が2ターン
  * 木行術の技能値で分岐
- * 木行術の技能値が16以上なら, 50% の確率分岐で集中を継続するか,「風の刃」
+ * 木行術の技能値が16以上なら, 75% の確率分岐で集中を継続するか,「風の刃」
  * 木行術の技能値が16未満なら,「風の刃」
  * 「守りの風」は NPC は使わない
  *
@@ -55,14 +55,14 @@ export function woodSpellTactic(actor: Unit, state: State): ActionRequest {
   // 2. 集中時間が1ターン
   if (turns === 1) {
     if (skill < 12) return haste() // ヘイスト
-    if (skill >= 13 && chance()) return cast() // 集中継続
+    if (skill >= 13 && chance(0.75)) return cast() // 集中継続
     // 次と同じ (技能値12のケースと同じ判定)
     return chance() ? haste() : enemy(1) // ヘイスト / 茨の呪縛
   }
 
   // 3. 集中時間が2ターン (「守りの風」は NPC は使わない)
   if (turns === 2) {
-    if (skill >= 16 && chance()) return cast() // 集中継続
+    if (skill >= 16 && chance(0.75)) return cast() // 集中継続
     return enemy(2) // 風の刃
   }
 
