@@ -376,7 +376,7 @@ export class ActionEffects {
           } else if (effect.kind === 'heal') {
             extraResults.push(...this.spellHealRoutine(target, spellData.label, effect))
           } else if (effect.kind === 'shootPenalty') {
-            // 「濃霧」: 対象を持たない持続効果. 術者と敵対する陣営 (自陣営には影響しない) にのみ適用され,
+            // 「守りの風」: 対象を持たない持続効果. 術者と敵対する陣営 (自陣営には影響しない) にのみ適用され,
             // 一度発動すれば戦闘終了まで持続する (再発動しても変化なし)
             this.state.shootPenalty[actor.side === 'player' ? 'enemy' : 'player'] = true
             effectResults.push({ kind: 'shootPenalty' })
@@ -399,7 +399,7 @@ export class ActionEffects {
   // 敵 (術者と別陣営) の場合のみ, その配置に応じたペナルティを課す (味方・自身が対象の場合は 0)
   private getSpellDistanceMod(spellData: Spell, target: Unit): number {
     const actor = this.state.actor
-    const shootPenalty = this.state.shootPenalty[actor.side] // 術者自身の所属陣営が「濃霧」の影響下にあるか否か
+    const shootPenalty = this.state.shootPenalty[actor.side] // 術者自身の所属陣営が「守りの風」の影響下にあるか否か
     if (spellData.spellType === 'range') {
       const kind = spellData.effects?.[0]?.kind
       if (kind !== 'dmg' && kind !== 'flash') return 0

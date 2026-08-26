@@ -146,7 +146,7 @@ export type FeintResult = Score & {
 }
 
 // 法術の効果適用結果 (buff・status・puppet は発動成功時に無条件適用されるため常に成功, debuff は抵抗判定の成否による)
-// shootPenalty は対象を持たない (戦場全体への持続効果. 「濃霧」用)
+// shootPenalty は対象を持たない (戦場全体への持続効果. 「守りの風」用)
 export type SpellEffectResult =
   | { kind: 'buff', target: SpellBuffTarget }
   | { kind: 'status', target: StatusEffectTarget }

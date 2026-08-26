@@ -264,7 +264,7 @@ export class CombatLog {
           } else if (result.kind === 'puppet') {
             messages.push(<>{`${target} を傀儡として操る!`}</>)
           } else if (result.kind === 'shootPenalty') {
-            messages.push(<>{`辺り一帯に深い霧が立ち込めた!`}</>)
+            messages.push(<>{`風の精霊の加護が働く!`}</>)
           } else if (result.applied) {
             messages.push(<>{`${target} は ${STATUS_EFFECT_LABELS[result.target]} 状態になった!`}</>)
           } else {
