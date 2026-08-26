@@ -21,7 +21,7 @@ export class CombatAction {
   public hasChangedWeapon: boolean // 「装備変更」を実行したかどうか (1ターンに1度まで)
   public hasChangedPosture: boolean // 「姿勢変更」を実行したかどうか (1ターンに1度まで)
   public promise: Promise<void>
-  public ready: Promise<void> // 開幕時の自動実行 (朦朧回復・消火) が完了したら解決される (敵の自動行動 (AI) はこれを待ってから起動する)
+  public ready: Promise<void> // 開幕時の自動実行 (朦朧回復・消火・パニックによる後退/待機) が完了したら解決される (敵の自動行動 (AI) はこれを待ってから起動する)
   private resolve!: () => void
   private readonly availabilityChecker: ActionAvailability
   private readonly effects: ActionEffects
@@ -42,10 +42,16 @@ export class CombatAction {
 
     // 朦朧状態の場合は「回復」を自動実行する
     // 火だるま状態の場合は「消火」を自動実行する (両方に該当する場合は「回復」を優先し,「消火」は朦朧から回復した後のターンに持ち越す)
+    // パニック状態の場合は, 前衛にいれば後衛へ「移動」を, 後衛にいれば「待機」を自動実行する
+    // (いずれも該当する場合は, 朦朧回復・消火を優先し, パニックへの対応は持ち越す)
     if (this.actor.health.stunned) {
       this.ready = this.execute({ key: 'recovery', options: {}, targets: [] })
     } else if (this.actor.health.burning) {
       this.ready = this.execute({ key: 'extinguish', options: {}, targets: [] })
+    } else if (this.actor.statusEffects.panic > 0) {
+      this.ready = this.actor.position !== 'back'
+        ? this.execute({ key: 'move', options: { position: 'back' }, targets: [] })
+        : this.execute({ key: 'wait', options: {}, targets: [] })
     } else {
       this.ready = Promise.resolve()
     }

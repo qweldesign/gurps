@@ -153,7 +153,7 @@ export class CombatLog {
         break
 
       case 'wait':
-        messages.push(<>{`${actor} は 待機している`}</>)
+        messages.push(<>{`${actor} は パニック状態で行動できない`}</>) // パニック状態のみ
         break
 
       case 'cast':
