@@ -13,9 +13,9 @@ import { isBerserkStuck } from './AI/utils'
 // 勝敗結果 (未決着は null)
 export type CombatResult = 'win' | 'lose' | null
 
-// 「重篤な状態」(「時間遡行」の発動条件用): 死亡・気絶・転倒・目/耳/四肢の故障のいずれか
+// 「重篤な状態」(「時間遡行」の発動条件用): 死亡・気絶・朦朧・目/耳/四肢の故障のいずれか
 function isCriticalUnit(unit: Unit): boolean {
-  return unit.health.dead || unit.health.unconscious || unit.posture === 'prone' ||
+  return unit.health.dead || unit.health.unconscious || unit.health.stunned ||
     unit.health.blinded || unit.health.deafened || unit.health.injuryOnArm || unit.health.injuryOnLeg
 }
 function isCriticalSnapshot(snapshot: UnitSnapshot): boolean {
@@ -33,7 +33,7 @@ export class CombatState {
   public logs: Log[]
   public playLog: () => Promise<void> // Combat 本体から受け取り, Action から呼び出す
   public action: Action | null
-  public shootPenalty: Record<Side, boolean> // 陣営ごとの射撃/術の距離ペナルティ倍化フラグ (「濃霧」用. 使用した陣営とは逆の陣営にのみ適用される. 一度発生すれば戦闘終了まで持続する)
+  public shootPenalty: Record<Side, boolean> // 陣営ごとの射撃/術の距離ペナルティ倍化フラグ (「守りの風」用. 使用した陣営とは逆の陣営にのみ適用される. 一度発生すれば戦闘終了まで持続する)
   public puppetTarget: Unit | null // 「傀儡」で移行中の対象 (非null の間, actor はこちらを優先する. 通常の行動順の進行とは無関係)
   public result: CombatResult // 勝敗結果 (未決着中は null. 決着後はターンを進めない)
 

@@ -26,9 +26,11 @@ export class ActionAvailability {
 
   // 「攻撃」「特殊攻撃」共通の基本条件
   // 射撃武器ではない, 自身が前方に配置されている, かつ幻惑状態ではないことが条件 (武器の準備状態はここに含めない)
+  // 「傀儡」中は, 位置 (後列を含む) を問わず対象を取れる (Formation.getMeleeTargets 参照. 気絶等で後列に
+  // 追いやられた状態のまま傀儡にされることが多いため) ので, 前方配置の条件を外す
   private canAttackBase(): boolean {
     const actor = this.state.actor
-    return !actor.attack.model.isMissile && actor.position !== 'back' && !this.isDazed()
+    return !actor.attack.model.isMissile && (actor.position !== 'back' || actor.health.puppeted) && !this.isDazed()
   }
 
   // 「攻撃」: 基本条件 + 武器が準備状態であること + 狂戦士状態ではないこと
@@ -79,19 +81,19 @@ export class ActionAvailability {
   }
 
   //「集中」実行可否取得
-  // 該当する系統の術の技能値が11以上, かつ幻惑状態ではないこと, かつ「這い」の姿勢ではないことが条件
+  // 該当する系統の術の技能値が11以上, かつ幻惑状態・狂戦士状態ではないこと, かつ「這い」の姿勢ではないことが条件
   // 「傀儡」中は不可 (蓄積した詠唱時間が次のターンへ持ち越されないため)
   canCast(element: SpellElement): boolean {
     const actor = this.state.actor
-    return actor.spells[element] > 10 && !this.isDazed() && actor.posture !== 'prone' && !actor.health.puppeted
+    return actor.spells[element] > 10 && !this.isDazed() && actor.posture !== 'prone' && !actor.health.puppeted && !actor.statusEffects.berserk
   }
 
   //「法術」実行可否取得
-  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上, 幻惑状態ではないこと, かつ「這い」の姿勢ではないことが条件
+  // 該当する系統の詠唱時間 (「集中」の実行回数) が1以上, 幻惑状態・狂戦士状態ではないこと, かつ「這い」の姿勢ではないことが条件
   // 「傀儡」中は不可 (集中と同様の理由)
   canSpell(element: SpellElement): boolean {
     const actor = this.state.actor
-    return actor.spellCast[element] > 0 && !this.isDazed() && actor.posture !== 'prone' && !actor.health.puppeted
+    return actor.spellCast[element] > 0 && !this.isDazed() && actor.posture !== 'prone' && !actor.health.puppeted && !actor.statusEffects.berserk
   }
 
   //「全力防御」実行可否取得
