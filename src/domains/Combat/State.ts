@@ -13,9 +13,9 @@ import { isBerserkStuck } from './AI/utils'
 // 勝敗結果 (未決着は null)
 export type CombatResult = 'win' | 'lose' | null
 
-// 「重篤な状態」(「時間遡行」の発動条件用): 死亡・気絶・転倒・目/耳/四肢の故障のいずれか
+// 「重篤な状態」(「時間遡行」の発動条件用): 死亡・気絶・朦朧・目/耳/四肢の故障のいずれか
 function isCriticalUnit(unit: Unit): boolean {
-  return unit.health.dead || unit.health.unconscious || unit.posture === 'prone' ||
+  return unit.health.dead || unit.health.unconscious || unit.health.stunned ||
     unit.health.blinded || unit.health.deafened || unit.health.injuryOnArm || unit.health.injuryOnLeg
 }
 function isCriticalSnapshot(snapshot: UnitSnapshot): boolean {
