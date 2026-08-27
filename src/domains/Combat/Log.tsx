@@ -412,8 +412,9 @@ export class CombatLog {
         if (!result.judge.success) messages.push(<>{`${targetName} は 即死した!!!`}</>)
         break
 
-      case 'trip': // 術の転倒効果の結果ログ (「アースハンド」用). 成功 (転倒を免れた) 時は表示しない
+      case 'trip': // 術の転倒効果の結果ログ (「アースハンド」用).
         if (!result.judge.success) messages.push(<>{`${targetName} は 転倒した!!`}</>)
+        else messages.push(<>{`だが、${targetName} は 転倒に耐えた!`}</>)
         break
 
       case 'castCanceled': // 精神集中の強制解除ログ (継続中の系統があった場合のみ渡ってくる. judge.target で対象を直接特定する)
@@ -443,6 +444,6 @@ export class CombatLog {
   private getResultLabel(judge: Judge): string {
     return judge.success && judge.critical ? 'クリティカル!!'
       : judge.success && !judge.critical ? '成功!'
-      : !judge.success && !judge.critical ? '失敗!' : 'ファンブル!!!'
+      : !judge.success && !judge.critical ? '失敗!' : '!!!'
   }
 }
