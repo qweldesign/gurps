@@ -343,7 +343,7 @@ export class ActionEffects {
     const extraResults: ActionResult[] = []
 
     if (!spellJudge.success && spellJudge.critical) {
-      actor.statusEffects.dazed = 1
+      actor.statusEffects.dazed = 2 // そのターンはすぐ終了して回復してしまうため 2 とする
     }
 
     if (spellJudge.success) {
