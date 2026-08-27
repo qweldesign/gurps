@@ -104,8 +104,8 @@ export function getEnemyBattleSetup(difficulty: BattleDifficultyTier | undefined
     r2 = Math.floor(Math.random() * 16)
   }
   const cpMultiplier = NORMAL_CP_MULTIPLIER_MIN + Math.random() * (NORMAL_CP_MULTIPLIER_MAX - NORMAL_CP_MULTIPLIER_MIN)
-  const enemyCp = Math.round(saveData.loadPoints() * cpMultiplier)
+  const enemyCp = Math.round(Math.floor(saveData.loadPoints() * cpMultiplier))
   // 能力値のスケーリング (CP倍率) は選択された初期CP (10/20/40) にあわせたセーブデータの値を使用する
   const models = createSamples(enemyCp, saveData.loadMultiplier(), 4, r2, 4).map(unit => unit.combatUnitModel)
-  return { models, reward: { cp: NORMAL_REWARD_CP, gold: NORMAL_REWARD_GOLD * cpMultiplier } }
+  return { models, reward: { cp: NORMAL_REWARD_CP, gold: Math.floor(NORMAL_REWARD_GOLD * cpMultiplier) } }
 }
