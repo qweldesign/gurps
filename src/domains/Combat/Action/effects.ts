@@ -5,7 +5,7 @@ import { type WeaponSlotKey } from '../../Equipments'
 import { type Position, type Posture, type CombatUnit as Unit } from '../Unit'
 import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseResult, type DmgResult, type SpellEffectResult, type FlashResult, type HealResult, type CleanseResult, type DebuffAllResult } from './types'
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, judgeShieldBlock, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
-import { SPELL_ELEMENTS, SPELL_LIST, type SpellElement, type SpellEffect, type Spell } from '../Spells'
+import { SPELL_ELEMENTS, SPELL_LIST, MAX_SPELL_CAST, type SpellElement, type SpellEffect, type Spell } from '../Spells'
 
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
@@ -315,9 +315,10 @@ export class ActionEffects {
 
   //「集中」実行 (該当する系統の詠唱時間を1蓄積する. 他の系統に集中していた場合, その詠唱時間はリセットされる)
   // 聾・沈黙状態の場合のみ判定を要する (それ以外は無条件で詠唱時間が進む)
+  // MAX_SPELL_CAST (=3) 到達後も「集中」を継続できるが, 詠唱時間はそれ以上蓄積されない (これ以上習得済みの術が増えないため)
   cast(element: SpellElement): ActionResult[] {
     const actor = this.state.actor
-    actor.spellCast[element]++
+    actor.spellCast[element] = Math.min(actor.spellCast[element] + 1, MAX_SPELL_CAST)
     SPELL_ELEMENTS.forEach(spellElement => {
       if (spellElement !== element) actor.spellCast[spellElement] = 0
     })

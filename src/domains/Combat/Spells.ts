@@ -68,6 +68,9 @@ export const SPELL_LIST: Record<SpellElement, Spell[]> = {
   water: WATER_SPELL
 }
 
+// 精神集中 (spellCast) の最大値 (全ての術の spellCast の最大値と一致. これ以上「集中」を継続しても習得済みの術は増えないため, ここで頭打ちにする)
+export const MAX_SPELL_CAST = 3
+
 // 五行
 export type SpellElement = typeof SPELL_ELEMENTS[number]
 
