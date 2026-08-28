@@ -248,27 +248,33 @@ function Action({ store }: { store: Store }) {
         >戻る</button>
       </div>
       <div className="actions option" data-disable={actionPalette !== 'spell'}>
-        {SPELL_ELEMENTS.map(element => SPELL_LIST[element].filter(spell => spell.spellType !== 'defense').map(spell => (
-          // 技能値による解禁レベル未満, 詠唱時間ゼロ, 該当する術に必要な詠唱時間未満のいずれかであれば非表示
-          // spellType: 'defense' (盾・時間遡行) は防御時に自動発動する術のため, このパレットには表示しない
-          <button
-            className="is-small"
-            key={`${element}:${spell.id}`}
-            disabled={spell.id >= store.actor.spells[element] - 10 || store.actor.spellCast[element] < spell.spellCast}
-            onClick={() => {
-              setActionOptions({ element, spellId: spell.id })
-              if (spell.targetScope) {
-                // 対象範囲が指定された術は対象選択を要するため, ターゲットパレットへ進む
-                setActionPalette('target')
-                setTargetPalette('spell')
-              } else {
-                // 対象を要さない術は暫定的に自身を対象とし, 確認パレットへ進む
-                setActionTargets([store.actor])
-                setActionPalette('confirmSpell')
-              }
-            }}
-          >{spell.label}</button>
-        )))}
+        {SPELL_ELEMENTS.map(element => SPELL_LIST[element].map(spell => {
+          // 技能値による解禁レベル未満, または該当する五行の集中が1ターンも継続していない (未着手) 場合は非表示
+          if (spell.id >= store.actor.spells[element] - 10 || store.actor.spellCast[element] < 1) return null
+          // 詠唱に必要な集中時間まで到達済みか (spellType: 'defense' (盾・時間遡行) は防御時に自動発動する術のため,
+          // 到達済みでも「法術」行動としては選択不可のまま, 準備完了の目安として表示する)
+          const isReady = store.actor.spellCast[element] >= spell.spellCast
+          const isSelectable = isReady && spell.spellType !== 'defense'
+          return (
+            <button
+              className={`is-small ${isSelectable ? '' : 'is-pending'}`}
+              key={`${element}:${spell.id}`}
+              onClick={() => {
+                if (!isSelectable) return
+                setActionOptions({ element, spellId: spell.id })
+                if (spell.targetScope) {
+                  // 対象範囲が指定された術は対象選択を要するため, ターゲットパレットへ進む
+                  setActionPalette('target')
+                  setTargetPalette('spell')
+                } else {
+                  // 対象を要さない術は暫定的に自身を対象とし, 確認パレットへ進む
+                  setActionTargets([store.actor])
+                  setActionPalette('confirmSpell')
+                }
+              }}
+            >{spell.label}{spell.spellType === 'defense' ? ' (自動)' : ''}</button>
+          )
+        }))}
         <button
           onClick={() => { reset(); }} // 全てリセットし, メインパレットへ戻る
         >戻る</button>

@@ -233,6 +233,10 @@
     @apply bg-emerald-400/50 text-white;
   }
 
+  .actions > button.is-pending {
+    @apply opacity-50 pointer-events-none cursor-default hover:bg-black/50 hover:text-white;
+  }
+
   .summary {
     @apply p-3;
   }
