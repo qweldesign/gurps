@@ -6,7 +6,7 @@ import { type BattleDifficultyTier } from '../../Difficulty'
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, isIncapacitated, pickLowestDefenseTarget, pickAttackOption, pickFullPowerOption, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
+import { chance, isIncapacitated, pickLowestDefenseTarget, pickAttackOption, fullAttackRequest, pickMoveToReachMeleeTarget, worstOwnDefenseTarget } from '../utils'
 
 // 戦士系統の移動先優先順位
 type MovePriority = Array<'left' | 'center' | 'right'> // 1. 後衛から前衛への移動優先順位
@@ -133,7 +133,7 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   // 2. 全力攻撃 (狂戦士状態は, 通常攻撃・牽制・全力防御がいずれも選択不可なため, 判定不能状態の場合と同様にここで全力攻撃を確定する)
   if (actor.statusEffects.berserk || melee.every(isIncapacitated)) {
     const enemy = pickLowestDefenseTarget(actor, melee)!
-    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, enemy, state.shootPenalty[actor.side]) }, targets: [enemy] }
+    return fullAttackRequest(actor, enemy, state.shootPenalty[actor.side])
   }
 
   // 3. 行動分岐
@@ -144,7 +144,7 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   if (toAggressiveBranch) {
     // 4. 全力攻撃/攻撃
     if (melee.length === 1) {
-      return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.shootPenalty[actor.side]) }, targets: [primaryTarget] }
+      return fullAttackRequest(actor, primaryTarget, state.shootPenalty[actor.side])
     }
     if (actor.attack.ready > 0) return { key: 'ready', options: {}, targets: [] } // 通常攻撃には武器の準備状態が要る
     return pickAttackOption(actor, state, primaryTarget, params.quickAttack)
@@ -153,14 +153,14 @@ export function warriorTactic(actor: Unit, state: State, isHeavyWarrior: boolean
   // 5. 全力攻撃/全力防御/準備/攻撃/牽制
   const selfDefense = worstOwnDefenseTarget(actor, melee)
   if (selfDefense <= params.attackMax) {
-    return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.shootPenalty[actor.side]) }, targets: [primaryTarget] }
+    return fullAttackRequest(actor, primaryTarget, state.shootPenalty[actor.side])
   }
   if (params.defenseValues.includes(selfDefense)) {
     return { key: 'defense', options: {}, targets: [] }
   }
   if (params.coinflipValues.includes(selfDefense)) {
     return chance()
-      ? { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, primaryTarget, state.shootPenalty[actor.side]) }, targets: [primaryTarget] }
+      ? fullAttackRequest(actor, primaryTarget, state.shootPenalty[actor.side])
       : { key: 'defense', options: {}, targets: [] }
   }
 

@@ -5,7 +5,7 @@
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../utils'
+import { chance, frontOrAll, pickByPriority, createSpellActions } from '../utils'
 
 /**
  * 1. 集中
@@ -32,15 +32,10 @@ import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../
 export function woodSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.wood
   const turns = actor.spellCast.wood
+  const { cast, enemy } = createSpellActions(actor, state, 'wood')
 
   // 1. 集中
-  if (turns === 0) return { key: 'cast', options: { element: 'wood' }, targets: [] }
-
-  const cast = (): ActionRequest => ({ key: 'cast', options: { element: 'wood' }, targets: [] })
-  const enemyTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies)
-  const enemy = (spellId: number): ActionRequest => enemyTarget
-    ? { key: 'spell', options: { element: 'wood', spellId }, targets: [enemyTarget] }
-    : { key: 'wait', options: {}, targets: [] }
+  if (turns === 0) return cast()
 
   // 「ヘイスト」の対象選定 (味方前衛優先. 既に回避UPバフが掛かっている対象がいれば最優先, それ以外は素の回避値が低い対象を優先する)
   const hasteTarget = pickByPriority(

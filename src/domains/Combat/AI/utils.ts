@@ -5,6 +5,7 @@
 import { type CombatState as State } from '../State'
 import { type CombatUnit as Unit, type Side, type Position } from '../Unit'
 import { type FullPower, type ActionRequest } from '../Action/types'
+import { type SpellElement } from '../Spells'
 
 // 確率分岐 (デフォルトは 50%)
 export function chance(probability: number = 0.5): boolean {
@@ -109,4 +110,23 @@ export function pickFullPowerOption(actor: Unit, target: Unit, shootPenalty: boo
   if (actor.attack.getTarget('body', 'none', target, shootPenalty) <= 10) return 'level'
   if (target.defense.getTarget(actor, 'body') >= 11) return 'feint'
   return 'double'
+}
+
+// 全力攻撃を無条件で選択する行動要求を組み立てる (pickFullPowerOption でオプションを決定する)
+// 狂戦士状態や, 防御目標値の閾値により全力攻撃が確定した戦士系統の各分岐 (warrior.ts) で共通利用する
+export function fullAttackRequest(actor: Unit, target: Unit, shootPenalty: boolean): ActionRequest {
+  return { key: 'attack', options: { aim: 'body', fullPower: pickFullPowerOption(actor, target, shootPenalty) }, targets: [target] }
+}
+
+// 術の基本詠唱パターン (AI/base/*Spell.ts) で共通利用する, 系統ごとのアクション生成ヘルパー
+// cast: 集中を1ターン進める. self: 対象を持たない術を自身に対して発動する.
+// enemy: 敵陣営から (自身の牽制修正込みの) 防御目標値が最も低い相手を選び, その術を発動する (対象がいなければ待機する)
+export function createSpellActions(actor: Unit, state: State, element: SpellElement) {
+  const cast = (): ActionRequest => ({ key: 'cast', options: { element }, targets: [] })
+  const self = (spellId: number): ActionRequest => ({ key: 'spell', options: { element, spellId }, targets: [actor] })
+  const enemyTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies)
+  const enemy = (spellId: number): ActionRequest => enemyTarget
+    ? { key: 'spell', options: { element, spellId }, targets: [enemyTarget] }
+    : { key: 'wait', options: {}, targets: [] }
+  return { cast, self, enemy, enemyTarget }
 }

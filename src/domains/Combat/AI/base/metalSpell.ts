@@ -5,7 +5,7 @@
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../utils'
+import { chance, frontOrAll, pickByPriority, createSpellActions } from '../utils'
 
 /**
  * 1. 集中
@@ -33,15 +33,10 @@ import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../
 export function metalSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.metal
   const turns = actor.spellCast.metal
+  const { cast, enemy } = createSpellActions(actor, state, 'metal')
 
   // 1. 集中
-  if (turns === 0) return { key: 'cast', options: { element: 'metal' }, targets: [] }
-
-  const cast = (): ActionRequest => ({ key: 'cast', options: { element: 'metal' }, targets: [] })
-  const enemyTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies)
-  const enemy = (spellId: number): ActionRequest => enemyTarget
-    ? { key: 'spell', options: { element: 'metal', spellId }, targets: [enemyTarget] }
-    : { key: 'wait', options: {}, targets: [] }
+  if (turns === 0) return cast()
 
   // 「金縛り」「金貨」共通の対象選定 (敵前衛優先. 抵抗値 (pre) が低い対象を優先し, 同じなら中央を優先する)
   const resistTarget = pickByPriority(

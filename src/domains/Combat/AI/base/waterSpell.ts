@@ -5,7 +5,7 @@
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../utils'
+import { chance, frontOrAll, pickByPriority, createSpellActions } from '../utils'
 
 /**
  * 1. 集中
@@ -30,16 +30,10 @@ import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../
 export function waterSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.water
   const turns = actor.spellCast.water
+  const { cast, self, enemy } = createSpellActions(actor, state, 'water')
 
   // 1. 集中
-  if (turns === 0) return { key: 'cast', options: { element: 'water' }, targets: [] }
-
-  const cast = (): ActionRequest => ({ key: 'cast', options: { element: 'water' }, targets: [] })
-  const self = (spellId: number): ActionRequest => ({ key: 'spell', options: { element: 'water', spellId }, targets: [actor] })
-  const enemyTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies)
-  const enemy = (spellId: number): ActionRequest => enemyTarget
-    ? { key: 'spell', options: { element: 'water', spellId }, targets: [enemyTarget] }
-    : { key: 'wait', options: {}, targets: [] }
+  if (turns === 0) return cast()
 
   // 「ぼんやり」の対象選定 (敵前衛優先. 抵抗値 (pre) が低い対象を優先し, 同じなら中央を優先する)
   const dazedTarget = pickByPriority(

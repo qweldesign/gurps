@@ -5,7 +5,7 @@
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../utils'
+import { chance, frontOrAll, pickByPriority, createSpellActions } from '../utils'
 
 /**
  * 1. 集中
@@ -32,16 +32,10 @@ import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../
 export function fireSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.fire
   const turns = actor.spellCast.fire
+  const { cast, self, enemy } = createSpellActions(actor, state, 'fire')
 
   // 1. 集中
-  if (turns === 0) return { key: 'cast', options: { element: 'fire' }, targets: [] }
-
-  const cast = (): ActionRequest => ({ key: 'cast', options: { element: 'fire' }, targets: [] })
-  const self = (spellId: number): ActionRequest => ({ key: 'spell', options: { element: 'fire', spellId }, targets: [actor] })
-  const enemyTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies)
-  const enemy = (spellId: number): ActionRequest => enemyTarget
-    ? { key: 'spell', options: { element: 'fire', spellId }, targets: [enemyTarget] }
-    : { key: 'wait', options: {}, targets: [] }
+  if (turns === 0) return cast()
 
   // 「ヒロイズム」の対象選定 (味方前衛優先. 素の命中値が低い対象を優先する)
   const heroismTarget = pickByPriority(frontOrAll(state.action!.target.allies), unit => unit.attack.model.level)

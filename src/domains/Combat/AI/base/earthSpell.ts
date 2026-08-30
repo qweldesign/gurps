@@ -5,7 +5,7 @@
 import { type CombatState as State } from '../../State'
 import { type CombatUnit as Unit } from '../../Unit'
 import { type ActionRequest } from '../../Action/types'
-import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../utils'
+import { chance, frontOrAll, pickByPriority, createSpellActions } from '../utils'
 
 /**
  * 1. 集中
@@ -32,16 +32,10 @@ import { chance, frontOrAll, pickByPriority, pickLowestDefenseTarget } from '../
 export function earthSpellTactic(actor: Unit, state: State): ActionRequest {
   const skill = actor.spells.earth
   const turns = actor.spellCast.earth
+  const { cast, self, enemy } = createSpellActions(actor, state, 'earth')
 
   // 1. 集中
-  if (turns === 0) return { key: 'cast', options: { element: 'earth' }, targets: [] }
-
-  const cast = (): ActionRequest => ({ key: 'cast', options: { element: 'earth' }, targets: [] })
-  const self = (spellId: number): ActionRequest => ({ key: 'spell', options: { element: 'earth', spellId }, targets: [actor] })
-  const enemyTarget = pickLowestDefenseTarget(actor, state.action!.target.enemies)
-  const enemy = (spellId: number): ActionRequest => enemyTarget
-    ? { key: 'spell', options: { element: 'earth', spellId }, targets: [enemyTarget] }
-    : { key: 'wait', options: {}, targets: [] }
+  if (turns === 0) return cast()
 
   // 「ベルセルク」の対象選定 (味方前衛優先. 既に攻撃UPバフが掛かっている対象がいれば最優先, それ以外は tactic: heavyWarrior を優先する)
   const berserkTarget = pickByPriority(
