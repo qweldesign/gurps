@@ -7,6 +7,16 @@ import { AIM_OPTIONS, type Aim, type FullPower, type ActionResult, type DefenseR
 import { judgeAttack, judgeDefense, rollDmg, judgeSpellDefense, judgeShieldBlock, rollSpellDmg, judgeFeint, judgeCast, judgeSpell, judgeTrip, judgeResist, judgeRecovery, judgeMaintainCast, judgeKnockedDown, judgeFatal, judgeUnconscious, judgeDead } from './resolver'
 import { SPELL_ELEMENTS, SPELL_LIST, MAX_SPELL_CAST, type SpellElement, type SpellEffect, type Spell } from '../Spells'
 
+// 部位狙いによる負傷上限 (耳・目は2点固定, それ以外は対象の最大HP比. resolveDamage で利用する)
+const LIMB_INJURY_CAP: Partial<Record<Aim, (target: Unit) => number>> = {
+  ear: () => 2,
+  eye: () => 2,
+  hand: target => Math.floor(target.health.maxHp / 3),
+  foot: target => Math.floor(target.health.maxHp / 3),
+  arm: target => Math.floor(target.health.maxHp / 2),
+  leg: target => Math.floor(target.health.maxHp / 2),
+}
+
 // 行動実行 (状態変更) を司るクラス / Action.execute から呼び出される
 export class ActionEffects {
   private state: State
@@ -66,21 +76,17 @@ export class ActionEffects {
     // 防御判定 (攻撃判定がクリティカルか, 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合はスキップ)
     // 全力防御中の対象は, 最初の防御に失敗しても続けて別の防御方法を試みるため, 複数回分の結果が返ることがある
     const canDefend = target.defense.getCanBlock(aim) || target.defense.canParry || target.defense.canDodge
-    let castCanceledResults: ActionResult[] = []
-    if (!attackJudge.critical && canDefend) {
-      const defenseJudges = judgeDefense(actor, aim, target)
-      const { results: defenseResults, defended, criticalDefense, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
-      results.push(...defenseResults)
-      castCanceledResults = deferred
-      if (defended) {
-        // 対象の防御判定がクリティカル成功した場合も, 武器の種別に関わらず自身が体勢を崩し最低1ターンの引き戻しが必要になる
-        if (criticalDefense) {
-          actor.attack.ready = Math.max(actor.attack.ready, 1)
-          results.push({ type: 'overextended', judge: { weaponName: actor.attack.model.name } })
-        }
-        results.push(...castCanceledResults) // ダメージ判定が発生しない場合はここで表示する
-        return results // 防御成功時はここで処理を止める
+    const { results: defenseResults, defended, criticalDefense, castCanceledResults } =
+      this.tryDefend(target, !attackJudge.critical && canDefend, () => judgeDefense(actor, aim, target))
+    results.push(...defenseResults)
+    if (defended) {
+      // 対象の防御判定がクリティカル成功した場合も, 武器の種別に関わらず自身が体勢を崩し最低1ターンの引き戻しが必要になる
+      if (criticalDefense) {
+        actor.attack.ready = Math.max(actor.attack.ready, 1)
+        results.push({ type: 'overextended', judge: { weaponName: actor.attack.model.name } })
       }
+      results.push(...castCanceledResults) // ダメージ判定が発生しない場合はここで表示する
+      return results // 防御成功時はここで処理を止める
     }
 
     // ダメージ判定 (攻撃判定がクリティカルの場合, 対象のDRを無視する)
@@ -97,20 +103,13 @@ export class ActionEffects {
     const results: ActionResult[] = []
 
     // 部位狙いによる, 頭・四肢への負傷上限と故障判定
-    // (耳・目は2点, 手首・足首は最大HPの1/3, 腕・脚は最大HPの1/2を超える負傷を負えず, 超えた分は故障として扱う)
+    // (耳・目は2点, 手首・足首は最大HPの1/3, 腕・脚は最大HPの1/2を超える負傷を負えず, 超えた分は故障として扱う. 上限値は LIMB_INJURY_CAP 参照)
     let injuryOnLimb = false
     let dmg = dmgJudge.roll
-    if (aim === 'ear' || aim === 'eye') {
-      injuryOnLimb = dmg >= 2
-      dmg = Math.min(dmg, 2)
-    }
-    if (aim === 'hand' || aim === 'foot') {
-      injuryOnLimb = dmg >= target.health.maxHp / 3
-      dmg = Math.min(dmg, Math.floor(target.health.maxHp / 3))
-    }
-    if (aim === 'arm' || aim === 'leg') {
-      injuryOnLimb = dmg >= target.health.maxHp / 2
-      dmg = Math.min(dmg, Math.floor(target.health.maxHp / 2))
+    const limbCap = LIMB_INJURY_CAP[aim]?.(target)
+    if (limbCap !== undefined) {
+      injuryOnLimb = dmg >= limbCap
+      dmg = Math.min(dmg, limbCap)
     }
 
     results.push({ type: 'dmg', judge: { ...dmgJudge, roll: dmg, target } })
@@ -194,6 +193,18 @@ export class ActionEffects {
     }
 
     return results
+  }
+
+  // 防御を試みるべきか (canDefend) を見た上で resolveDefenseAttempts に委譲する共通処理
+  // (attackRoutine/spellDmgRoutine/spellTripRoutine/spellFlashRoutine の「防御を試みて, 成功していれば打ち切る」定型処理を集約する)
+  // canDefend が false の場合は判定自体を行わず, 何も起きなかった結果を返す
+  private tryDefend(
+    target: Unit,
+    canDefend: boolean,
+    getDefenseJudges: () => Array<Omit<DefenseResult, 'ready'>>
+  ): { results: ActionResult[], defended: boolean, criticalDefense: boolean, castCanceledResults: ActionResult[] } {
+    if (!canDefend) return { results: [], defended: false, criticalDefense: false, castCanceledResults: [] }
+    return this.resolveDefenseAttempts(target, getDefenseJudges())
   }
 
   // 防御判定結果配列を順に適用し, 実際の防御試行回数・武器準備状態への反映とログ用結果を生成する
@@ -459,16 +470,12 @@ export class ActionEffects {
 
     // 対象がいかなる防御も行えない (自身が全力攻撃選択中など) 場合は防御判定自体をスキップする
     const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
-    let castCanceledResults: ActionResult[] = []
-    if (canDefend) {
-      const defenseJudges = judgeSpellDefense(target, aim, allowParry, extraMod)
-      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
-      results.push(...defenseResults)
-      castCanceledResults = deferred
-      if (defended) {
-        results.push(...castCanceledResults) // ダメージ判定が発生しない場合はここで表示する
-        return results // 防御成功時はここで処理を止める
-      }
+    const { results: defenseResults, defended, castCanceledResults } =
+      this.tryDefend(target, canDefend, () => judgeSpellDefense(target, aim, allowParry, extraMod))
+    results.push(...defenseResults)
+    if (defended) {
+      results.push(...castCanceledResults) // ダメージ判定が発生しない場合はここで表示する
+      return results // 防御成功時はここで処理を止める
     }
 
     const dmgJudge = rollSpellDmg(effect.dice, effect.dmgType, aim, target, isMetal)
@@ -494,16 +501,12 @@ export class ActionEffects {
     const allowParry = effect.allowParry ?? true
 
     const canDefend = target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge
-    let castCanceledResults: ActionResult[] = []
-    if (canDefend) {
-      const defenseJudges = judgeSpellDefense(target, aim, allowParry)
-      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
-      results.push(...defenseResults)
-      castCanceledResults = deferred
-      if (defended) {
-        results.push(...castCanceledResults) // ダメージ判定に相当する箇所が無いため, ここで表示する
-        return results // 防御成功時はここで処理を止める
-      }
+    const { results: defenseResults, defended, castCanceledResults } =
+      this.tryDefend(target, canDefend, () => judgeSpellDefense(target, aim, allowParry))
+    results.push(...defenseResults)
+    if (defended) {
+      results.push(...castCanceledResults) // ダメージ判定に相当する箇所が無いため, ここで表示する
+      return results // 防御成功時はここで処理を止める
     }
 
     const tripJudge = judgeTrip(target, effect.mod ?? 0)
@@ -546,16 +549,12 @@ export class ActionEffects {
     const isPreparingShot = (target.attack.ready > 0 && target.attack.model.isMissile) || target.attack.feint?.source === 'snipe'
 
     const canDefend = !isCasting && !isPreparingShot && (target.defense.getCanBlock(aim) || (allowParry && target.defense.canParry) || target.defense.canDodge)
-    let castCanceledResults: ActionResult[] = []
-    if (canDefend) {
-      const defenseJudges = judgeSpellDefense(target, aim, allowParry)
-      const { results: defenseResults, defended, castCanceledResults: deferred } = this.resolveDefenseAttempts(target, defenseJudges)
-      results.push(...defenseResults)
-      castCanceledResults = deferred
-      if (defended) {
-        results.push(...castCanceledResults) // ダメージ判定に相当する箇所が無いため, ここで表示する
-        return results // 回避に成功すれば効果を免れる
-      }
+    const { results: defenseResults, defended, castCanceledResults } =
+      this.tryDefend(target, canDefend, () => judgeSpellDefense(target, aim, allowParry))
+    results.push(...defenseResults)
+    if (defended) {
+      results.push(...castCanceledResults) // ダメージ判定に相当する箇所が無いため, ここで表示する
+      return results // 回避に成功すれば効果を免れる
     }
 
     // そのターン中 (対象自身の次ターン終了時まで) の命中/回避ペナルティを付与する (StatusEffects.flashed の減衰は Attack/Defense の各目標値取得側で参照する)
