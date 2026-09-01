@@ -15,8 +15,8 @@ function App() {
       <header className={headerClass}>
         <h1 className="sitebrand">
           <Link to="/">
-            <span className="sitebrand__title">GURPS.QWEL</span>
-            <span className="sitebrand__tagline">QWELによって再構成を遂げた新しいGURPS</span>
+            <span className="sitebrand__title">RPG.LOGIC</span>
+            <span className="sitebrand__tagline">RPG戦闘ロジック・シミュレーター</span>
           </Link>
         </h1>
       </header>
@@ -25,7 +25,7 @@ function App() {
       </main>
       <div className={coverClass}></div>
       <footer className="footer">
-        <small>&copy; 2016 - { new Date().getFullYear() } GURPS.QWEL.DESIGN</small>
+        <small>&copy; 2019 - { new Date().getFullYear() } QWEL.DESIGN</small>
       </footer>
     </>
   )
